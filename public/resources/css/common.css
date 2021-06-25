@@ -1,0 +1,11 @@
+@charset "utf-8";
+
+.mskbg2 { position:fixed;  top:0; left:0; width:100%; height:100%; z-index:1000;  background:#000000; opacity:0.4; filter:alpha(opacity=40);}
+.pop { position:fixed; top:50%; left:50%;; z-index:20000;}
+.ploading { width:512px; height:512px; margin:-300px 0 0 -300px;}
+.ploading2 { width:700px; height:512px; margin:-300px 0 0 -400px;}
+.ploading3 { width:400px; height:250px; margin:-200px 0 0 -200px;}
+.ploading4 { width:600px; height:250px; margin:-200px 0 0 -300px;}
+
+.mskbg { position:fixed;  top:0; left:0; width:100%; height:100%; z-index:2000;  background:#000000; opacity:0.4; filter:alpha(opacity=40);}
+.ploading5 { width:253px; height:94px; margin:-50px 0 0 -100px;}

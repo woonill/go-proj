@@ -1,0 +1,9 @@
+.fc-prev-button {display: block;width: 10px;height: 17px;background-image: url(../images/icon-calendar-prev.png);}
+.fc-next-button {display: block;width: 10px;height: 17px;background-image: url(../images/icon-calendar-next.png);}
+
+.fc-day-header {padding: 13px 0;font-size: 14px;font-weight: 400;line-height: 1em;color: #333;text-align: center;vertical-align: middle;border: 1px solid #e0e1e5;background-color: #f7f7f7;}
+
+.fc-sat {color: #4888df;}
+.fc-sun {color: #eb5463;}
+
+.calendar-table .today {background-color: #f7f7f7;}

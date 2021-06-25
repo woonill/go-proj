@@ -1,0 +1,138 @@
+@charset "utf-8";
+
+/* 
+Date : 2014-01-27
+Title : Basic.css
+By : Kim YuSun
+Explanation : 객체의 레이아웃과 디자인적 요소를 나열합니다.
+*/
+
+/* 
+1. 단위가 px인 경우엔 따로 단위를 표시하지 않습니다. %인 경우엔 per를 붙입니다. 
+2. padding & margin의 경우 top, right, bottom, left의 순서로 갑니다. v는 Vertical(좌우), h는 Horizontal(위아래)을 뜻합니다. 
+*/
+
+/* display */
+.show { display:block; }
+.hide { display:none; }
+.hidden { visibility:hidden; height:0; margin:0; padding:0; background:none; font-size:0; line-height:0; }
+.v_hide { visibility:hidden; }
+
+/* floating */
+.clear { clear:both; }
+.float_left { float:left; }
+.float_right { float:right; }
+
+/* margin */
+.mt5 { margin-top:5px; }
+.mt40 { margin-top:40px; }
+.mb33 { margin-bottom:33px; }
+
+/* padding */
+.pt10 { padding-top:10px; }
+.ph20 { padding:0 20px; }
+.ptl10 { padding:10px 0 0 10px; }
+
+/* width */
+.w5per { width:5%; }
+.w10per { width:10%; }
+.w15per { width:15%; } 
+.w20per { width:20%; }
+.w25per { width:25%; }
+.w30per { width:30%; }
+.w35per { width:35%; }
+.w40per { width:40%; }
+.w45per { width:45%; }
+.w50per { width:50%; }
+.w55per { width:55%; }
+.w60per { width:60%; }
+.w65per { width:65%; } 
+.w70per { width:70%; }
+.w75per { width:75%; } 
+.w80per { width:80%; }
+.w85per { width:85%; }
+.w90per { width:90%; }
+.w95per { width:95%; }
+.w96per { width:96%; }
+.w18 { width:18px; }
+
+/* background color */
+
+/* background image */
+.bg_gray01 { background:url(http://image.solutus.co.kr/common/bg/bg_gray01.jpg); }
+.bg_gray02 { background:url(http://image.solutus.co.kr/common/bg/bg_gray02.jpg); }
+.bg_green01 { background:url(http://image.solutus.co.kr/common/bg/bg_green01.jpg); }
+.bg_tree01 { background:url(http://image.solutus.co.kr/common/bg/bg_tree1.jpg); }
+.bg_wood01 { background:url(http://image.solutus.co.kr/common/bg/bg_wood01.jpg); }
+.bg_wood02 { background:url(http://image.solutus.co.kr/common/bg/bg_wood02.jpg); }
+
+/* background repeat */
+.bg_norepeat { background-repeat:no-repeat; }
+.bg_xrepeat { background-repeat:repeat-x; }
+.bg_yrepeat { background-repeat:repeat-y; }
+
+/* icon */
+.ico_checked01 { display:inline-block; overflow:hidden; width:32px; height:32px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -40px -30px no-repeat; vertical-align:middle; }
+.ico_circle_arrow01 { display:inline-block; overflow:hidden; width:16px; height:16px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -30px 0 no-repeat; vertical-align:middle; }
+.ico_circle_arrow02 { display:inline-block; overflow:hidden; width:26px; height:26px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) 0 0 no-repeat; vertical-align:middle; }
+.ico_critical01 { display:inline-block; overflow:hidden; width:32px; height:32px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) 0 -30px no-repeat; vertical-align:middle; }
+.ico_document01 { display:inline-block; overflow:hidden; width:16px; height:16px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -50px 0 no-repeat; vertical-align:middle; }
+.ico_mail01 { display:inline-block; overflow:hidden; width:16px; height:16px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -70px 0 no-repeat; vertical-align:middle; }
+.ico_mail02 { display:inline-block; overflow:hidden; width:64px; height:64px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -100px -100px no-repeat; vertical-align:middle; }
+.ico_new01 { display:inline-block; overflow:hidden; width:16px; height:16px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -80px -20px no-repeat; vertical-align:middle; }
+.ico_newfile01 { display:inline-block; overflow:hidden; width:32px; height:32px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -50px -70px no-repeat; vertical-align:middle; }
+.ico_newflag01 { display:inline-block; overflow:hidden; width:24px; height:24px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -100px -20px no-repeat; vertical-align:middle; }
+.ico_pen01 { display:inline-block; overflow:hidden; width:16px; height:16px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -90px 0 no-repeat; vertical-align:middle; }
+.ico_picture01 { display:inline-block; overflow:hidden; width:48px; height:48px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -90px -50px no-repeat; vertical-align:middle; }
+.ico_rarrow01 { display:inline-block; overflow:hidden; width:16px; height:16px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -110px 0 no-repeat; vertical-align:middle; }
+.ico_rock01 { display:inline-block; overflow:hidden; width:48px; height:48px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -50px -120px no-repeat; vertical-align:middle; }
+.ico_star01 { display:inline-block; overflow:hidden; width:48px; height:48px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) 0 -120px no-repeat; vertical-align:middle; }
+.ico_update01 { display:inline-block; overflow:hidden; width:16px; height:16px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) -130px 0 no-repeat; vertical-align:middle; }
+.ico_zoom01 { display:inline-block; overflow:hidden; width:48px; height:48px; background:url(http://image.solutus.co.kr/common/icon/ico_ver01.png) 0 -70px no-repeat; vertical-align:middle; }
+
+/* color */
+.orange1 { color:#ff6000; }
+.orange2 { color:#F70; }
+.gray1 { color:#555; }
+.gray2 { color:#999; }
+.gray3 { color:#ccc; }
+.green1 { color:#093; }
+.blue1 { color:#369; }
+.red1 { color:#f30; }
+.red2 { color:#ea002c; }
+
+/* font-size */
+.size10 { font-size:10px; }
+.size11 { font-size:11px; }
+.smaller { font-size:7pt; }
+.small { font-size:8pt; }
+.big { font-size:12pt; }
+.bigger { font-size:14.5pt; }
+
+/* font-weight */
+.bold { font-weight:bold; }
+
+/* text-align */
+.left { text-align:left; }
+.center { text-align:center; }
+.right { text-align:right; }
+
+/* hyperlink */
+.underline:hover { text-decoration:underline; }
+
+/* Form Style */
+input, select { line-height:1em; }
+
+/* Button Style */
+.btn_blue1 { padding:6px 8px; border:1px solid #06C; background:#09F; color:#fff; }
+.btn_orange1 { padding:6px 8px; border:1px solid #C30; background:#F63; color:#fff; }
+.btn_gray1 { padding:6px 8px; border:1px solid #333; background:#666; color:#fff; }
+.btn_gray2 { padding:6px 8px; border:1px solid #999; background:#f0f0f0; color:#888; }
+.btn_green1 { padding:6px 8px; border:1px solid #060; background:#093; color:#fff; }
+.sbtn_gray1 { border:1px solid #333; padding:4px 6px; background:#999; color:#fff; font-size:9pt; font-weight:bold; }
+.sbtn_gray2 { border:1px solid #999; padding:2px 4px; background:#f0f0f0; color:#888; font-size:9pt; font-weight:bold; }
+.sbtn_white1 { border:1px solid #aaa; margin-bottom:3px; padding:3px 5px; background:#fff; color:#888; font-size:8pt; }
+.mbtn_gray1 { padding:2px 3px; background:#666; font-weight:bold; color:#fff; font-size:7pt; vertical-align:middle; }
+
+/* etc */
+.icon_new1:after { margin-left:3px; padding:0 2px; border:1px solid #02f; border-radius:2px; background:#08f; color:#fff; font-size:7pt; font-weight:bold; line-height:1em; content:"N"; }

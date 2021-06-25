@@ -1,0 +1,123 @@
+@import url('normalize.css');
+
+.mlayer {display:none; position:absolute; width:900px; height:700px; z-index:100000;}
+.mlayer .mbg {position:absolute; width:900px; height:700px; background:#000; opacity:.3; filter:alpha(opacity=30);}
+.mlayer .mpop-layer {display:block;}
+.mpop-layer {display:none; position: absolute; top: 50%; left: 50%; background-color:#fff; border: 5px solid #3571B5; z-index: 10;} /* width, height는 html에서 조정. */ 
+.mpop-layer .mpop-container {padding: 20px 25px;}
+.mpop-layer p.ctxt {color: #666; line-height: 25px;}
+.mpop-layer .mbtn-r {width: 100%; margin:10px 0 20px; padding-top: 10px; border-top: 1px solid #DDD; text-align:right;}
+
+#canvas{ *zoom:1 }	/* for stupid IE */
+#canvas:after{ content:""; display:block; clear:both; }	/* for standard */
+
+.maparea {
+	position: relative;
+	margin: 0px auto 0px;
+	width: 900px;
+	min-height: 700px;
+}
+
+.background {
+	fill: #f7fcfd;
+	pointer-events: all;
+}
+
+#map {
+	border: 1px solid #ddd;
+}
+
+#states path {
+	fill: #ccece6;
+	stroke: #fff;
+	stroke-width: 1.5px;
+}
+
+#states path:hover {
+	stroke: white;
+}
+
+#states .active {
+	fill: orange;
+}
+
+#states path {
+	cursor: pointer;
+}
+
+#states text {
+	cursor: pointer;
+	font-size: 12px;
+	font-family: 'Nanum Gothic';
+}
+
+/* #tooltip {
+	position: absolute;
+	height: auto;
+	padding: 10px;
+	background-color: #E1E1E1;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	border:2px solid #E1E1E1;
+	-webkit-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+	-moz-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+	pointer-events: none;
+	width:200px;
+	height:150px;
+}
+
+#tooltip.hidden {
+	display: none;
+}
+
+#tooltip p {
+	margin: 0px;
+	font-family: sans-serif;
+	font-size: 12px;
+	line-height: 20px;
+	color: #777;
+	width: 200px;
+	height: 150px;
+} */
+
+.legend_area {
+	position: absolute;
+	height: auto;
+	padding: 10px;
+	background-color: #E1E1E1;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	border:2px solid #E1E1E1;
+	/* -webkit-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+	-moz-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4); */
+	pointer-events: none;
+	width:200px;
+	height:150px;
+}
+
+.legend_area .legend {
+	margin-bottom:5px;
+	width:200px;
+	height:20px;
+}
+
+.legend_rect {
+	width:38px;
+	height:18px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	float:left;
+}
+
+.legend_text {
+	padding-left:5px;
+	width:180px;
+	height:20px;
+	display:table-cell;
+	vertical-align:middle;
+}

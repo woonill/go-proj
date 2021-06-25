@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Web site created using create-react-app" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+
+  <!-- <link rel="stylesheet" href="http://localhost:8080/resources/assets/font/notosanskr/style.css">
+  <link rel="stylesheet" href="http://localhost:8080/resources/assets/css/default.css">
+  <link rel="stylesheet" href="http://localhost:8080/resources/assets/css/style.css?ver=1.01">   -->
+  <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
+
+
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+
+  <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
       Only files inside the `public` folder can be referenced from the HTML.
@@ -24,12 +32,91 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+  <title>객실예약시스템</title>
+  <style>
+    .ui-autocomplete {
+      max-height: 200px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .ui-menu .ui-menu-item {
+      font-size: 9pt;
+    }
+  </style>
+
+
+
+  <!-- <link rel="stylesheet" href="/resources/assets/font/notosanskr/style.css">
+  <link rel="stylesheet" href="/resources/assets/css/default.css">
+  <link rel="stylesheet" href="/resources/assets/css/style.css?ver=1.01">  -->
+
+</head>
+
+<body>
+  <!--[if lt IE 9]>
+        <script src="./assets/js/html5shiv.min.js"></script>
+        <div id="ie-version"><p>고객님께서는 현재 Explorer 구형버전으로 접속 중이십니다. 이 사이트는 Explorer 최신버전에 최적화 되어 있습니다. <a href="http://windows.microsoft.com/ko-kr/internet-explorer/download-ie" target="_blank">Explorer 업그레이드 하기</a></p> <button type="button" class="version-close">X</button></div>
+    <![endif]-->
+  <ul class="skip-nav">
+    <li><a href="#container">본문 바로가기</a></li>
+  </ul>
+  <div id="wrap">
+
+    <header id="header">
+      <div class="hgroup clearfix">
+        <h1 class="logo">
+
+
+          <a href="/" class="clearfix">
+            <i class="icon-logo"></i>
+
+            <span class="text-ir">궁</span>
+            <span class="text">궁클래식</span>
+            <strong class="text branch">강남점</strong>
+          </a>
+
+
+
+        </h1>
+        <div class="utils">
+          <p class="account">
+            <span class="text date">2021-06-15</span>
+            <span class="text message">test님 안녕하세요.</span>
+          </p>
+
+          <a href="/login/logout?sa=0" class="btn-logout">
+            <i class="icon-logout"></i>
+            <span class="text tup">logout</span>
+          </a>
+        </div>
+      </div>
+      <nav id="nav">
+        <h2 class="text-ir">메뉴</h2>
+        <ul class="clearfix">
+          <li id="top_menu_12"><a href="/">홈</a></li>
+          <li id="top_menu_14" class="active"><a href="/reservation/list">예약관리</a></li>
+          <li id="top_menu_133"><a href="/reservation/calendar">입퇴실달력</a></li>
+          <li id="top_menu_13"><a href="/reservation/add">예약추가</a></li>
+          <li id="top_menu_15"><a href="/counsel/list">상담관리</a></li>
+          <li id="top_menu_105"><a href="/app/list">APP 상담관리</a></li>
+          <li id="top_menu_20"><a href="/schedule/main">조리원일정</a></li>
+          <li id="top_menu_21"><a href="/balance/main">정산</a></li>
+          <li id="top_menu_84"><a href="/inventory/payment/list">지출/결제</a></li>
+          <li id="top_menu_16"><a href="/room/main">설정</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
     <div id="root"></div>
-    <!--
+    <footer id="footer">
+      <div class="fgroup">
+        <p class="copyright">Copyright 2019 궁홀딩스. All Rights Reserved.</p>
+      </div>
+    </footer>
+  </div>
+  <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
 
@@ -39,5 +126,8 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-  </body>
+
+
+</body>
+
 </html>
