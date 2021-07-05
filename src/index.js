@@ -4,6 +4,14 @@ import './index.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+
+// ReactDOM.render(
+//   <React.StrictMode>
+//     <Header />
+//   </React.StrictMode>,
+//   document.getElementById('header')
+// );
+
 ReactDOM.render(
   <React.StrictMode>
     <App />

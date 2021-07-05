@@ -119,7 +119,6 @@ function newMenuList(menus,eventDispacher) {
         return (
           <MenuItem
             onClick={eventDispacher}
-            key="s-key-2"
             data={el.data}
           >
             {el.text}
@@ -134,14 +133,13 @@ function newMenuList(menus,eventDispacher) {
 function newSubMenuList(title,menus,eventDispacher) {
 
   return (
-    <SubMenu key="s-key-1" title={title}>
+    <SubMenu  title={title}>
     {
       menus.map((el) =>  {
 
         return (
           <MenuItem
             onClick={eventDispacher}
-            key="s-key-2"
             data={el.data}
           >
             {el.text}
@@ -153,47 +151,76 @@ function newSubMenuList(title,menus,eventDispacher) {
   )
 }
 
-function MouseRightMenu(props) {
+// function MouseRightMenu(props) {
 
-  let sArray = [
-    {text:"결제내역",data:{}},
-    {text:"잠감결제",data:{}}
-  ]
+//   let sArray = [
+//     {text:"결제내역",data:{}},
+//     {text:"잠감결제",data:{}}
+//   ]
 
-  let fArray = [
-    {text:"상세보기",data:{}},
-    {text:"객실이동",data:{}},
-    {text:"기간연장",data:{}},
-    {text:"퇴실확정",data:{}},
-    {text:"계약일수정",data:{}}
-  ]
+//   let fArray = [
+//     {text:"상세보기",data:{}},
+//     {text:"객실이동",data:{}},
+//     {text:"기간연장",data:{}},
+//     {text:"퇴실확정",data:{}},
+//     {text:"계약일수정",data:{}}
+//   ]
 
-  let tArray = [
-    {text:"환별",data:{}},
-    {text:"에약삭제",data:{}},
-  ]
+//   let tArray = [
+//     {text:"환별",data:{}},
+//     {text:"에약삭제",data:{}},
+//   ]
 
 
-  return (
-    <div>
-      {/* <div className="well">Right click to see the menu</div> */}
-      <ContextMenuTrigger id={props.menuId}>
-        <div className='pure-menu pure-menu-horizontal'>
-              {props.children}
-          </div>            
-      </ContextMenuTrigger>
+//   return (
+//     <div>
+//       {/* <div className="well">Right click to see the menu</div> */}
+//       <ContextMenuTrigger id={props.menuId}>
+//         <div className='pure-menu pure-menu-horizontal'>
+//               {props.children}
+//           </div>            
+//       </ContextMenuTrigger>
 
-      <ContextMenu id={props.menuId}>
-        <SubMenu key="s-key-1" title="예약">
-            {newMenuList(fArray,props.handleClick)}
-        </SubMenu>
-        {newSubMenuList("결제",sArray,props.handleClick)}
-        <SubMenu key="s-key-1" title="취소">
-            {newMenuList(tArray,props.handleClick)}
-        </SubMenu>
-      </ContextMenu>
-    </div>
-  );
+//       <ContextMenu id={props.menuId}>
+//         <SubMenu key="s-key-1" title="예약">
+//             {newMenuList(fArray,props.handleClick)}
+//         </SubMenu>
+//         {newSubMenuList("결제",sArray,props.handleClick)}
+//         <SubMenu key="s-key-1" title="취소">
+//             {newMenuList(tArray,props.handleClick)}
+//         </SubMenu>
+//       </ContextMenu>
+//     </div>
+//   );
+// }
+
+
+function newMouseRightMenu(fArray,sArray,tArray) {
+
+
+  return function(props) {
+
+    return (
+      <div>
+        {/* <div className="well">Right click to see the menu</div> */}
+        <ContextMenuTrigger id={props.menuId}>
+          <div className='pure-menu pure-menu-horizontal'>
+                {props.children}
+            </div>            
+        </ContextMenuTrigger>
+  
+        <ContextMenu id={props.menuId}>
+          <SubMenu title="예약">
+              {newMenuList(fArray,props.handleClick)}
+          </SubMenu>
+          {newSubMenuList("결제",sArray,props.handleClick)}
+          <SubMenu title="취소">
+              {newMenuList(tArray,props.handleClick)}
+          </SubMenu>
+        </ContextMenu>
+      </div>
+    );  
+  }
 }
 
-export { MouseRightMenu };
+export {newMouseRightMenu };
