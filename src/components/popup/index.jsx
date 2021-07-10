@@ -1,5 +1,5 @@
-import React from "react";
-import { Modal } from 'antd';
+import React,{useState} from "react";
+import { Modal,Button } from 'antd';
 
 // class PopupViewWrapper extends React.Component {
 //   state = { visible: false };
@@ -87,15 +87,15 @@ function PopupViewWrapper(props) {
 }
 
 
-function newPopupWrapper(visableState,handleOk) {
+function PopupView(props) {
 
-  return function(props) {
 
     return (
+
         <Modal
           title="Basic Modal"
-          visible={visableState}
-          onOk={handleOk}
+          visible={props.visible}
+          onOk={props.handleCancel}
           onCancel={props.handleCancel}
           okButtonProps={{ disabled: false }}
           cancelButtonProps={{ disabled: false }}
@@ -103,11 +103,86 @@ function newPopupWrapper(visableState,handleOk) {
           {props.children}
         </Modal>
     );
+}
+
+
+// function PopupView(props) {
+
+//   let [showPopupState, setShowPopup] = useState(false);
+
+
+//     return (
+//       <>
+//         <Button onClick={(e)=> setShowPopup(true)}>Test</Button>
+
+//         <Modal
+//           title="Basic Modal"
+//           visible={showPopupState}
+//           onOk={(e)=>{
+//             setShowPopup(false)
+//           }}
+//           onCancel={(e)=>{
+//             setShowPopup(false)
+//           }}
+//           okButtonProps={{ disabled: false }}
+//           cancelButtonProps={{ disabled: false }}
+//         >
+//           {props.children}
+//         </Modal>
+//         </>
+//     );
+// }
+
+
+
+
+class PopupComp extends React.Component {
+
+  state = { visible: false };
+
+  showModal = () => {
+    this.setState({
+      visible: true,
+    });
+  };
+
+  handleOk = e => {
+    console.log(e);
+    this.setState({
+      visible: false,
+    });
+  };
+
+  handleCancel = e => {
+    console.log(e);
+    this.setState({
+      visible: false,
+    });
+  };
+
+  render(){
+
+    return (
+
+      <Modal
+          title="Basic Modal"
+          visible={this.state.visible}
+          onOk={this.handleOk}
+          onCancel={this.handleCancel}
+          okButtonProps={{ disabled: true }}
+          cancelButtonProps={{ disabled: true }}
+        >
+          {this.props.children}
+        </Modal>
+  );
+
+
   }
 }
 
 
 export {
     PopupViewWrapper,
-    newPopupWrapper
+    PopupView,
+    PopupComp
 }

@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState,useEffect,useMemo } from "react";
 
 import {
     Button,
@@ -11,7 +11,7 @@ import {
 
   import style from "./ChartView.module.scss"
   
-  import { ServerEventContext,emitHttpEvent } from "./chart_view_context";
+  import { ServerEventContext,emitHttpEvent,toChartData } from "./chart_view_context";
   import moment from "moment";
   import {ChartDataView} from "./table_data"
   import {GroupTable} from './group_table'
@@ -29,28 +29,41 @@ import {
   
   
   
-  function newSubSearchInputRender(selectedValue) {
-
-    let dateFormat = "YYYY-MM-DD";
-    let startDate = moment().subtract(15,"days")
-    let endDate = moment().add(15,"days")
-
-    let rangeView = (
-      <RangePicker
-        defaultValue={[startDate, endDate]}      
-        format={dateFormat}
-      //   value={hackValue || value}
-      //   disabledDate={disabledDate}
-      //   onCalendarChange={val => setDates(val)}
-      //   onChange={val => setValue(val)}
-      //   onOpenChange={onOpenChange}
-      />
-    );
-
-    return function(props) {
+  function SearchConditionChoosherView(props) {
 
 
-      switch (selectedValue) {
+
+    // let rangeView = (
+    //   <RangePicker
+    //     defaultValue={[startDate, endDate]}      
+    //     format={dateFormat}
+    //   //   value={hackValue || value}
+    //   //   disabledDate={disabledDate}
+    //      onCalendarChange={val => setDates(val)}
+    //   //   onChange={val => setValue(val)}
+    //   //   onOpenChange={onOpenChange}
+    //   />
+    // );
+
+
+
+      let rangeView = (
+        <RangePicker
+          defaultValue={props.dateRange}      
+          format={props.dateFormat}
+        //   value={hackValue || value}
+        //   disabledDate={disabledDate}
+           onCalendarChange={val => {
+//             console.log("range date",val)
+             props.setValue(val)
+           }}
+//          onChange={val => console.log("change date",val)}
+        //   onOpenChange={onOpenChange}
+        />
+      );
+
+
+      switch (props.selectedValue) {
 
         case "0":
           return rangeView;
@@ -92,37 +105,67 @@ import {
         default:
           return rangeView;
       }
-    }
-  
- 
   }
   
-  function newHeaderView(setSelectValue,selectedValue) {
-    
-    //selectedValue, setSelectValue
+  //상위 검색조건 선택뷰 
+  function HeaderView(props) {
+
+      let [selectedValue, setSelectValue] = useState("0");
+
+      let dateFormat = "YYYY-MM-DD";
+      let [dateRangeVals,updateDateRange] = useState(()=>{
+        let startDate = moment().subtract(15,"days")
+        let endDate = moment().add(15,"days")
+        return [startDate,endDate]
+      })
+
+
+      let handleSelectChange = (item) => {
+        setSelectValue(item);
+      };
   
-    let handleSelectChange = (item) => {
-      //    console.log(item);
-      setSelectValue(item);
-//      props.eventObserver({type:"UpdateSearchCondition",item:item})
-    };
-
-    let SearchInputView = newSubSearchInputRender(selectedValue)
-    let textVal;
-
-    function updateVal(c) {
-      c.preventDefault()
-      textVal = c.target.value;
-    }
-
-    function observeEvent(buttonEvent){
-        console.log("search value",textVal)      
-//        props.eventObserver({type:""})
-    }
+//      let SearchInputView = newSubSearchInputRender(selectedValue)
+      let textVal;
+//      let rangeDate;
   
-    return function(props) {
+      function updateVal(c) {
+  
+        if(selectedValue === "0") { //date range 로 처리  [moment,moment]  array 로 온다 
+          updateDateRange(c)
+//           rangeDate = c;
+        }else{
+          c.preventDefault()
+          textVal = c.target.value;
+        }
+      }
+  
+  
+      function searchReservations(event){
 
- 
+          console.log("search value",textVal,dateRangeVals)
+  
+          let params = {}
+  
+          if(selectedValue === "0") {
+  
+            let startDate = dateRangeVals[0].format("YYYY-MM-DD");
+            let endDate = dateRangeVals[1].format("YYYY-MM-DD");
+  
+            params['from'] = startDate;
+            params['to'] =endDate;
+          }
+  
+  
+          emitHttpEvent(
+            {
+              type:"FetchTableDataList",
+              params:params,
+              resultHandler:function(data){
+                console.log("http data","return")
+                props.eventObserver({type:"OnLoadCompletedResList",dataList:data})
+          }})        
+  
+      }       
 
       return (
         <div
@@ -163,13 +206,19 @@ import {
               <Option value="4">예정일</Option>
             </Select>
             <div style={{ width: 1 }} />
-            <SearchInputView setValue={updateVal}/>
+            <SearchConditionChoosherView 
+              selectedValue={selectedValue}
+              setValue={updateVal}
+              dateRange={dateRangeVals}
+              dateFormat={dateFormat}              
+              />
             <div style={{ width: 1 }} />
-            <Button icon={<SearchOutlined />} onClick={observeEvent}>검색</Button>
+            <Button
+              icon={<SearchOutlined />} 
+              onClick={searchReservations}>검색</Button>
           </div>
         </div>
       );
-    }
   }
   
   function ActionBunttonGroupView(props) {
@@ -291,9 +340,6 @@ import {
 
           </li>
 
-
-
-
           <button className={style.showGridButton} onClick={(e)=>{
                 props.eventObserver({
                     type:"DataViewUpdate",currentDisplayState:props.displayState
@@ -325,32 +371,11 @@ import {
     );
   }
 
-  function buildListView(viewState) {
-
-
-    return function(props){
-
-      if(viewState === 0) {
-        return (
-            <GroupTable dataList={props.dataList}/>
-        )
-      }else{
-          return (
-              <ChartDataView dataList={props.dataList}/>
-          )
-      }
-    }
-  }
-
-
-
 
   let allReservationList=[]
 
-
   function newEventDispach(
     setChartViewState,
-    setSelectValue,
     updateTableDataList) {
 
 
@@ -369,9 +394,9 @@ import {
           allReservationList = Array.from(e.dataList);
           updateTableDataList( allReservationList)
         }
-        else if(e.type === "UpdateSearchCondition")  {
-          setSelectValue(e.item)
-        }
+        // else if(e.type === "UpdateSearchCondition")  {
+        //   setSelectValue(e.item)
+        // }
         else if(e.type === "filter-0"){
           console.log(allReservationList.length)
           updateTableDataList(allReservationList)
@@ -407,12 +432,24 @@ import {
         }     
         else if(e.type === "filter-5"){
 
+          let list = allReservationList.filter((e)=>{
+            return e.isMove === 1 
+          })
+          updateTableDataList(list)
+
         }     
         else if(e.type === "filter-6"){
-
+          let list = allReservationList.filter((e)=>{
+            return e.inState === 2 || e.inState === 3000
+          })
+          updateTableDataList(list)
         }     
         else if(e.type === "filter-7"){
 
+          let list = allReservationList.filter((e)=>{
+            return e.delState === 1
+          })
+          updateTableDataList(list)
         }     
         else if(e.type === "filter-8"){
 
@@ -420,22 +457,55 @@ import {
             return e.revisit
           })
           updateTableDataList(list)
-
-
         }     
         else if(e.type === "filter-9"){
+          let list = allReservationList.filter((e)=>{
+            return e.delState === 2
+          })
+          updateTableDataList(list)
 
         }
     }
+  }
+
+
+  function ListView(props) {
+
+
+    let TableComponent = React.memo(
+      (props) => {
+        console.log("Render GroupTable");
+  
+        return (
+          <GroupTable dataList={props.dataList}/>
+        );
+      },
+//      [props.dataList]
+      (prevProps, nextProps) => {
+        return prevProps.dataList.length !== nextProps.dataList.length;
+      }
+    );
+
+    if(props.viewState === 0) {
+
+      return (
+          <TableComponent dataList={props.dataList}/>
+      )
+    }else{
+        return (
+            <ChartDataView dataList={props.dataList}/>
+        )
+    }
+
+
   }
   
   export default function ChartView() {
 
     let [chartViewState,setChartViewState] = useState(0)
-    let [selectedValue, setSelectValue] = useState("0");
     let [reservationDataList,updateTableDataList] = useState([])
 
-    let eventDiapcher = newEventDispach(setChartViewState,setSelectValue,updateTableDataList)
+    let eventDiapcher = newEventDispach(setChartViewState,updateTableDataList)
 
     
     useEffect(() => {
@@ -455,11 +525,10 @@ import {
           resultHandler:function(data){
             eventDiapcher({type:"OnLoadCompletedResList",dataList:data})
       }})
-//      loadTableDataList(eventDiapcher,param)
-    }, [])
+    }, [])//한번만 콜된다 , 그후로는 search button에 의해 동작하기때문에 
 
-    let HeaderView = newHeaderView(setSelectValue,selectedValue)
-    let ListView = buildListView(chartViewState);
+//    let HeaderView = HeaderView(setSelectValue,selectedValue,eventDiapcher)
+//    let ListView = buildListView(chartViewState);
 
     return (
       <ServerEventContext.Provider >
@@ -471,7 +540,7 @@ import {
             displayState={chartViewState} 
             eventObserver={eventDiapcher}/>
           <div style={{ padding: 10 }}>
-              <ListView dataList={reservationDataList}/>
+              <ListView viewState={chartViewState} dataList={reservationDataList}/>
           </div>
         </div>
       </ServerEventContext.Provider>

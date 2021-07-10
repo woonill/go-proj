@@ -69,7 +69,10 @@ const columns = [
         //   <a>Invite {record.name}</a>
         //   <a>Delete</a>
         // </Space>
-        <Button>
+        <Button onClick={(e)=>{
+//          console.log("click now",record.no)
+          window.location.href="/reservation/view?reservation_no="+record.no
+        }}>
           상세보기
         </Button>
       ),

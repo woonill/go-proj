@@ -1,30 +1,22 @@
-import React, { useState, useContext,useRef } from "react";
+import React, { useState, useContext, useEffect, useMemo } from "react";
 import { Table, Button, Popover } from "antd";
 
-//import moment from "moment";
 import Moment from "moment";
 import { extendMoment } from "moment-range";
-import { toChartData } from "./general_chart_data";
 import { newMouseRightMenu } from "../components/pmenu/menu_compos";
 import { v4 as uuidv4 } from "uuid";
 import { ReversionCancelPopup } from "./chart_view_modal";
-import { newPopupWrapper } from "../components/popup";
-import { GantchartContext } from "./chart_view_context";
+import { PopupView } from "../components/popup";
+import { GantchartContext, toChartData } from "./chart_view_context";
 
 const moment = extendMoment(Moment);
 
-// function isDebugger() {
-//   return "dev" == process.env.NODE_ENV;
-// }
-
 function buildEvent(allEvents, i) {
-
   if (allEvents.length === i) {
     return null;
   }
 
   let colData = allEvents[i];
-
 
   let event = {
     from: colData.from,
@@ -33,11 +25,10 @@ function buildEvent(allEvents, i) {
     next: null,
   };
 
-  let returnVal = {    
-    event:event,
-    index:i
-  }
-
+  let returnVal = {
+    event: event,
+    index: i,
+  };
 
   let nextIndex = i + 1;
   let nextEventVal = buildEvent(allEvents, nextIndex);
@@ -55,350 +46,400 @@ function buildEvent(allEvents, i) {
     }
   }
 
-
-
   return returnVal;
 }
 
+// //구간 text view 생성함수 20220-01-02 ~ 2020-01-20
+// function toRangeText(name, from, to) {
+//   let rtext = "(" + name + ")" + from + " ~ " + to + "";
+//   //  console.log("rtext length",rtext.length)
+//   rtext = rtext.length > 20 ? rtext.substring(0, 5) : rtext;
 
-function toRangeText(from,to) {
+//   return (
+//     <div>
+//       <p>{rtext}</p>
+//     </div>
+//   );
+// }
 
-  let rtext = "" + from + " ~ " + to + ""
-//  console.log("rtext length",rtext.length)
-  rtext = rtext.length > 10 ? rtext.substring(0,5) : rtext
+// function OverTimeline(eventObj) {
+//   return (
+//     <div>
+//       <p>{"" + eventObj.from + " ~ " + eventObj.source.to + ""}</p>
+//       <p>{"" + eventObj.next.from + " ~ " + eventObj.to + ""}</p>
+//     </div>
+//   );
+// }
 
+function RangeTimelineText(props) {
+  let rtext = "(" + props.name + ")" + props.from + " ~ " + props.to + "";
+  rtext = rtext.length > 20 ? rtext.substring(0, 7) : rtext;
   return (
     <div>
-    <p>{rtext}</p>
-  </div>
-  )
+      <p>{rtext}</p>
+    </div>
+  );
 }
 
-function newGridChartComp(menuClickHandler) {
+//중첩구간에대한 View 생성함수
+function gridChartCompRender(eventObj, mergeCount) {
+  //    console.log("mergcount",mergeCount)
+  //처음 바차트
+  let sfirstTime = eventObj["from"];
+  let endLastTime = eventObj.next.source["from"];
+  let fRange = moment(endLastTime).diff(sfirstTime, "days") + 1;
 
-  return function (eventObj, mergeCount) {
+  //중첩구간 중첩구간
+  // (처음시간에 toDate - 두번째시간에 fromDate)
+  let seFirstTime = eventObj.next.source["from"];
+  let seLastTime = eventObj.source["to"];
+  //처음시작점과 끝나는 점에서의 최종 날짜 간격
+  let srRange = moment(seLastTime).diff(seFirstTime, "days") + 1;
 
-//    console.log("mergcount",mergeCount)
-    //처음 바차트 
-    let sfirstTime = eventObj["from"];
-    let endLastTime = eventObj.next.source["from"];
-    let fRange = moment(endLastTime).diff(sfirstTime, "days") + 1;
+  let fWidth = mergeCount * (fRange / mergeCount);
+  let ssMerge = mergeCount * (srRange / mergeCount);
 
-    //중첩구간 중첩구간 
-    // (처음시간에 toDate - 두번째시간에 fromDate)
-    let seFirstTime = eventObj.next.source["from"];
-    let seLastTime = eventObj.source["to"];
-    //처음시작점과 끝나는 점에서의 최종 날짜 간격
-    let srRange = moment(seLastTime).diff(seFirstTime, "days") + 1; 
+  //앞에두개에서 나믄 부분이 세번째 바에길이
+  let trLen = mergeCount - (fWidth + ssMerge);
+//  let tfMerge = trLen;
 
-    let fWidth = (mergeCount*(fRange/mergeCount));
-    let ssMerge = (mergeCount * (srRange/mergeCount))
+  // let fReversionTime = toRangeText(
+  //   eventObj.source.name,
+  //   eventObj.from,
+  //   eventObj.source.to
+  // );
 
+  let overrideTimeline = (
+    <div>
+      <p>{"" + eventObj.from + " ~ " + eventObj.source.to + ""}</p>
+      <p>{"" + eventObj.next.from + " ~ " + eventObj.to + ""}</p>
+    </div>
+  );
 
-    //앞에두개에서 나믄 부분이 세번째 바에길이 
-    let trLen = mergeCount - (fWidth + ssMerge)
-    let tfMerge = trLen;
+  // let sfReversionTime = toRangeText(
+  //   eventObj.next.from,
+  //   eventObj.next.source.to
+  // );
 
-    let fReversionTime = toRangeText(eventObj.from,eventObj.source.to)
-    // let fReversionTime = (
-    //   <div>
-    //     <p>{"" + eventObj.from + " ~ " + eventObj.source.to + ""}</p>
-    //   </div>
-    // );
-
-    let overrideTimeline = 
-    (
-      <div>
-        <p>{"" + eventObj.from + " ~ " + eventObj.source.to + ""}</p>
-        <p>{"" + eventObj.next.from + " ~ " + eventObj.to + ""}</p>
-      </div>
-    );
-
-    let sfReversionTime = toRangeText(eventObj.next.from,eventObj.next.source.to)
-    // (
-    //   <div>
-    //     <p>{"" + eventObj.next.from + " ~ " + eventObj.next.source.to + ""}</p>
-    //   </div>
-    // );
-
-    return (
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "row",
+      }}
+    >
       <div
         style={{
-          width: "100%",
+          //        width: fWidth,
+          flex: fWidth,
+          borderColor: "red",
+          borderBottomStyle: "solid",
+          borderTopStyle: "solid",
+          borderLeftStyle: "solid",
           height: "100%",
-          display: "flex",
-          flexDirection: "row",
         }}
       >
-        <div
-          style={{
-            //        width: fWidth,
-            flex: fWidth,
-            borderColor: "red",
-            borderBottomStyle: "solid",
-            borderTopStyle: "solid",
-            borderLeftStyle: "solid",
-            height: "100%",
-          }}
+        {/* <PopupSchedulerItem fReversionTime={fReversionTime} text="1 구간" /> */}
+        <DefaultSchedulerBar
+          colData={eventObj}
+          // reversionTime={fReversionTime}
         >
-          {/* <PopupSchedulerItem fReversionTime={fReversionTime} text="1 구간" /> */}
-          <DefaultSchedulerBar
-            colData={eventObj}
-            reversionTime={fReversionTime}
+          <SchedulerBarButton
             style={{
               width: "100%",
               height: "100%",
               backgroundColor: "red",
               borderStyle: "none",
             }}
-          />
-        </div>
-        <div
-          style={{
-            flex: ssMerge,
-            // opacity: 0.3,
-            borderTopStyle: "solid",
-            borderTopColor: "red",
-            borderRightColor: "red",
-            borderLeftColor: "green",
-            //          borderLeftWidth:2,
-            borderLeftStyle: "solid",
-            borderBottomStyle: "solid",
-            borderBottomColor: "green",
-            //        borderStyle: "solid",
-          }}
-        >
-          <Popover content={overrideTimeline} title="중첩구간">
-            <Button
-              style={{
-                width: "100%",
-                height: "100%",
-                backgroundColor: "red",
-                borderStyle: "none",
-              }}
-            >
-              중첩 구간
-            </Button>
-          </Popover>
-        </div>
-        <div
-          style={{
-            borderBottomStyle: "solid",
-            borderTopStyle: "solid",
-            borderRightStyle: "solid",
-            borderRightColor: "green",
-            borderTopColor: "green",
-            borderLeftColor: "green",
-            borderBottomColor: "green",
-            flex: tfMerge,
-          }}
-        >
-          <DefaultSchedulerBar
             colData={eventObj}
-            reversionTime={sfReversionTime}
+          >
+            <RangeTimelineText
+              name={eventObj.source.name}
+              from={eventObj.from}
+              to={eventObj.source.to}
+            />
+          </SchedulerBarButton>
+        </DefaultSchedulerBar>
+      </div>
+      <div
+        style={{
+          flex: ssMerge,
+          // opacity: 0.3,
+          borderTopStyle: "solid",
+          borderTopColor: "red",
+          borderRightColor: "red",
+          borderLeftColor: "green",
+          //          borderLeftWidth:2,
+          borderLeftStyle: "solid",
+          borderBottomStyle: "solid",
+          borderBottomColor: "green",
+          //        borderStyle: "solid",
+        }}
+      >
+        <Popover content={overrideTimeline} title="중첩구간">
+          <Button
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: "red",
+              borderStyle: "none",
+            }}
+          >
+            중첩 구간
+          </Button>
+        </Popover>
+      </div>
+      <div
+        style={{
+          borderBottomStyle: "solid",
+          borderTopStyle: "solid",
+          borderRightStyle: "solid",
+          borderRightColor: "green",
+          borderTopColor: "green",
+          borderLeftColor: "green",
+          borderBottomColor: "green",
+          flex: trLen,
+        }}
+      >
+        <DefaultSchedulerBar colData={eventObj}>
+          <SchedulerBarButton
             style={{
               width: "100%",
               height: "100%",
               backgroundColor: "green",
               borderStyle: "none",
             }}
-          />
-        </div>
+            colData={eventObj}
+          >
+            <RangeTimelineText
+              name={eventObj.source.name}
+              from={eventObj.next.from}
+              to={eventObj.next.source.to}
+            />
+          </SchedulerBarButton>
+        </DefaultSchedulerBar>
       </div>
-    );
-  };
+    </div>
+  );
 }
 
-
 function SchedulerBarButton(props) {
-
-  const box = useRef(0);
-  const { groupState, eventDispach } = useContext(GantchartContext);
+  const { groupState } = useContext(GantchartContext);
+  const [bcState, updateBgColor] = useState("black");
 
   let dataSource = props.colData.source;
   let groupKey = dataSource.group;
   let isGroupping = groupKey !== undefined;
 
+  const onDoubleClickHandler = function (e) {
+    //    console.log("data", props.colData);
+    window.location.href =
+      "/reservation/view?reservation_no=" + props.colData.source.no;
+  };
 
-  if(!isGroupping) {
+  useEffect(() => {
+    if (isGroupping) {
+      //이동흔적이 있으면
+      //예약이동시 처리 부분
+      return function () {
+        //release function from context parameter
+      };
+    }
+  });
 
-
-    return (
-      <div 
-      style={{width:"100%",padding:"1px",backgroundColor:"black"}} 
-      >  
-        <Button
-          type="primary"
-          style={props.style}
-  //        onClick={(e)=> box.current.style.backgroundColor = "red"}
-          // onMouseOver={mouseOverEventHandler}
-          // onMouseMove={mouseMoveEventHandler}
-        >
-          {props.reversionTime}
-        </Button>
-       </div>
-    )
-  
-
-  }
-
-  let groupStateVal = groupState[groupKey]
+  let groupStateVal = groupState[groupKey];
 
   let mouseOverEventHandler = (e) => {
-//       if (groupState[groupKey] === "normal") {
-//         eventDispach({ type: "ChartBarMouseOn", groupId: groupKey });
-//       } else {
-// //        console.log("is normal state of group", groupKey);
-//       }
-        console.log("reset bgcolor",groupStateVal)
-        box.current.style.backgroundColor = "red"
+    //        console.log("reset bgcolor red")
+    if (isGroupping) {
+      updateBgColor("red");
+    }
   };
 
-
-  let mouseMoveEventHandler = (e) => {
-      console.log("reset bgcolor move")
-      box.current.style.backgroundColor = "black"
-
-//       if (groupState[groupKey] === "active") {
-//         eventDispach({ type: "ChartBarMouseMove", groupId: groupKey });
-//       } else {
-// //        console.log("is normal state of group", groupKey);
-//       }
+  let mouseOutEventHandler = (e) => {
+    //      console.log("reset bgcolor move")
+    //      box.current.style.backgroundColor = "black"
+    if (isGroupping) {
+      updateBgColor("black");
+    }
   };
 
- 
   return (
-    <div 
-    ref={box}
-    style={{width:"100%",padding:"1px",backgroundColor:"black"}} 
-    onMouseOver = {mouseOverEventHandler}
-    onBlur={mouseMoveEventHandler}
-    >
-
+    <div style={{ width: "100%", padding: "1px", backgroundColor: bcState }}>
       <Button
         type="primary"
         style={props.style}
-//        onClick={(e)=> box.current.style.backgroundColor = "red"}
-        // onMouseOver={mouseOverEventHandler}
-        // onMouseMove={mouseMoveEventHandler}
+        onDoubleClick={onDoubleClickHandler}
+        onMouseOver={mouseOverEventHandler}
+        onMouseOut={mouseOutEventHandler}
       >
-        {props.reversionTime}
+        {/* {props.reversionTime} */}
+        {props.children}
       </Button>
-     </div>
-  )
-
+    </div>
+  );
 }
 
+const _Right_Popup_fArray = [
+  { text: "상세보기", data: { popupView: "1-1" } },
+  { text: "객실이동", data: { popupView: "1-2" } },
+  { text: "기간연장", data: { popupView: "1-3" } },
+  { text: "퇴실확정", data: { popupView: "1-4" } },
+  { text: "계약일수정", data: { popupView: "1-5" } },
+];
+
+const _Right_Popup_sArray = [
+  { text: "결제내역", data: { popupView: "2-1" } },
+  { text: "잠감결제", data: { popupView: "2-2" } },
+];
+
+const _Right_Popup_tArray = [
+  { text: "환불", data: { popupView: "3-1" } },
+  { text: "에약삭제", data: { popupView: "3-2" } },
+];
+
+const MouseRightMenuComp = newMouseRightMenu(
+  _Right_Popup_fArray,
+  _Right_Popup_sArray,
+  _Right_Popup_tArray
+);
+
 function DefaultSchedulerBar(props) {
-
-  const {eventDispach } = useContext(GantchartContext);
-
-
-  let fArray = [
-    { text: "상세보기", data: { popupView: "1-1" } },
-    { text: "객실이동", data: { popupView: "1-2" } },
-    { text: "기간연장", data: { popupView: "1-3" } },
-    { text: "퇴실확정", data: { popupView: "1-4" } },
-    { text: "계약일수정", data: { popupView: "1-5" } },
-  ];
-
-  let sArray = [
-    { text: "결제내역", data: { popupView: "2-1" } },
-    { text: "잠감결제", data: { popupView: "2-2" } },
-  ];
-
-  let tArray = [
-    { text: "환불", data: { popupView: "3-1" } },
-    { text: "에약삭제", data: { popupView: "3-2" } },
-  ];
-
-  let MouseRightMenuComp = newMouseRightMenu(fArray, sArray, tArray);
-
+  const { eventDispach } = useContext(GantchartContext);
   return (
     <MouseRightMenuComp
-      // handleClick={props.itemOnClick}
       handleClick={(e, d) => {
         eventDispach({ type: "ShowPopup" });
       }}
       menuId={uuidv4()}
     >
-      <SchedulerBarButton 
-        style={props.style} 
+      {/* <SchedulerBarButton
+        style={props.style}
         colData={props.colData}
-        reversionTime={props.reversionTime}
-        />
+        // reversionTime={props.reversionTime}
+      >
+          {props.children}
+      </SchedulerBarButton> */}
+      {props.children}
     </MouseRightMenuComp>
   );
 }
 
-function choosherRenderFunc(scheduleRender, newGridChartRender) {
 
-  return function (record, dateFormat) {
 
-    let colArray = record["colDataArray"];
-    let momentDate = moment(dateFormat);
-
-//    let qIndex = -1;
-
-    for (let i = 0; i < colArray.length; i++) {
-
-//      if(i > qIndex) {
-
-        let eventObjWrapper = buildEvent(colArray, i);
-
-        i = eventObjWrapper.index
-
-        let eventObj = eventObjWrapper.event;
+function tableColumnRender(record, currentDayFormate) {
   
-        if (isDurationVal(eventObj, momentDate)) {
-          // console.log("from",eventObj["from"],eventObj["to"],momentDate.format("YYYY-MM-DD"))
-          // console.log("inDuration")
-          let lastTime = moment(eventObj["to"]);
-          if (lastTime.isSame(momentDate)) {
-  
-            let mergeCount = calcuRangeDays(eventObj);
-            if (eventObj.next != null) {
-              return {
-                children: newGridChartRender(eventObj, mergeCount), //newGridChart(eventObj, mergeCount),
-                props: {
-                  colSpan: mergeCount,
-                  rowSpan: 1,
-                },
-              };
-            }
-  
-            let cTag = scheduleRender(eventObj);
-            return {
-              children: cTag,
-              props: {
-                colSpan: mergeCount,
-                rowSpan: 1,
-              },
-            };
-          } else {
-            return {
-              children: "",
-              props: {
-                colSpan: 0,
-                rowSpan: 1,
-              },
-            };
-          }
-//        }
-  
+  let eventObjectList = record["eventObjList"];
 
+  let currentDay = moment(currentDayFormate)
 
-      }
-
+  let currentEventObj = null;
+  for (let i = 0; i < eventObjectList.length; i++) {
+    let eventObj = eventObjectList[i];
+    if (isDurationVal(eventObj, currentDay)) {
+      currentEventObj =eventObj
+        break;
     }
+  }
 
-    return {
-      children: "",
-      props: {
-        colSpan: 1,
-        rowSpan: 1,
-      },
-    };
+  if(currentEventObj != null){
+
+    let lastTime = moment(currentEventObj["to"]);
+    if (lastTime.isSame(currentDay)) {
+
+       let mergeCount = calcuRangeDays(currentEventObj);
+       if (currentEventObj.next != null) {
+         return {
+           children: gridChartCompRender(currentEventObj, mergeCount), //newGridChart(eventObj, mergeCount),
+            props: {
+             colSpan: mergeCount,
+             rowSpan: 1,
+           },
+         };
+       }
+       return {
+         children: <DefaultSchedulerLine eventObj={currentEventObj}/>,
+         props: {
+           colSpan: mergeCount,
+           rowSpan: 1,
+         },
+       };
+     } 
+     else {
+       return {
+         children: "",
+         props: {
+           colSpan: 0,
+           rowSpan: 1,
+         },
+       };
+     }
+
+  }
+
+ 
+  return {
+    children: "em",
+    props: {
+      colSpan: 1,
+      rowSpan: 1,
+    },
+  };
+}
+
+
+function tableColumnRender2(record, currentDay) {
+  let colArray = record["colDataArray"];
+  let momentDate = moment(currentDay);
+
+  for (let i = 0; i < colArray.length; i++) {
+    let eventObjWrapper = buildEvent(colArray, i);
+    i = eventObjWrapper.index;
+
+    let eventObj = eventObjWrapper.event;
+
+    let isTrue = isDurationVal(eventObj, momentDate);
+    if (isTrue) {
+
+      let lastTime = moment(eventObj["to"]);
+      if (lastTime.isSame(momentDate)) {
+        let mergeCount = calcuRangeDays(eventObj);
+        if (eventObj.next != null) {
+          return {
+            children: gridChartCompRender(eventObj, mergeCount), //newGridChart(eventObj, mergeCount),
+            props: {
+              colSpan: mergeCount,
+              rowSpan: 1,
+            },
+          };
+        }
+        return {
+          children: <DefaultSchedulerLine eventObj={eventObj}/>,
+          props: {
+            colSpan: mergeCount,
+            rowSpan: 1,
+          },
+        };
+      } else {
+        return {
+          children: "",
+          props: {
+            colSpan: 0,
+            rowSpan: 1,
+          },
+        };
+      }
+    }
+  }
+
+  return {
+    children: "",
+    props: {
+      colSpan: 1,
+      rowSpan: 1,
+    },
   };
 }
 
@@ -416,91 +457,90 @@ function newTotalFragment(record, key, month, day) {
   }
 }
 
-function newColumnRender(updateViewState) {
-  let itemClickHandler = (e, data) => {
-    //    console.log("event",e,data)
-    updateViewState(true);
-  };
+function DefaultSchedulerLine(props) {
 
-  const schedulerRenderFunc = (eventObj) => {
-    let reversionTime = (
-      <div>
-        <p>{"" + eventObj.from + " ~ " + eventObj.to + ""}</p>
-      </div>
-    );
-
-    return (
-      <DefaultSchedulerBar
-        colData={eventObj}
-        itemOnClick={itemClickHandler}
-        reversionTime={reversionTime}
-        style={{ width: "100%" }}
+  let eventObj = props.eventObj;
+  return (
+    <DefaultSchedulerBar colData={props.eventObj} style={{ width: "100%" }}>
+    <SchedulerBarButton
+      style={{
+        width: "100%",
+      }}
+      colData={props.eventObj}
+    >
+      <RangeTimelineText
+        name={eventObj.source.name}
+        from={eventObj.from}
+        to={eventObj.to}
       />
-    );
-  };
+    </SchedulerBarButton>
+  </DefaultSchedulerBar>
+  )
+}
 
-  //  let newGridChartRender = newGridChart(eventObj, mergeCount)
-  let newGridChartRender = newGridChartComp(itemClickHandler);
+function newColumnRender(sdate, startIndex = 1) {
+  let mo = moment(sdate);
+  let mLen = mo.daysInMonth(); //특정 달에서 가지고 있는 날짜 수량 30， 31, 28 등으로 표현
+  let fMonthData = [];
 
-  let columnRender = choosherRenderFunc(
-    schedulerRenderFunc,
-    newGridChartRender
-  );
 
-  return function (sdate, theKey, startIndex = 1) {
+//  let calDay = mo;
 
-    let mo = moment(sdate);
-    let mLen = mo.daysInMonth(); //특정 달에서 가지고 있는 날짜 수량 30， 31, 28 등으로 표현
-    let fMonthData = [];
+  for (let i = startIndex; i <= mLen; i++) {
 
-    for (let i = startIndex; i <= mLen; i++) {
+    let calDay = moment();
+    calDay.year(mo.year());
+    calDay.month(mo.month());
+    calDay.date(i);
+//     console.log("calday",calDay.format("YYYY-MM-DD"))
+    let model = {
+      title: i,
+      width: 35,
+      height: 15,
+      dataIndex: "eventObjList",
+      key: sdate + "-" + i,
+      render: function (text, record, index) {
+        let recKey = record["key"];
+        let sKey = recKey.toString();
+        if (
+          sKey === "totallReport:0" ||
+          sKey === "totallReport:1" ||
+          sKey === "totallReport:2"
+        ) {
+          return newTotalFragment(record, sKey, mo.month(), i);
+        }
 
-      let calDay = moment();
-      calDay.year(mo.year);
-      calDay.month(mo.month());
-      calDay.date(i);
+//        console.log("EventObjectList",record,"date",calDay.format("YYYY-MM-DD"))
+        return tableColumnRender(record, calDay.format("YYYY-MM-DD"));
+        // tableColumnRender(record, reDate);
+        // return (<div>test bar char</div>)
+      },
+    };
 
-      let reDate = calDay.format("YYYY-MM-DD");
-//      console.log("calday",calDay.format("YYYY-MM-DD"))
-      let model = {
-        title: i,
-        width: 35,
-        height: 20,
-        dataIndex: "colDataArray",
-        key: theKey + "-" + i,
-        render: function (text, record, index) {
-          let recKey = record["key"];
-          let sKey = recKey.toString();
-          if (
-            sKey === "totallReport:0" ||
-            sKey === "totallReport:1" ||
-            sKey === "totallReport:2"
-          ) {
-            return newTotalFragment(record, sKey, mo.month(), i);
-          }
-
-          return columnRender(record, reDate);
-        },
-      };
-
-      fMonthData.push(model);
-    }
-    return fMonthData;
-  };
+    fMonthData.push(model);
+  }
+  return fMonthData;
 }
 
 //구간에 있는지 확인 함수
 function isDurationVal(currentObj, cTime) {
   //    console.log(currentObj["to"])
   let fTime = moment(currentObj["from"]);
-//  let lTime = moment(currentObj["to"]).add(1, "minutes");
+  //  let lTime = moment(currentObj["to"]).add(1, "minutes");
   let lTime = moment(currentObj["to"]);
 
-
   const range = moment.range(fTime, lTime);
-//  return range.contains(cTime, { exclusive: false });
   return range.contains(cTime);
 
+  // let cunixt = cTime.unix()
+  // let res  = cunixt >= fTime.unix() && cunixt <= lTime.unix()
+  //let cstr = cTime.format("YYYY");
+  // if( cstr === "2020"){
+  //   console.log("date",cTime.format("YYYY-MM-DD"),currentObj,res)
+  // }
+  //  return res;
+
+  //  return cTime.isAfter(fTime) && cTime.isBefore(lTime)
 }
 
 //끝나는 날과 시작날 사이 날자 계산
@@ -510,25 +550,8 @@ function calcuRangeDays(currentObj) {
   return lTime.diff(fTime, "days") + 1;
 }
 
-function newColumnHeader(popupViewState,searchRange) {
-
-  let ColumnRenderFunc = newColumnRender(popupViewState);
-
-  let childrenCompos = searchRange.map((e)=>{
-    let mon = moment(e)
-    let sTitle = (mon.month()+1)+"월"
-    let smonth = mon.format("YYYY-MM-DD");
-    return  {
-        title: sTitle,
-//        key: "fmonth",
-        //          dataIndex:"colDataArray",
-        children: ColumnRenderFunc(smonth, "fmonth"),
-      }
-  })
-
-  console.log("Column children comps",childrenCompos)
-
-  const columns = [
+function newColumnHeader(searchRange) {
+  let columns = [
     {
       dataIndex: "name",
       key: "name",
@@ -536,145 +559,159 @@ function newColumnHeader(popupViewState,searchRange) {
       height: 30,
       fixed: "left",
     },
-    {
-      title: "2021",
+  ];
+
+  //  console.log("SearchRange",searchRange)
+  let ykey = "";
+  let childrenCompos = [];
+
+  for (const key in searchRange) {
+    ykey = ykey + key + "~";
+
+    let value = searchRange[key];
+    const monthObj = value.mObj;
+
+    for (const mkey in monthObj) {
+      let mvalue = monthObj[mkey];
+      let el = {
+        title: key + "-" + mkey,
+        key: mkey,
+        // dataIndex:"colDataArray",
+        children: newColumnRender(mvalue),
+      };
+      childrenCompos.push(el);
+    }
+
+    columns.push({
+      title: key,
       key: "year",
       children: childrenCompos,
-    },
-  ];
+    });
+  }
 
   return columns;
 }
 
-function SubViewComponent(showPopupState) {
-  return <ReversionCancelPopup></ReversionCancelPopup>;
+function SubViewComponent(props) {
+  return <ReversionCancelPopup />;
 }
 
-function newViewEventObserver(updatePopupState, groupState, groupStateUpdater) {
-
-
+function newViewEventObserver(listener) {
   return function (e) {
-    if (e.type === "ShowPopup") {
-      updatePopupState(true);
-      return;
-    }
-
-    if (e.type === "ClosePopup") {
-      updatePopupState(false);
-      return;
-    }
-
-    if (e.type === "ChartBarMouseOn") {
-      console.log("ChartBarMouseOn now");
-      let groupVal = groupState[e.groupId];
-      if (groupVal === "active") {
-        console.log("isActive");
-        return;
-      }
-      groupStateUpdater((prevState) => ({
-        ...prevState,
-        [e.groupId]: "active",
-      }));
-      return;
-    }
-    if (e.type === "ChartBarMouseMove") {
-
-      let groupVal = groupState[e.groupId];
-      if (groupVal === "normal") {
-        console.log("isNormal");
-        return;
-      }
-//      console.log("groupVal", groupVal, e.groupId);
-      groupStateUpdater((prevState) => ({
-        ...prevState,
-        [e.groupId]: "normal",
-      }));
-      return;
-    }
-    if (e.type === "updateChartBarGroupView") {
-      console.log("updateChartBarGroupView");
-      return;
-    }
-    console.log("return now");
+    listener.forEach((fallback) => {
+      fallback(e);
+    });
   };
 }
 
-
-
-export default function GroupTable(props) {
-
-//  console.log("chart data list",props.dataList)
-
-  let chartData = toChartData(props.dataList)
-  let data  = chartData.list
+function ChartTableView(props) {
+  let chartData = toChartData(props.dataList);
+  let data = chartData.list;
   let searchRange = chartData.range;
-//  console.log(searchRange)
+  let columns = newColumnHeader(searchRange);
 
+  let TableComponent = React.memo(
+    (props) => {
+      console.log("render table2");
 
-  let [showPopupState, setShowPopup] = useState(false);
-  let columns = newColumnHeader(setShowPopup,searchRange);
-
-
-  let groupEle = {};
-
-  data.forEach((value) => {
-    value.colDataArray.forEach((v2) => {
-      if (v2.group !== undefined) {
-//        console.log("group value", v2.group, v2.key);
-        let gropuId = groupEle[v2.group];
-        if (gropuId === undefined || gropuId === null) {
-          groupEle[v2.group] = "normal";
-        }
-      }
-    });
-  });
-
-
-  const [groupState, barGroupState] = useState(() => {
-    return groupEle;
-  });
-
-  //  console.log("Init GroupState val",groupState)
-
-  let handleOk = (e) => {
-    console.log("hadleOk now");
-    setShowPopup(false);
-  };
-
-  let eventDispach = newViewEventObserver(
-    setShowPopup,
-    groupState,
-    barGroupState
+      return (
+        <Table
+          rowKey="key"
+          scroll={{ y: 1100 }}
+          columns={props.columns}
+          dataSource={props.data}
+          bordered
+          pagination={false}
+          size="middle"
+        />
+      );
+    },
+    (prevProps, nextProps) => {
+      console.log("update state");
+      return prevProps.data.length !== nextProps.data.length;
+    }
   );
 
-  let PopupViewWrapper = newPopupWrapper(showPopupState, handleOk);
+  // return TableComponent;
+
+  return <TableComponent data={data} columns={columns} />;
+}
+
+function newInPopupView(listeners) {
+  return function (props) {
+    //parent 에서 공유 state 를 사용하면 팝업이뜰때마다 전체가 다시 랜들링이 되기때문에
+    //이건 내부에 state 를 가지고가야한다
+
+    let [showPopupState, setShowPopup] = useState(false);
+    listeners.push(function (e) {
+      //      console.log("recived message",e)
+
+      if (e.type === "ShowPopup") {
+        setShowPopup(true);
+        return;
+      }
+
+      if (e.type === "ClosePopup") {
+        setShowPopup(false);
+        return;
+      }
+    });
+
+    return (
+      <PopupView
+        onOk={(e) => {
+          setShowPopup(false);
+        }}
+        visible={showPopupState}
+        handleCancel={(e) => {
+          setShowPopup(false);
+        }}
+      >
+        <SubViewComponent />
+      </PopupView>
+    );
+  };
+}
+
+export default function GroupTable(props) {
+  // const chartData = useMemo(()=>{
+  //   console.log("update chartdata")
+  //   return toChartData(props.dataList)
+  // },[props.dataList])
+
+  let groupState = {};
+  let listeners = [];
+
+  // data.forEach((value) => {
+  //   value.colDataArray.forEach((v2) => {
+  //     if (v2.group !== undefined) {
+  //       let gropuId = groupState[v2.group];
+  //       if (gropuId === undefined || gropuId === null) {
+  //         groupState[v2.group] = "normal";
+  //       }
+  //     }
+  //   });
+  // });
+
+  let InPopupView = newInPopupView(listeners);
+  let eventDispach = newViewEventObserver(listeners);
 
   return (
-    <GantchartContext.Provider
-      value={{ showPopupState, eventDispach, groupState }}
-    >
+    <GantchartContext.Provider value={{ eventDispach, groupState, listeners }}>
       <div style={{ padding: 10 }}>
-        <Table
+        {/* <Table
+          rowKey="key"
           scroll={{ y: 1100 }}
           columns={columns}
           dataSource={data}
           bordered
           pagination={false}
           size="middle"
-          
-          //        scroll={{ x: 'calc(700px + 50%)', y: 240 }}
-          //        scroll={{ x: 'calc(700px + 50%)', y: 120 }}
-          //      title={newHeaderView}
-          //      footer={() => "Footer"}
-        />
-        <PopupViewWrapper
-          visible={showPopupState}
-          handleCancel={(e) => {
-            setShowPopup(false);
-          }}
-        >
-          {SubViewComponent(showPopupState)}
-        </PopupViewWrapper>
+        /> */}
+        <ChartTableView dataList={props.dataList} />
+        <InPopupView>
+          <SubViewComponent />
+        </InPopupView>
       </div>
     </GantchartContext.Provider>
   );
