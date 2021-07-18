@@ -1,5 +1,28 @@
 import { Table,Button } from 'antd';
 
+
+
+function stateText(e) {
+
+  if(e.inState === 0 && e.payType === "deposit"){//filter 1 
+    return "입실예정(잔금미납)";
+  }
+  else if(e.inState === 0 && e.payType === "full"){ //filter 2
+    return "입실예정(잔금완납)";
+
+  }
+  else if(e.inState === 1 && e.payType === "deposit"){ //filter 3
+    return "입실완료(잔금미납)";
+
+  }
+  else if(e.inState === 1 && e.payType === "full"){ //filter 4
+    return "입실완료(잔금완납)";
+  }
+  else {
+    return "none"
+  }
+
+}
 const columns = [
     {
       title: '산모명',
@@ -21,6 +44,11 @@ const columns = [
       title: '상태',
       dataIndex: 'state',
 //      key: 'state',
+      render: (text, record) => (
+        <div>
+          {stateText(record)}
+        </div>
+      ),
     },
 
     {
@@ -84,9 +112,11 @@ const columns = [
 
   function ChartDataView(props) {
       return (
-        <Table columns={columns} dataSource={props.dataList} pagination={false}/>
+        <Table 
+        columns={columns} 
+        dataSource={props.dataList} 
+        pagination={false}/>
       )
-
   }
 
   export {

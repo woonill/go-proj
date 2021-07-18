@@ -11,7 +11,7 @@ import {
 
   import style from "./ChartView.module.scss"
   
-  import { ServerEventContext,emitHttpEvent,toChartData } from "./chart_view_context";
+  import { ServerEventContext,emitHttpEvent } from "./chart_view_context";
   import moment from "moment";
   import {ChartDataView} from "./table_data"
   import {GroupTable} from './group_table'
@@ -87,7 +87,7 @@ import {
         case "3":
           return (
             <Input 
-              placeholder="산모연락처" 
+              placeholder="보호자이름" 
               style={{ marginLeft: 1, width: 255 }} 
               onChange={props.setValue}
               />
@@ -154,7 +154,22 @@ import {
             params['from'] = startDate;
             params['to'] =endDate;
           }
-  
+          else if(selectedValue === "1") {
+            params["uname"] = textVal
+          }
+          else if(selectedValue === "2") {
+            params["uaddr"] = textVal;
+          }
+          else if(selectedValue === "3") {
+            params["pname"] = textVal;
+          }
+          else if(selectedValue ==="4") {
+            params["due-data"] = textVal
+          }
+          else {
+            props.eventObserver({type:"ShowErrorMessage",errorMessage:"no specfic of condition type:"+selectedValue})
+            return;
+          }
   
           emitHttpEvent(
             {
@@ -202,7 +217,7 @@ import {
               <Option value="0">기간</Option>
               <Option value="1">산모이름</Option>
               <Option value="2">산모주소</Option>
-              <Option value="3">산모연락처</Option>
+              <Option value="3">보호자</Option>
               <Option value="4">예정일</Option>
             </Select>
             <div style={{ width: 1 }} />
@@ -474,7 +489,6 @@ import {
 
     let TableComponent = React.memo(
       (props) => {
-        console.log("Render GroupTable");
   
         return (
           <GroupTable dataList={props.dataList}/>

@@ -13,7 +13,8 @@ function Header() {
   let [headerInfo,updateHeaderInfo] = useState({
     centerName:"",
     branchName:"",
-    userName:""
+    userName:"",
+    menuList:[],
   })
 
   useEffect(() => {
@@ -30,7 +31,8 @@ function Header() {
 //        console.log("Request", res);
         return res.json()
       }).then((resMessage) => {
-        // console.log("dataResult",data)
+        
+//        console.log("dataResult",resMessage)
         // console.log(data)
 
         let data = resMessage.data;
@@ -38,7 +40,8 @@ function Header() {
           ...headerInfo,
             centerName:data.center_name,
             branchName:data.branch_name,
-            userName:data.user_name
+            userName:data.user_name,
+            menuList:data.menu_list
           }
       )
 
@@ -81,16 +84,15 @@ function Header() {
       <nav id="nav">
         <h2 class="text-ir">메뉴</h2>
         <ul class="clearfix">
-          <li id="top_menu_12"><a href="/">홈</a></li>
-          <li id="top_menu_14" class="active"><a href="/reservation/list">예약관리</a></li>
-          <li id="top_menu_133"><a href="/reservation/calendar">입퇴실달력</a></li>
-          <li id="top_menu_13"><a href="/reservation/add">예약추가</a></li>
-          <li id="top_menu_15"><a href="/counsel/list">상담관리</a></li>
-          <li id="top_menu_105"><a href="/app/list">APP 상담관리</a></li>
-          <li id="top_menu_20"><a href="/schedule/main">조리원일정</a></li>
-          <li id="top_menu_21"><a href="/balance/main">정산</a></li>
-          <li id="top_menu_84"><a href="/inventory/payment/list">지출/결제</a></li>
-          <li id="top_menu_16"><a href="/room/main">설정</a></li>
+          {
+            headerInfo.menuList.map((e)=>{
+              let rid = "top_menu_"+e.no;
+              if(e.no === 14) {
+                return <li id={rid} class="active"><a href="/html/index.html">{e.name}</a></li> 
+              }
+              return <li id={rid}><a href={e.link}>{e.name}</a></li> 
+            })
+          }
         </ul>
       </nav>
     </>
