@@ -1,0 +1,70 @@
+
+@import "../globle.scss";
+
+
+.TextLineWrapper {
+
+    @include RowLine;
+
+    .TextTitle {
+        display: flex;
+        width: 200px;
+        height: 40px;
+        background-color: rgb(245, 245, 245);
+        justify-content:center;
+        align-items:center;
+    }
+    
+    .TextContent{
+        display:flex;
+        width: 200px;
+        height: 40px;
+        align-items: center;
+    }
+}
+
+.BalanceWrapper {
+
+    display: flex;
+    flex:1;
+    justify-content: end;
+    flex-direction: row;
+    align-items: center;
+
+
+
+    .BalanceTitle {
+        background-color: rgb(245, 245, 245);
+        display: flex;
+//        flex:1;
+        width: 200px;
+        height: 40px;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    
+    .BalanceCostList{
+        display: flex;
+        flex:1;
+        width: 200px;
+        height: 40px;
+    //        background-color: black;
+        justify-content: end;
+        flex-direction: row;
+        align-items: center;
+    }
+    
+
+
+}
+
+
+.MemoInputBox{
+    background-color: rgb(245, 245, 245);
+    display:flex; 
+    width: 300px; 
+    align-items: center;
+    justify-content:center;
+}
+

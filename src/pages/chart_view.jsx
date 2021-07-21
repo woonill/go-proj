@@ -176,8 +176,8 @@ import {
               type:"FetchTableDataList",
               params:params,
               resultHandler:function(data){
-                console.log("http data","return")
-                props.eventObserver({type:"OnLoadCompletedResList",dataList:data})
+//                console.log("http data","return",data)
+                props.eventObserver({type:"OnLoadCompletedResList",data:data})
           }})        
   
       }       
@@ -404,10 +404,10 @@ import {
               setChartViewState(0)
             }
         }
-        else if(e.type==="OnLoadCompletedResList") {
-//          console.log("update reservation data list")
-          allReservationList = Array.from(e.dataList);
-          updateTableDataList( allReservationList)
+        else if(e.type ==="OnLoadCompletedResList") {
+          console.log("update reservation data list",e.data)
+          allReservationList = Array.from(e.data.dataList);
+          updateTableDataList(allReservationList)
         }
         // else if(e.type === "UpdateSearchCondition")  {
         //   setSelectValue(e.item)
@@ -486,7 +486,6 @@ import {
 
   function ListView(props) {
 
-
     let TableComponent = React.memo(
       (props) => {
   
@@ -519,10 +518,11 @@ import {
     let [chartViewState,setChartViewState] = useState(0)
     let [reservationDataList,updateTableDataList] = useState([])
 
-    let eventDiapcher = newEventDispach(setChartViewState,updateTableDataList)
+    let dispach = newEventDispach(setChartViewState,updateTableDataList)
 
     
     useEffect(() => {
+
 
       let startDate = moment().subtract(15,"days").format("YYYY-MM-DD")
       let endDate = moment().add(15,"days").format("YYYY-MM-DD")
@@ -537,7 +537,8 @@ import {
           type:"FetchTableDataList",
           params:param,
           resultHandler:function(data){
-            eventDiapcher({type:"OnLoadCompletedResList",dataList:data})
+//              console.log("data",data)
+              dispach({type:"OnLoadCompletedResList",data:data})
       }})
     }, [])//한번만 콜된다 , 그후로는 search button에 의해 동작하기때문에 
 
@@ -548,11 +549,11 @@ import {
       <ServerEventContext.Provider >
         <div className={style.main}>
           <div style={{ padding: 10 }}>
-            <HeaderView eventObserver={eventDiapcher}/>
+            <HeaderView eventObserver={dispach}/>
           </div>
           <ActionBunttonGroupView 
             displayState={chartViewState} 
-            eventObserver={eventDiapcher}/>
+            eventObserver={dispach}/>
           <div style={{ padding: 10 }}>
               <ListView viewState={chartViewState} dataList={reservationDataList}/>
           </div>

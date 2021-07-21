@@ -1,5 +1,5 @@
-import React,{useState} from "react";
-import { Modal,Button } from 'antd';
+import React from "react";
+import { Modal } from 'antd';
 
 // class PopupViewWrapper extends React.Component {
 //   state = { visible: false };
@@ -64,7 +64,6 @@ import { Modal,Button } from 'antd';
 
 function PopupViewWrapper(props) {
 
-  console.log(props)
   let visibleStte = props.visible;
 
   return (
@@ -93,7 +92,9 @@ function PopupView(props) {
     return (
 
         <Modal
-          title="Basic Modal"
+          width={700}
+          
+          title={props.title}
           visible={props.visible}
           onOk={props.handleCancel}
           onCancel={props.handleCancel}

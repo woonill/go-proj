@@ -142,7 +142,12 @@ function inDurationVal2(from, to, cdate) {
 function isValidCountReport(eventObj, from, to, ctime) {
 
   //  console.log(eventObj)
-  return (inDurationVal2(from, to, ctime) && eventObj.source.isMove === 0)
+  // return (inDurationVal2(from, to, ctime) 
+  //           && eventObj.source.isMove === 0 
+  //           && eventObj.source.last)
+
+  return (inDurationVal2(from, to, ctime)   && eventObj.source.last)
+
 }
 
 function validReportCounting(eventObj, ctimeFormatStr) {
@@ -270,6 +275,12 @@ function rebuildEventObj(eventObj) {
 
 
 
+// function buildStartAndEnd(start,from,eventObj) {
+
+
+// }
+
+
 function newBabyCounter() {
 
   let bReport = {}
@@ -349,6 +360,9 @@ function toChartData(dataList) {
   let roomDataMap = {}
   let rangeObj = {}
 
+  let earliestDate = null;
+  let latestDate = null;
+
   dataList.forEach(element => {
 
 
@@ -362,6 +376,19 @@ function toChartData(dataList) {
     let emf = moment(element.toDate);
     rangeObj = wrapRangeObj(rangeObj, fmf)
     rangeObj = wrapRangeObj(rangeObj, emf)
+
+
+    //---------------------------- 최초 와 최후의 날짜를 찾아서 그리드에서 앞으로 6일 뒤로 6일로 해서 여백을 최소화하는데 사용
+    //맨 처음시작되는 날짜를 찾는다 
+    if(earliestDate == null || fmf.isBefore(earliestDate)) {
+        earliestDate = fmf;
+    }
+
+    //최후 끝나는 날자를 찾는다 
+    if(latestDate == null || emf.isAfter(latestDate)) {
+      latestDate = emf;
+    }
+
 
 
     const id = element.roomGradeNo;
@@ -453,7 +480,13 @@ function toChartData(dataList) {
       })
 
       eventObjList.push(eventObj)
+
+
+
     }
+
+
+
 
 
     list.push({
@@ -485,7 +518,11 @@ function toChartData(dataList) {
   let data = {
     list: list,
     range: rangeObj,
-    totalReport: totalCount
+    totalReport: totalCount,
+    stObj:{
+      sDate :earliestDate,
+      eDate : latestDate,
+    }
   }
 
   return data;
@@ -508,6 +545,8 @@ function toRoomData(record) {
 
 function doHttpGet(uri, params, fn) {
 
+  console.log("call http request now")
+
 
   let query = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
   //    let url = '/ajax/api/tableDataList?' + query;
@@ -524,7 +563,7 @@ function doHttpGet(uri, params, fn) {
     .then(res => {
       return res.json()
     }).then((resMessage) => {
-      let data = resMessage.data.dataList;
+      let data = resMessage.data;
       //         eventDispacher({type:"OnLoadCompletedResList",dataList:data})
       fn(data)
     }).catch(e => {
@@ -549,22 +588,41 @@ export const ServerEventContext = createContext()
 
 const _Right_Popup_fArray = [
   { text: "상세보기", data: { popupView: "1-1" } },
-  { text: "객실이동", data: { popupView: "1-2" } },
-  { text: "기간연장", data: { popupView: "1-3" } },
-  { text: "퇴실확정", data: { popupView: "1-4" } },
-  { text: "계약일수정", data: { popupView: "1-5" } },
+  { text: "객실이동", data: { popupView: "1-2",title:"객실이동" } },
+  { text: "기간연장", data: { popupView: "1-3",title:"기간연장" } },
+  { text: "퇴실확정", data: { popupView: "1-4",title:"퇴실확정" } },
+  { text: "계약일수정", data: { popupView: "1-5",title:"계약일수정" } },
 ];
 
 const _Right_Popup_sArray = [
-  { text: "결제내역", data: { popupView: "2-1" } },
-  { text: "잠감결제", data: { popupView: "2-2" } },
+  { text: "결제내역", data: { popupView: "2-1",title:"결제내역" } },
+  { text: "잔금결제", data: { popupView: "2-2",title:"잔금결제" } },
 ];
 
 const _Right_Popup_tArray = [
-  { text: "환불", data: { popupView: "3-1" } },
-  { text: "에약삭제", data: { popupView: "3-2" } },
+  { text: "환불", data: { popupView: "3-1",title:"환불" } },
+  { text: "에약삭제", data: { popupView: "3-2",title:"에약삭제" } },
 ];
 
+
+
+function roomGroupByGradeNo(roomList) {
+
+  let map  = {
+  }
+
+  for(let i = 0 ;i < roomList.length;i++) {
+    const roomInfo = roomList[i];
+    const gradeNo = roomInfo.gradeNo 
+    let sroomList = map[gradeNo]
+    if(sroomList === undefined) {
+      sroomList = []
+      map[gradeNo] = sroomList;
+    }
+    sroomList.push(roomInfo)
+  }
+  return map
+}
 
 
 const GlobalProps = {
@@ -576,5 +634,5 @@ const GlobalProps = {
 }
 
 export {
-  emitHttpEvent, toChartData, GlobalProps
+  emitHttpEvent, toChartData, GlobalProps,roomGroupByGradeNo
 }
