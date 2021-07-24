@@ -183,31 +183,31 @@ function validReportCounting(eventObj, ctimeFormatStr) {
 
 
 
-function wrapRangeObj(rangeObj, mom) {
+// function wrapRangeObj(rangeObj, mom) {
 
-  let year = mom.year();
-  let month = mom.month() + 1
+//   let year = mom.year();
+//   let month = mom.month() + 1
 
-  if (rangeObj[year] === undefined) {
+//   if (rangeObj[year] === undefined) {
 
-    let fmObj = {}
-    fmObj[month] = mom.format("YYYY-MM")
+//     let fmObj = {}
+//     fmObj[month] = mom.format("YYYY-MM")
 
-    rangeObj[year] = {
-      y: "" + year,
-      mObj: fmObj
-    }
-    return rangeObj;
+//     rangeObj[year] = {
+//       y: "" + year,
+//       mObj: fmObj
+//     }
+//     return rangeObj;
 
-  } else {
-    let fmObj = rangeObj[year].mObj
-    let m = fmObj[month]
-    if (m === undefined) {
-      fmObj[month] = mom.format("YYYY-MM")
-    }
-    return rangeObj
-  }
-}
+//   } else {
+//     let fmObj = rangeObj[year].mObj
+//     let m = fmObj[month]
+//     if (m === undefined) {
+//       fmObj[month] = mom.format("YYYY-MM")
+//     }
+//     return rangeObj
+//   }
+// }
 
 /**
  * 
@@ -272,13 +272,6 @@ function rebuildEventObj(eventObj) {
   }
   return eventObj;
 }
-
-
-
-// function buildStartAndEnd(start,from,eventObj) {
-
-
-// }
 
 
 function newBabyCounter() {
@@ -358,25 +351,15 @@ function toChartData(dataList) {
 
 
   let roomDataMap = {}
-  let rangeObj = {}
+//  let rangeObj = {}
 
   let earliestDate = null;
   let latestDate = null;
 
   dataList.forEach(element => {
 
-
-    // if (element.no === 445) { //테스트환경의 이상한데이터 이 부분은 디비에서 지우기로한다 
-    //   //잠시 테스트를 위해 추가한 부분 
-    //   return
-    // }
-
-
     let fmf = moment(element.fromDate)
     let emf = moment(element.toDate);
-    rangeObj = wrapRangeObj(rangeObj, fmf)
-    rangeObj = wrapRangeObj(rangeObj, emf)
-
 
     //---------------------------- 최초 와 최후의 날짜를 찾아서 그리드에서 앞으로 6일 뒤로 6일로 해서 여백을 최소화하는데 사용
     //맨 처음시작되는 날짜를 찾는다 
@@ -388,8 +371,6 @@ function toChartData(dataList) {
     if(latestDate == null || emf.isAfter(latestDate)) {
       latestDate = emf;
     }
-
-
 
     const id = element.roomGradeNo;
     const roomGradeTotalObj = totalCount["room-grade-" + id]
@@ -421,24 +402,15 @@ function toChartData(dataList) {
 
 
 
-  //from 필드로 sorting 하여 빠른 from 날짜를 앞으로 이동시킨다 
-  Object.keys(rangeObj).sort((a, b) => {
-    return a - b
-  })
-
-  //console.log("RangeObj",rangeObj)
-  //end sorting 
-
-  const keys = Object.keys(roomDataMap)
-
   const list = [];
 
+  const keys = Object.keys(roomDataMap)
+  
   keys.forEach((e) => {
 
     let wrapper = roomDataMap[e];
     const colDataArray = wrapper.roomDataArray
     colDataArray.sort(colDataArraySort)
-
 
     let eventObjList = []
 
@@ -462,7 +434,7 @@ function toChartData(dataList) {
         roomGraceReport[eventObj.source.roomLevel] = roomReport;
       }
 
-      //      console.log("DateList",dateList)
+//           console.log("DateList",dateList)
       dateList.forEach((cDate) => {
 
         let babyReport = babyCounter(eventObj,cDate);
@@ -478,55 +450,136 @@ function toChartData(dataList) {
           roomReport.dataList[cDate] = countVal + 1;
         }
       })
-
       eventObjList.push(eventObj)
-
-
-
     }
 
+//    console.log(wrapper)
 
-
-
+    let roomNo = null;
+    if(wrapper.el !== null) {
+      roomNo = wrapper.el.room
+    }else{
+      console.log(wrapper)
+    }
 
     list.push({
-      key: e,
-      roomLevel: wrapper.el.roomLevel,
-      name: wrapper.el.rgName + "," + wrapper.el.roomName,
+      roomNo:roomNo,
+      // key: e,
+      // roomLevel: wrapper.el.roomLevel,
+      // name: wrapper.el.rgName + "," + wrapper.el.roomName,
       //      colDataArray: colDataArray,
       eventObjList: eventObjList,
     });
   })
 
 
-  list.sort(function (a, b) {
+  // list.sort(function (a, b) {
 
-    if (a.roomLevel === 1) {
-      return a.RoomLevel - b.RoomLevel
-    }
-    if (b.roomLevel === 1) {
-      return b.RoomLevel - a.RoomLevel
-    }
+  //   if (a.roomLevel === 1) {
+  //     return a.RoomLevel - b.RoomLevel
+  //   }
+  //   if (b.roomLevel === 1) {
+  //     return b.RoomLevel - a.RoomLevel
+  //   }
 
-    return ('' + a.name).localeCompare(b.name);
-  })
-
-
+  //   return ('' + a.name).localeCompare(b.name);
+  // })
 
 
 
-  let data = {
+
+
+  return {
     list: list,
-    range: rangeObj,
+//    range: rangeObj,
     totalReport: totalCount,
     stObj:{
       sDate :earliestDate,
       eDate : latestDate,
     }
   }
-
-  return data;
 }
+
+
+function allOfBabyCountingVal() {
+
+
+  let babyCounter = newBabyCounter()
+  let _babyTotalCount = null;
+
+  return function(cDate,eventObj) {
+
+    let babyReport = babyCounter(eventObj,cDate);
+    _babyTotalCount = babyReport;
+    return _babyTotalCount;
+  }
+}
+
+
+function allOfRoomCountingVal() {
+
+  let roomGraceReport ={}
+
+
+  return function(cDate,eventObj) {
+
+    let roomReport = roomGraceReport[eventObj.source.roomLevel]
+    if (roomReport === undefined) {
+      roomReport = {
+        name: eventObj.source.rgName,
+        dataList: {}
+      }
+      roomGraceReport[eventObj.source.roomLevel] = roomReport;
+    }
+
+    let countVal = roomReport.dataList[cDate];
+    if (countVal === undefined) {
+      countVal = 0;  //0으로 초기화 밑에서 체크기준에 따라 추가 
+      roomReport.dataList[cDate] = countVal;
+    }
+
+    if (validReportCounting(eventObj, cDate)) {
+      roomReport.dataList[cDate] = countVal + 1;
+    }
+    return roomGraceReport;
+  }
+}
+
+
+// const groupBy = function(xs, key) {
+//   return xs.reduce(function(rv, x) {
+//     (rv[x[key]] = rv[x[key]] || []).push(x);
+//     return rv;
+//   }, {});
+// };
+
+function buildReportDataList(eventObjList,roomList) {
+
+  let totalCount = {};
+
+  const babyCouter = allOfBabyCountingVal();
+  const roomReportingCounter = allOfRoomCountingVal();
+
+  eventObjList.forEach((e)=>{
+
+//    let roomNo = e.roomNo;
+    let eventObjectList = e.eventObjList
+
+    eventObjectList.forEach((eventObj)=>{
+
+      let dateList = rangeOfDates(eventObj.from, eventObj.lastTo)
+
+      dateList.forEach((cDate) => {
+        totalCount["baby"] = babyCouter(cDate,eventObj);
+        totalCount["roomGrade"] = roomReportingCounter(cDate,eventObj);
+      })
+    })
+  })
+
+
+  return totalCount
+}
+
 
 function newRoomNo(record) {
   return record.rgName + "-" + record.room;
@@ -543,14 +596,23 @@ function toRoomData(record) {
 
 
 
-function doHttpGet(uri, params, fn) {
+function toUrl(uri,params) {
 
-  console.log("call http request now")
-
+  if(params === null) {
+    return uri;
+  }
 
   let query = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
   //    let url = '/ajax/api/tableDataList?' + query;
-  let url = uri + "?" + query;
+  return uri + "?" + query;
+
+}
+
+function doHttpGet(uri, params, fn) {
+
+//  console.log("call http request now")
+
+  const url = toUrl(uri,params)
 
   fetch(url, {
     method: 'GET',
@@ -577,7 +639,14 @@ function emitHttpEvent(event) {
 
   if (event.type === "FetchTableDataList") {
     doHttpGet("/ajax/api/tableDataList", event.params, event.resultHandler)
+    return
   }
+
+  if (event.type === "FetchRoomList") {
+    doHttpGet("/ajax/api/roomList", null, event.resultHandler)
+    return 
+  }
+
 }
 
 
@@ -606,23 +675,23 @@ const _Right_Popup_tArray = [
 
 
 
-function roomGroupByGradeNo(roomList) {
+// function roomGroupByGradeNo(roomList) {
 
-  let map  = {
-  }
+//   let map  = {
+//   }
 
-  for(let i = 0 ;i < roomList.length;i++) {
-    const roomInfo = roomList[i];
-    const gradeNo = roomInfo.gradeNo 
-    let sroomList = map[gradeNo]
-    if(sroomList === undefined) {
-      sroomList = []
-      map[gradeNo] = sroomList;
-    }
-    sroomList.push(roomInfo)
-  }
-  return map
-}
+//   for(let i = 0 ;i < roomList.length;i++) {
+//     const roomInfo = roomList[i];
+//     const gradeNo = roomInfo.gradeNo 
+//     let sroomList = map[gradeNo]
+//     if(sroomList === undefined) {
+//       sroomList = []
+//       map[gradeNo] = sroomList;
+//     }
+//     sroomList.push(roomInfo)
+//   }
+//   return map
+// }
 
 
 const GlobalProps = {
@@ -634,5 +703,5 @@ const GlobalProps = {
 }
 
 export {
-  emitHttpEvent, toChartData, GlobalProps,roomGroupByGradeNo
+  emitHttpEvent, toChartData, GlobalProps,buildReportDataList
 }

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Table, Button, Popover } from "antd";
 
 import Moment from "moment";
@@ -16,7 +16,7 @@ import {
   DelteReservationForm,
 } from "./chart_view_modal";
 import { PopupView } from "../components/popup";
-import { GantchartContext, toChartData } from "./chart_view_context";
+import { GantchartContext, toChartData,emitHttpEvent,buildReportDataList } from "./chart_view_context";
 
 const moment = extendMoment(Moment);
 
@@ -312,13 +312,10 @@ function tableColumnRender(record, currentDayFormate) {
     if (lastTime.isSame(currentDay)) {
       let mergeCount = calcuRangeDays(currentEventObj);
       if (currentEventObj.isTouch) {
-        //next 에는 포함이되여있지 않고 하지만 다음에 오는것이 접전이라면
+        //next 에는 포함이되여있지않고 하지만 다음에 오는것이 접전이라면
         //merge 를 그전칸으로 쫇힌다
         mergeCount = mergeCount - 0.01;
       }
-      //  if(currentEventObj.name === "조수진") {
-      //   console.log("jinxiuzhen",currentDay,currentEventObj,mergeCount)
-      // }
 
       if (currentEventObj.subList.length >= 1) {
         return {
@@ -395,9 +392,9 @@ function DefaultSchedulerLine(props) {
   );
 }
 
-function newColumnRender(sdate, start,end) {
+function newColumnRender(sdate, start, end) {
   let mo = moment(sdate);
-//  let mLen = mo.daysInMonth(); //특정 달에서 가지고 있는 날짜 수량 30， 31, 28 등으로 표현
+  //  let mLen = mo.daysInMonth(); //특정 달에서 가지고 있는 날짜 수량 30， 31, 28 등으로 표현
   let fMonthData = [];
 
   for (let i = start; i <= end; i++) {
@@ -441,27 +438,43 @@ function calcuRangeDays(currentObj) {
   return lTime.diff(fTime, "days") + 1;
 }
 
-function newColumnHeader(searchRange, stObj) {
+function newColumnHeader(stObj) {
   //  console.log("SRamge",searchRange)
 
-  const sDate = stObj.sDate.subtract(7, 'days');
-  const eDate = stObj.eDate.add(7,"days");
+  const sDate = stObj.sDate.subtract(7, "days");
+  const eDate = stObj.eDate.add(7, "days");
+
+  let dateStart = sDate.clone();
+  let dateEnd = eDate.clone();
 
 
-  var dateStart = sDate.clone()
-  var dateEnd = eDate.clone();
-  var timeValues = [];
-  
-  while (dateEnd > dateStart || dateStart.format('M') === dateEnd.format('M')) {
-     timeValues.push(dateStart.format('YYYY-MM'));
-     dateStart.add(1,'month');
+
+  let yearObj = {};
+  yearObj[dateStart.year()] = [];
+
+  while (dateEnd > dateStart || dateStart.format("M") === dateEnd.format("M")) {
+
+    let curYearOfMonth = yearObj[dateStart.year()];
+
+    if (curYearOfMonth === undefined) {
+      //새로운 년도로 넘어가면 값이없을거며 새로 추가해줘야한다
+      curYearOfMonth = [];
+      let newYear = dateStart.year();
+      yearObj[newYear] = curYearOfMonth;
+    }
+
+    //     timeValues.push(dateStart.format('YYYY-MM'));
+    curYearOfMonth.push({
+      mKey: dateStart.format("M"),
+      mObj: dateStart.format("YYYY-MM"),
+    });
+    dateStart.add(1, "month");
   }
 
-  console.log("Range Month",timeValues)
+//  console.log("Range Month", yearObj);
 
-
-  const sDateStr = sDate.format("YYYY-MM")
-  const eDateStr = eDate.format("YYYY-MM")
+  const sDateStr = sDate.format("YYYY-MM");
+  const eDateStr = eDate.format("YYYY-MM");
 
   let columns = [
     {
@@ -475,36 +488,38 @@ function newColumnHeader(searchRange, stObj) {
 
   let ykey = "";
 
-  for (const key in searchRange) {
+  for (const key in yearObj) {
     let childrenCompos = [];
 
     ykey = ykey + key + "~";
 
-    let value = searchRange[key];
-    const monthObj = value.mObj;
+    let value = yearObj[key];
+    //    const monthObj = value.mObj;
 
-    for (const mkey in monthObj) {
-
-      let mvalue = monthObj[mkey];
+    //    for (const mkey in monthObj) {
+    for (let i = 0; i < value.length; i++) {
+      const monthObj = value[i];
+      const mkey = monthObj.mKey;
+      const mvalue = monthObj.mObj;
 
       let startIndex = 1;
-      let endIndex = moment(mvalue).daysInMonth()
+      let endIndex = moment(mvalue).daysInMonth();
 
-      if(mvalue === sDateStr) {
-        startIndex = sDate.date()
-        endIndex = sDate.daysInMonth()
+      if (mvalue === sDateStr) {
+        startIndex = sDate.date();
+        endIndex = sDate.daysInMonth();
       }
 
-      if(mvalue === eDateStr) {
-        startIndex = 1
-        endIndex = eDate.date()
+      if (mvalue === eDateStr) {
+        startIndex = 1;
+        endIndex = eDate.date();
       }
 
       let el = {
-        title: key + "-" + mkey,
+        title: key + "-"+mkey,
         key: mvalue,
         // dataIndex:"colDataArray",
-        children: newColumnRender(mvalue,startIndex,endIndex),
+        children: newColumnRender(mvalue, startIndex, endIndex),
       };
       childrenCompos.push(el);
     }
@@ -527,24 +542,103 @@ function newViewEventObserver(listener) {
   };
 }
 
-function ChartTableView(props) {
+
+//톨계데이터를 room별로 바꾸는 함수 
+function buildTableDataList(roomList,eventObjList) {
 
 
-  if(props.dataList.length <1) {
-    return <div> no have data</div>
+  const groupBy = function(xs, key) {
+    return xs.reduce(function(rv, x) {
+      (rv[x[key]] = rv[x[key]] || []).push(x);
+      return rv;
+    }, {});
+  };
+
+
+  const roomLevelGroup = groupBy(roomList,"level")
+  console.log("RoomGroup",roomLevelGroup)
+
+  roomList.sort(function (a, b) {
+
+    if (a.level === 1) {
+      return a.level - b.level
+    }
+    if (b.level === 1) {
+      return b.level - a.level
+    }
+
+    return ('' + a.name).localeCompare(b.name);
+  })
+
+
+  let eList = [];
+
+  const selector = (roomNo) => {
+
+    for(let i=0;i<eventObjList.length;i++) {
+      const eventObjWrapper = eventObjList[i];
+//      console.log("Eventwrapper",eventObjWrapper)
+      if(eventObjWrapper.roomNo === roomNo) {
+        return eventObjWrapper
+      }
+    }
+    return null;
   }
 
+
+  for(let i=0;i<roomList.length;i++) {
+    let room = roomList[i];
+    let eventObjWarraper = selector(room.no)
+
+    const key = room.gradeName + "-" + room.name
+    const columnName = room.gradeName + "," + room.name
+    const eventList = eventObjWarraper == null ? [] : eventObjWarraper.eventObjList
+
+
+    eList.push({
+      key: key,
+      name: columnName,
+      roomLevel: room.level,
+      eventObjList: eventList,
+    })
+
+  }
+  return eList;
+}
+
+function ChartTableView(props) {
+
+  let [roomList,updateRoomList] = useState([])
+
+
+  useEffect(()=>{
+
+    if(roomList.length < 1) {
+      emitHttpEvent({
+        type:"FetchRoomList",
+        resultHandler:function(e) {
+          console.log("RoomList",e)
+          updateRoomList(e.dataList)
+        }
+      })
+    }
+  },[roomList])
+
+
+  if (props.dataList.length < 1 || roomList.length < 1) {
+    return (<div><span>loading.......</span></div>)
+  }
+
+ 
   let chartData = toChartData(props.dataList);
 
-  let data = chartData.list;
-  let searchRange = chartData.range;
+  let data = buildTableDataList(roomList,chartData.list);
+  let columns = newColumnHeader(chartData.stObj);
 
-  let columns = newColumnHeader(searchRange, chartData.stObj);
+  let totalReportMap = buildReportDataList(chartData.list,roomList)//chartData["totalReport"];
 
-  let totlaReportMap = chartData["totalReport"];
-
-  let babyReport = totlaReportMap["baby"];
-  let roomGradeReport = totlaReportMap["roomGrade"];
+  let babyReport = totalReportMap["baby"];
+  let roomGradeReport = totalReportMap["roomGrade"];
 
   Object.keys(roomGradeReport)
     .reverse()
@@ -590,6 +684,7 @@ function ChartTableView(props) {
 }
 
 function newInPopupView(listeners) {
+
   const defaultObj = { pageIndex: "0-0", title: "Basic Modal" };
 
   return function (props) {

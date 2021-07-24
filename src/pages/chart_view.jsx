@@ -1,4 +1,4 @@
-import React, { useState,useEffect,useMemo } from "react";
+import React, { useState,useEffect } from "react";
 
 import {
     Button,
@@ -142,7 +142,7 @@ import {
   
       function searchReservations(event){
 
-          console.log("search value",textVal,dateRangeVals)
+//          console.log("search value",textVal,dateRangeVals)
   
           let params = {}
   

@@ -6,37 +6,23 @@ module.exports = function (app) {
     {
       target: 'http://192.168.101.8:8080', changeOrigin: true,
       onProxyReq(proxyReq, req, res) {
-        proxyReq.setHeader('cookie', 'JSESSIONID=6008D8431605F79716D86147B276E4EA; shared_session_id=6008D8431605F79716D86147B276E4EA');
+        proxyReq.setHeader('cookie', 'JSESSIONID=996846B41EB30B7C7992F2C8C6D12769; shared_session_id=996846B41EB30B7C7992F2C8C6D12769');
       }
       // pathRewrite: {
       //   '^/ajax': '' // URL ^/api -> 공백 변경
       // }
     },
-    '/resources',
-    {
-      target: 'http://192.168.101.8:8080', changeOrigin: true,
-      onProxyReq(proxyReq, req, res) {
-        proxyReq.setHeader('cookie', 'JSESSIONID=6008D8431605F79716D86147B276E4EA; shared_session_id=6008D8431605F79716D86147B276E4EA');
-      }
-    },
-    '/static',
-    {
-      target: 'http://192.168.101.8:8080', changeOrigin: true,
-      onProxyReq(proxyReq, req, res) {
-        proxyReq.setHeader('cookie', 'JSESSIONID=6008D8431605F79716D86147B276E4EA; shared_session_id=6008D8431605F79716D86147B276E4EA');
-      }
-    },
-    '/css',
-    {
-      target: 'http://192.168.101.8:8080', changeOrigin: true,
-      onProxyReq(proxyReq, req, res) {
-        proxyReq.setHeader('cookie', 'JSESSIONID=6008D8431605F79716D86147B276E4EA; shared_session_id=6008D8431605F79716D86147B276E4EA');
-      }
-    },
+    ))
 
-
-    ));
-
+    app.use(createProxyMiddleware(
+      '/resources',
+    {
+      target: 'http://testg.tosky.co.kr', changeOrigin: true,
+      onProxyReq(proxyReq, req, res) {
+        proxyReq.setHeader('Access-Control-Allow-Origin', 'true');
+      }      
+    }
+    ))
 };
 
 
