@@ -271,20 +271,20 @@ function SchedulerBarButton(props) {
 
 const _Right_Popup_fArray = [
   { text: "상세보기", data: { popupView: "1-1" } },
-  { text: "객실이동", data: { popupView: "1-2", title: "객실이동" } },
-  { text: "기간연장", data: { popupView: "1-3", title: "기간연장" } },
-  { text: "퇴실확정", data: { popupView: "1-4", title: "퇴실확정" } },
-  { text: "계약일수정", data: { popupView: "1-5", title: "계약일수정" } },
+  { text: "객실이동", data: { popupView: "1-2", title: "객실이동",size:{width:530,height:600} } },
+  { text: "기간연장", data: { popupView: "1-3", title: "기간연장",size:{width:610,height:600} } },
+  { text: "퇴실확정", data: { popupView: "1-4", title: "퇴실확정",size:{width:500,height:600} } },
+  { text: "계약일수정", data: { popupView: "1-5", title: "계약일수정",size:{width:500,height:600} } },
 ];
 
 const _Right_Popup_sArray = [
-  { text: "결제내역", data: { popupView: "2-1", title: "결제내역" } },
-  { text: "잔금결제", data: { popupView: "2-2", title: "잔금결제" } },
+  { text: "결제내역", data: { popupView: "2-1", title: "결제내역" ,size:{width:700,height:600}} },
+  { text: "잔금결제", data: { popupView: "2-2", title: "잔금결제" ,size:{width:700,height:600}} },
 ];
 
 const _Right_Popup_tArray = [
-  { text: "환불", data: { popupView: "3-1", title: "환불" } },
-  { text: "에약삭제", data: { popupView: "3-2", title: "에약삭제" } },
+  { text: "환불", data: { popupView: "3-1", title: "환불" ,size:{width:500,height:600}} },
+  { text: "에약삭제", data: { popupView: "3-2", title: "에약삭제" ,size:{width:500,height:600}} },
 ];
 
 const MouseRightMenuComp = newMouseRightMenu(
@@ -363,6 +363,11 @@ function newTotalFragment(record, date) {
   let dataOfMonth = colDataArray[date];
   //  console.log("date",dataOfMonth)
   if (dataOfMonth !== undefined) {
+
+    if(record["rtype"] !== undefined) { //report 타입이 룹을 카운팅할때 
+      dataOfMonth = record["roomSize"] - dataOfMonth      
+    }
+
     return (
       <div style={{ width: "100%" }}>
         <span>{dataOfMonth}</span>
@@ -546,18 +551,6 @@ function newViewEventObserver(listener) {
 //톨계데이터를 room별로 바꾸는 함수 
 function buildTableDataList(roomList,eventObjList) {
 
-
-  const groupBy = function(xs, key) {
-    return xs.reduce(function(rv, x) {
-      (rv[x[key]] = rv[x[key]] || []).push(x);
-      return rv;
-    }, {});
-  };
-
-
-  const roomLevelGroup = groupBy(roomList,"level")
-  console.log("RoomGroup",roomLevelGroup)
-
   roomList.sort(function (a, b) {
 
     if (a.level === 1) {
@@ -606,29 +599,20 @@ function buildTableDataList(roomList,eventObjList) {
   return eList;
 }
 
+
+const groupBy = function(xs, key) {
+  return xs.reduce(function(rv, x) {
+    (rv[x[key]] = rv[x[key]] || []).push(x);
+    return rv;
+  }, {});
+};
+
+
 function ChartTableView(props) {
 
-  let [roomList,updateRoomList] = useState([])
+ 
 
-
-  useEffect(()=>{
-
-    if(roomList.length < 1) {
-      emitHttpEvent({
-        type:"FetchRoomList",
-        resultHandler:function(e) {
-          console.log("RoomList",e)
-          updateRoomList(e.dataList)
-        }
-      })
-    }
-  },[roomList])
-
-
-  if (props.dataList.length < 1 || roomList.length < 1) {
-    return (<div><span>loading.......</span></div>)
-  }
-
+  const roomList = props.roomList;
  
   let chartData = toChartData(props.dataList);
 
@@ -640,12 +624,20 @@ function ChartTableView(props) {
   let babyReport = totalReportMap["baby"];
   let roomGradeReport = totalReportMap["roomGrade"];
 
+  const roomLevelGroup = groupBy(roomList,"level")
+//  console.log("RoomGroup",roomLevelGroup)
+
   Object.keys(roomGradeReport)
     .reverse()
     .forEach((key) => {
       let totalReport = roomGradeReport[key];
+      let groupLength = roomLevelGroup[key].length
+      console.log(key,"count",groupLength)
+
       data.unshift({
         key: "report",
+        rtype:"room",
+        roomSize:groupLength,
         name: totalReport.name,
         colDataArray: totalReport.dataList,
       });
@@ -685,7 +677,7 @@ function ChartTableView(props) {
 
 function newInPopupView(listeners) {
 
-  const defaultObj = { pageIndex: "0-0", title: "Basic Modal" };
+  const defaultObj = { pageIndex: "0-0", title: "Basic Modal",size:{width:700,height:500} };
 
   return function (props) {
     //parent 에서 공유 state 를 사용하면 팝업이뜰때마다 전체가 다시 랜들링이 되기때문에
@@ -698,7 +690,12 @@ function newInPopupView(listeners) {
           window.location.href = scheduleDetailURL(e.eventObj.no);
           return;
         } else {
-          setShowPopup({ pageIndex: e.data.popupView, title: e.data.title });
+          console.log("Event",e)
+          setShowPopup({ 
+            pageIndex: e.data.popupView, 
+            title: e.data.title,
+            eventObj:e.eventObj,
+            size:e.data.size });
           return;
         }
       }
@@ -709,65 +706,107 @@ function newInPopupView(listeners) {
       }
     });
 
+
+    const eventUpdate = function(sEvent) {
+
+      if(sEvent.type !== "Cancel" ) {
+        console.log("event",sEvent)
+//        emitHttpEvent(sEvent)
+      }
+      console.log("cancel popup")
+      setShowPopup(defaultObj);
+
+    }
+
+
     return (
       <PopupView
         title={showPopupState.title}
+        size={showPopupState.size}
         onOk={(e2) => {
           setShowPopup(defaultObj);
+
         }}
         visible={showPopupState.pageIndex !== defaultObj.pageIndex}
         handleCancel={(e) => {
           setShowPopup(defaultObj);
         }}
       >
-        <SubViewComponent pageIndex={showPopupState.pageIndex} />
+        <SubViewComponent 
+          pageIndex={showPopupState.pageIndex} 
+          eventObj={showPopupState.eventObj}
+          roomList={props.roomList}
+          dispach={eventUpdate}
+          />
       </PopupView>
     );
   };
 }
 
 function SubViewComponent(props) {
+
+//  console.log("Popup props:",props)
+
   if ("1-2" === props.pageIndex) {
-    return <MoveRoomForm></MoveRoomForm>;
+    const roomDataMap = groupBy(props.roomList,"level")
+    return <MoveRoomForm {...props} 
+      loadData={emitHttpEvent} 
+      roomMap={roomDataMap}
+      />
   }
 
   if ("1-3" === props.pageIndex) {
-    return <YenzangForm />;
+    return <YenzangForm {...props}/>;
   }
 
   if ("1-4" === props.pageIndex) {
-    return <ReversionCancelPopup></ReversionCancelPopup>;
+    return <ReversionCancelPopup {...props}/>
   }
 
   if ("1-5" === props.pageIndex) {
-    return <UpdateDueDateForm />;
+    return <UpdateDueDateForm  {...props}/>;
   }
 
   if ("2-1" === props.pageIndex) {
-    return <FinaceListView></FinaceListView>;
+    return <FinaceListView {...props} loadData={emitHttpEvent}/>
   }
   if ("2-2" === props.pageIndex) {
-    return <BalanceView></BalanceView>;
+    return <BalanceView {...props}/>
   }
 
   if ("3-1" === props.pageIndex) {
-    return <RefundForm></RefundForm>;
+    return <RefundForm {...props}/>
   }
 
   if ("3-2" === props.pageIndex) {
-    return <DelteReservationForm></DelteReservationForm>;
+    return <DelteReservationForm {...props}/>
   }
 
   return <ReversionCancelPopup />;
 }
 
 export default function GroupTable(props) {
-  // const chartData = useMemo(()=>{
-  //   console.log("update chartdata")
-  //   return toChartData(props.dataList)
-  // },[props.dataList])
 
-  //  let chartData = toChartData(props.dataList);
+  let [roomList,updateRoomList] = useState([])
+
+  useEffect(()=>{
+
+    if(roomList.length < 1) {
+      emitHttpEvent({
+        type:"FetchRoomList",
+        resultHandler:function(e) {
+//          console.log("RoomList",e)
+          updateRoomList(e.dataList)
+        }
+      })
+    }
+  },[roomList])
+
+
+  if (props.dataList.length < 1 || roomList.length < 1) {
+    return (<div><span>loading.......</span></div>)
+  }
+
 
   let groupState = {};
   let listeners = [];
@@ -796,9 +835,9 @@ export default function GroupTable(props) {
           pagination={false}
           size="middle"
         /> */}
-        <ChartTableView dataList={props.dataList} />
-        <InPopupView>
-          <SubViewComponent />
+        <ChartTableView dataList={props.dataList} roomList={roomList} />
+        <InPopupView roomList={roomList}>
+          <SubViewComponent/>
         </InPopupView>
       </div>
     </GantchartContext.Provider>

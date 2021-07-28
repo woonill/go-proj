@@ -22,29 +22,8 @@ import {
   const { RangePicker } = DatePicker;
 
   
-  // function isDebugger() {
-  //   return "dev" == process.env.NODE_ENV;
-  // }
-  
-  
-  
   
   function SearchConditionChoosherView(props) {
-
-
-
-    // let rangeView = (
-    //   <RangePicker
-    //     defaultValue={[startDate, endDate]}      
-    //     format={dateFormat}
-    //   //   value={hackValue || value}
-    //   //   disabledDate={disabledDate}
-    //      onCalendarChange={val => setDates(val)}
-    //   //   onChange={val => setValue(val)}
-    //   //   onOpenChange={onOpenChange}
-    //   />
-    // );
-
 
 
       let rangeView = (

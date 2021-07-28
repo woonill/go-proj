@@ -141,11 +141,6 @@ function inDurationVal2(from, to, cdate) {
 
 function isValidCountReport(eventObj, from, to, ctime) {
 
-  //  console.log(eventObj)
-  // return (inDurationVal2(from, to, ctime) 
-  //           && eventObj.source.isMove === 0 
-  //           && eventObj.source.last)
-
   return (inDurationVal2(from, to, ctime)   && eventObj.source.last)
 
 }
@@ -181,33 +176,6 @@ function validReportCounting(eventObj, ctimeFormatStr) {
   return false;
 }
 
-
-
-// function wrapRangeObj(rangeObj, mom) {
-
-//   let year = mom.year();
-//   let month = mom.month() + 1
-
-//   if (rangeObj[year] === undefined) {
-
-//     let fmObj = {}
-//     fmObj[month] = mom.format("YYYY-MM")
-
-//     rangeObj[year] = {
-//       y: "" + year,
-//       mObj: fmObj
-//     }
-//     return rangeObj;
-
-//   } else {
-//     let fmObj = rangeObj[year].mObj
-//     let m = fmObj[month]
-//     if (m === undefined) {
-//       fmObj[month] = mom.format("YYYY-MM")
-//     }
-//     return rangeObj
-//   }
-// }
 
 /**
  * 
@@ -340,14 +308,6 @@ function toChartData(dataList) {
   }
   */
 
-  let roomGraceReport ={}
-  let babyCounter = newBabyCounter()
-
-
-  let totalCount = {
-    "roomGrade":roomGraceReport,
-  };
-
 
 
   let roomDataMap = {}
@@ -372,18 +332,6 @@ function toChartData(dataList) {
       latestDate = emf;
     }
 
-    const id = element.roomGradeNo;
-    const roomGradeTotalObj = totalCount["room-grade-" + id]
-    if (roomGradeTotalObj !== undefined) { //골드 팬트하우스 빼고 다른방은 패스 
-
-      let dueDateObj = roomGradeTotalObj[element.dueDate]
-      if (dueDateObj !== undefined) {
-        dueDateObj = 0
-      }
-
-      dueDateObj = dueDateObj + 1;
-      roomGradeTotalObj[element.dueDate] = dueDateObj //count 를 하나추가하고 update 한다
-    }
 
     let roomKey = newRoomNo(element)
     let roomReport = roomDataMap[roomKey]
@@ -421,39 +369,8 @@ function toChartData(dataList) {
 
       let eventObj = eventObjWrapper.event;
       eventObj = rebuildEventObj(eventObj)
-
-
-      let dateList = rangeOfDates(eventObj.from, eventObj.lastTo)
-
-      let roomReport = roomGraceReport[eventObj.source.roomLevel]
-      if (roomReport === undefined) {
-        roomReport = {
-          name: eventObj.source.rgName,
-          dataList: {}
-        }
-        roomGraceReport[eventObj.source.roomLevel] = roomReport;
-      }
-
-//           console.log("DateList",dateList)
-      dateList.forEach((cDate) => {
-
-        let babyReport = babyCounter(eventObj,cDate);
-        totalCount["baby"] = babyReport;
-
-        let countVal = roomReport.dataList[cDate];
-        if (countVal === undefined) {
-          countVal = 0;  //0으로 초기화 밑에서 체크기준에 따라 추가 
-          roomReport.dataList[cDate] = countVal;
-        }
-
-        if (validReportCounting(eventObj, cDate)) {
-          roomReport.dataList[cDate] = countVal + 1;
-        }
-      })
       eventObjList.push(eventObj)
     }
-
-//    console.log(wrapper)
 
     let roomNo = null;
     if(wrapper.el !== null) {
@@ -464,35 +381,13 @@ function toChartData(dataList) {
 
     list.push({
       roomNo:roomNo,
-      // key: e,
-      // roomLevel: wrapper.el.roomLevel,
-      // name: wrapper.el.rgName + "," + wrapper.el.roomName,
-      //      colDataArray: colDataArray,
       eventObjList: eventObjList,
     });
   })
 
 
-  // list.sort(function (a, b) {
-
-  //   if (a.roomLevel === 1) {
-  //     return a.RoomLevel - b.RoomLevel
-  //   }
-  //   if (b.roomLevel === 1) {
-  //     return b.RoomLevel - a.RoomLevel
-  //   }
-
-  //   return ('' + a.name).localeCompare(b.name);
-  // })
-
-
-
-
-
   return {
     list: list,
-//    range: rangeObj,
-    totalReport: totalCount,
     stObj:{
       sDate :earliestDate,
       eDate : latestDate,
@@ -634,6 +529,37 @@ function doHttpGet(uri, params, fn) {
 
 }
 
+function doHttpPost(uri, params, fn) {
+
+  //  console.log("call http request now")
+  
+    let formData = new FormData()
+    Object.keys(params).forEach((k)=>{
+      formData.append(k,params[k])
+    })
+
+
+    fetch(uri, {
+      method: 'POST',
+      body:formData,
+      // headers: {
+      //   'Content-Type': 'application/json;charset=UTF-8'
+      // },
+      mode: 'cors',
+      cache: 'default'
+    })
+      .then(res => {
+        return res.json()
+      }).then((resMessage) => {
+        let data = resMessage.data;
+        //         eventDispacher({type:"OnLoadCompletedResList",dataList:data})
+        fn(data)
+      }).catch(e => {
+        console.log("error", e)
+      })
+  
+  }
+
 
 function emitHttpEvent(event) {
 
@@ -646,6 +572,21 @@ function emitHttpEvent(event) {
     doHttpGet("/ajax/api/roomList", null, event.resultHandler)
     return 
   }
+
+  if(event.type === "FetchPaymentHistorylist") {
+//    http://testg.tosky.co.kr/reservation/payment/list?reservation_no=7740&bno=3
+    doHttpGet("/reservation/payment/list",event.params,event.resultHandler)
+    return;
+  }
+
+
+  if (event.type === "PostChangeRoom") {
+    doHttpPost("/ajax/api/postChangeRoom",event.params,event.resultHandler)
+    return;
+
+  }
+
+
 
 }
 
@@ -672,26 +613,6 @@ const _Right_Popup_tArray = [
   { text: "환불", data: { popupView: "3-1",title:"환불" } },
   { text: "에약삭제", data: { popupView: "3-2",title:"에약삭제" } },
 ];
-
-
-
-// function roomGroupByGradeNo(roomList) {
-
-//   let map  = {
-//   }
-
-//   for(let i = 0 ;i < roomList.length;i++) {
-//     const roomInfo = roomList[i];
-//     const gradeNo = roomInfo.gradeNo 
-//     let sroomList = map[gradeNo]
-//     if(sroomList === undefined) {
-//       sroomList = []
-//       map[gradeNo] = sroomList;
-//     }
-//     sroomList.push(roomInfo)
-//   }
-//   return map
-// }
 
 
 const GlobalProps = {

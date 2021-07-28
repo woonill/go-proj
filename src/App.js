@@ -4,6 +4,7 @@ import ChartView from './pages/chart_view'
 import React, { useEffect,useState } from 'react';
 //import Icon from '@ant-design/icons';
 import ReactDOM from 'react-dom';
+import {IntlProvider} from 'react-intl'
 
 
 
@@ -113,10 +114,14 @@ function Header() {
 
 function App() {
   return (
-    <div className="App">
-      <Header></Header>
-      <ChartView></ChartView>
-    </div>
+    <IntlProvider locale='en'>
+
+      <div className="App">
+            <Header></Header>
+            <ChartView></ChartView>
+          </div>
+
+    </IntlProvider>
   );
 }
 
