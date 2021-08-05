@@ -27,12 +27,13 @@ function PopupViewWrapper(props) {
 
 function PopupView(props) {
 
-    console.log(props)
+//    console.log(props)
     return (
 
         <Modal
           width={props.size.width}
           heigt={props.size.heigt}
+          bodyStyle={{margin:0,padding:0}}
           title={props.title}
           visible={props.visible}
           onOk={props.handleCancel}
@@ -40,6 +41,7 @@ function PopupView(props) {
           okButtonProps={{ disabled: true,visible:false }}
           cancelButtonProps={{ disabled: true,visible:false }}
           footer={null}
+          destroyOnClose
         >
           {props.children}
         </Modal>

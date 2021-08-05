@@ -13,19 +13,22 @@ import {
   FinaceListView,
   BalanceView,
   RefundForm,
+  CancelContractForm,
+  ReservationConfirmForm,
   DelteReservationForm,
 } from "./chart_view_modal";
 import { PopupView } from "../components/popup";
-import { GantchartContext, toChartData,emitHttpEvent,buildReportDataList } from "./chart_view_context";
+import { GantchartContext, toChartData,buildReportDataList } from "./chart_view_context";
+import {ServerEventContext} from "../server_event_context.js"
 
 const moment = extendMoment(Moment);
 
 function RangeTimelineText(props) {
   let rtext = "(" + props.name + ")" + props.from + " ~ " + props.to + "";
-  rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 10);
+  rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 5);
   return (
     <div>
-      <p>{rtext}</p>
+      <span>{rtext}</span>
     </div>
   );
 }
@@ -94,6 +97,17 @@ function gridChartCompRender(eventObj, mergeCount) {
 
   let overrideTimeline = OverrideTimline(overTimeArray);
 
+  let fname = "";
+
+  overTimeArray.forEach((e,i)=>{
+
+    if(i>0) {
+      fname = fname+","
+    }
+    fname = fname+e.name
+  })
+
+
   return (
     <div
       style={{
@@ -155,7 +169,7 @@ function gridChartCompRender(eventObj, mergeCount) {
               borderStyle: "none",
             }}
           >
-            중첩 구간
+            <span>{fname}</span>
           </Button>
         </Popover>
       </div>
@@ -192,6 +206,86 @@ function gridChartCompRender(eventObj, mergeCount) {
   );
 }
 
+
+
+const MouseRightMenuFunc = function(){
+
+  const _Right_Popup_fArray = [
+    { text: "상세보기",key:"1", data: { popupView: "1-1" } },
+    { text: "객실이동",key:"2", data: { popupView: "1-2", title: "객실이동",size:{width:530,height:"auto"} } },
+    { text: "기간연장",key:"3", data: { popupView: "1-3", title: "기간연장",size:{width:610,height:"auto"} } },
+    { text: "퇴실확정",key:"4", data: { popupView: "1-4", title: "퇴실확정",size:{width:610,height:"auto"} } },
+    { text: "계약일수정",key:"5", data: { popupView: "1-5", title: "계약일수정",size:{width:530,height:"auto"} } },
+    { text: "입실확정",key:"6", data: { popupView: "1-6", title: "입실확정",size:{width:800,height:"auto"} } },    
+  ];
+  
+  const _Right_Popup_sArray = [
+    { key:"7",text: "결제내역", data: { popupView: "2-1", title: "결제내역" ,size:{width:800,height:"auto"}} },
+    { key:"8",text: "잔금결제", data: { popupView: "2-2", title: "잔금결제" ,size:{width:610,height:"auto"}} },
+  ];
+  
+  const _Right_Popup_tArray = [
+    { key:"9",text: "환불", data: { popupView: "3-1", title: "환불" ,size:{width:610,height:"auto"}} },
+    { key:"10",text: "예약삭제", data: { popupView: "3-2", title: "예약삭제" ,size:{width:610,height:"auto"}} },
+    { key:"11",text: "예약취소", data: { popupView: "3-3", title: "예약취소" ,size:{width:610,height:"auto"}} },
+    { key:"12",text: "계약포기", data: { popupView: "3-4", title: "계약포기" ,size:{width:530,height:"auto"}} },
+
+  ];
+
+
+  let fMouseArray = {f:["1","2","3","4","5"],s:["7","8"],t:["9","10"]};
+  let sMouseArray = {f:["1","5","6"],s:["7","8"],t:["11","12","10"]};
+  let tMouseArray = {f:["1","5"],s:["7","8"],t:["10"]}
+
+  const filterFunc = (tList) => {
+
+    return (e) => {
+      for(let i = 0;i<tList.length;i++) {
+        const fEle = tList[i];
+        if(fEle === e.key) {
+          return true;
+        }
+     }
+     return false;
+  
+    }
+  };
+
+  const fComp = newMouseRightMenu(
+      _Right_Popup_fArray.filter(filterFunc(fMouseArray.f)),
+      _Right_Popup_sArray.filter(filterFunc(fMouseArray.s)),
+      _Right_Popup_tArray.filter(filterFunc(fMouseArray.t))
+    );
+
+  const sComp = newMouseRightMenu(
+    _Right_Popup_fArray.filter(filterFunc(sMouseArray.f)),
+    _Right_Popup_sArray.filter(filterFunc(sMouseArray.s)),
+    _Right_Popup_tArray.filter(filterFunc(sMouseArray.t))
+  );
+
+  const tComp = newMouseRightMenu(
+    _Right_Popup_fArray.filter(filterFunc(tMouseArray.f)),
+    _Right_Popup_sArray.filter(filterFunc(tMouseArray.s)),
+    _Right_Popup_tArray.filter(filterFunc(tMouseArray.t))
+  );
+
+
+
+  return function(source) {
+
+    if(source.last && source.isMove === 1){
+      return tComp
+    }
+
+    if(source.inState === 0) {
+      return sComp
+    }
+
+//    console.log("source",source)
+    return fComp;
+  };
+}();
+  
 function SchedulerBarButton(props) {
   const { eventDispach } = useContext(GantchartContext);
 
@@ -242,6 +336,8 @@ function SchedulerBarButton(props) {
     }
   };
 
+  const MouseRightMenuComp = MouseRightMenuFunc(dataSource);
+
   return (
     <MouseRightMenuComp
       handleClick={(e, d) => {
@@ -269,29 +365,8 @@ function SchedulerBarButton(props) {
   );
 }
 
-const _Right_Popup_fArray = [
-  { text: "상세보기", data: { popupView: "1-1" } },
-  { text: "객실이동", data: { popupView: "1-2", title: "객실이동",size:{width:530,height:600} } },
-  { text: "기간연장", data: { popupView: "1-3", title: "기간연장",size:{width:610,height:600} } },
-  { text: "퇴실확정", data: { popupView: "1-4", title: "퇴실확정",size:{width:500,height:600} } },
-  { text: "계약일수정", data: { popupView: "1-5", title: "계약일수정",size:{width:500,height:600} } },
-];
 
-const _Right_Popup_sArray = [
-  { text: "결제내역", data: { popupView: "2-1", title: "결제내역" ,size:{width:700,height:600}} },
-  { text: "잔금결제", data: { popupView: "2-2", title: "잔금결제" ,size:{width:700,height:600}} },
-];
 
-const _Right_Popup_tArray = [
-  { text: "환불", data: { popupView: "3-1", title: "환불" ,size:{width:500,height:600}} },
-  { text: "에약삭제", data: { popupView: "3-2", title: "에약삭제" ,size:{width:500,height:600}} },
-];
-
-const MouseRightMenuComp = newMouseRightMenu(
-  _Right_Popup_fArray,
-  _Right_Popup_sArray,
-  _Right_Popup_tArray
-);
 
 function tableColumnRender(record, currentDayFormate) {
   let eventObjectList = record["eventObjList"];
@@ -365,6 +440,9 @@ function newTotalFragment(record, date) {
   if (dataOfMonth !== undefined) {
 
     if(record["rtype"] !== undefined) { //report 타입이 룹을 카운팅할때 
+      // if(record["roomSize"] === 2) {
+      //   console.log("total",record["roomSize"],dataOfMonth)
+      // }
       dataOfMonth = record["roomSize"] - dataOfMonth      
     }
 
@@ -415,7 +493,8 @@ function newColumnRender(sdate, start, end) {
       dataIndex: "eventObjList",
       key: sdate + "-" + i,
       render: function (text, record, index) {
-        if (record["key"] === "report") {
+//        if (record["key"] === "report") {
+        if(record["key"].startsWith("report")){
           return newTotalFragment(record, calDay.format("YYYY-MM-DD"));
         }
         return tableColumnRender(record, calDay.format("YYYY-MM-DD"));
@@ -607,6 +686,26 @@ const groupBy = function(xs, key) {
   }, {});
 };
 
+const roomLevelGroupBy = function(roomList) {
+//  console.log("RoomList",roomList)
+
+  let obj =  {}
+  for(let i = 0;i<roomList.length;i++) {
+    const room = roomList[i];
+    const key = room["gradeNo"]
+    let roomLevel = obj[key]
+    if(roomLevel === undefined) {
+      roomLevel = {
+        name:room["gradeName"],
+        roomList:[]
+      }
+      obj[key]  = roomLevel
+    }
+    roomLevel["roomList"].push(room)    
+  }
+  return obj;
+}
+
 
 function ChartTableView(props) {
 
@@ -629,13 +728,13 @@ function ChartTableView(props) {
 
   Object.keys(roomGradeReport)
     .reverse()
-    .forEach((key) => {
+    .forEach((key,i) => {
       let totalReport = roomGradeReport[key];
       let groupLength = roomLevelGroup[key].length
-      console.log(key,"count",groupLength)
+//      console.log(key,"count",groupLength)
 
       data.unshift({
-        key: "report",
+        key: "report"+i,
         rtype:"room",
         roomSize:groupLength,
         name: totalReport.name,
@@ -675,7 +774,7 @@ function ChartTableView(props) {
   return <TableComponent data={data} columns={columns} />;
 }
 
-function newInPopupView(listeners) {
+function newInPopupView(listeners,emitHttpEvent) {
 
   const defaultObj = { pageIndex: "0-0", title: "Basic Modal",size:{width:700,height:500} };
 
@@ -690,7 +789,8 @@ function newInPopupView(listeners) {
           window.location.href = scheduleDetailURL(e.eventObj.no);
           return;
         } else {
-          console.log("Event",e)
+
+//          console.log("Event",e)
           setShowPopup({ 
             pageIndex: e.data.popupView, 
             title: e.data.title,
@@ -711,13 +811,15 @@ function newInPopupView(listeners) {
 
       if(sEvent.type !== "Cancel" ) {
         console.log("event",sEvent)
-//        emitHttpEvent(sEvent)
+        emitHttpEvent(sEvent)
       }
       console.log("cancel popup")
       setShowPopup(defaultObj);
 
     }
 
+//    const roomDataMap = groupBy(props.roomList,"level")
+    const roomDataMap = roomLevelGroupBy(props.roomList)
 
     return (
       <PopupView
@@ -737,6 +839,8 @@ function newInPopupView(listeners) {
           eventObj={showPopupState.eventObj}
           roomList={props.roomList}
           dispach={eventUpdate}
+          loadData={emitHttpEvent}
+          roomMap={roomDataMap}
           />
       </PopupView>
     );
@@ -748,10 +852,9 @@ function SubViewComponent(props) {
 //  console.log("Popup props:",props)
 
   if ("1-2" === props.pageIndex) {
-    const roomDataMap = groupBy(props.roomList,"level")
     return <MoveRoomForm {...props} 
-      loadData={emitHttpEvent} 
-      roomMap={roomDataMap}
+      // loadData={emitHttpEvent} 
+      // roomMap={roomDataMap}
       />
   }
 
@@ -767,32 +870,48 @@ function SubViewComponent(props) {
     return <UpdateDueDateForm  {...props}/>;
   }
 
+  if("1-6" === props.pageIndex) {
+    return <ReservationConfirmForm {...props}/>
+  }
+
   if ("2-1" === props.pageIndex) {
-    return <FinaceListView {...props} loadData={emitHttpEvent}/>
+    return <FinaceListView {...props} />
   }
   if ("2-2" === props.pageIndex) {
     return <BalanceView {...props}/>
   }
 
   if ("3-1" === props.pageIndex) {
-    return <RefundForm {...props}/>
+    return <RefundForm {...props} type={2}/>
+  }
+
+  if("3-3" === props.pageIndex) {
+    return <RefundForm {...props} type={3}/>
+
   }
 
   if ("3-2" === props.pageIndex) {
     return <DelteReservationForm {...props}/>
   }
 
-  return <ReversionCancelPopup />;
+  if("3-4" === props.pageIndex) {
+    return <CancelContractForm {...props}/>
+
+  }
+
+  return <ReversionCancelPopup {...props}/>;
 }
 
 export default function GroupTable(props) {
+
+  let {serverEventEmmiter} = useContext(ServerEventContext);
 
   let [roomList,updateRoomList] = useState([])
 
   useEffect(()=>{
 
     if(roomList.length < 1) {
-      emitHttpEvent({
+      serverEventEmmiter({
         type:"FetchRoomList",
         resultHandler:function(e) {
 //          console.log("RoomList",e)
@@ -800,7 +919,7 @@ export default function GroupTable(props) {
         }
       })
     }
-  },[roomList])
+  },[1])
 
 
   if (props.dataList.length < 1 || roomList.length < 1) {
@@ -820,7 +939,7 @@ export default function GroupTable(props) {
     }
   });
 
-  let InPopupView = newInPopupView(listeners);
+  let InPopupView = newInPopupView(listeners,serverEventEmmiter);
   let eventDispach = newViewEventObserver(listeners);
 
   return (

@@ -1,12 +1,31 @@
-import React, { useEffect, useState,Component } from "react";
-import { Select, DatePicker, Table, Input, Button, Radio, message } from "antd";
+import React, { useEffect, useState } from "react";
+import {
+  Select,
+  DatePicker,
+  Input,
+  InputNumber,
+  Button,
+  Radio,
+  message,
+} from "antd";
 import moment from "moment";
 import { FormattedNumber, createIntl } from "react-intl";
-import style from "./reservation_popup.module.scss";
+import { GlobalProps } from "./chart_view_context";
+//import style from "./reservation_popup.module.scss";
 import TextArea from "antd/lib/input/TextArea";
 const { Option } = Select;
 
 const { RangePicker } = DatePicker;
+
+const newDefaultItem = (index = 0) => {
+  return {
+    i: index,
+    type: 0,
+    amount: 0,
+    payMethod: GlobalProps.PayMethodList[0].type,
+    insertTime: moment(),
+  };
+};
 
 const intl = createIntl({
   locale: "KOR",
@@ -15,32 +34,114 @@ const intl = createIntl({
 
 const toRangeString = (event) => event.fromDate + " ~ " + event.toDate;
 
-function PaymentTypeSelectComp(props) {
-  return (
-    <Select showSearch style={{ width: "100px" }} defaultValue="0">
-      {moneyTypeList.map((me) => {
-        return <Option value={me.type}>{me.name}</Option>;
-      })}
-    </Select>
-  );
+function newCostEventObserver(itemList, fallback) {
+  const rfunc = fallback === undefined ? function (e, e2) {} : fallback;
+
+  return (e) => {
+    let isCall = true;
+    let obs = itemList[e.index];
+
+    if (e.type === "updateAmount") {
+      obs.amount = e.amount;
+    } else if (e.type === "updateInserttime") {
+      obs["insertTime"] = e.insertTime;
+    } else if (e.type === "updatePaymentMethod") {
+      obs["payMethod"] = e.payMethod;
+    } else {
+      isCall = false;
+    }
+
+    if (isCall) {
+      rfunc(obs, e);
+    }
+  };
 }
 
-function TextLineWrapper(props) {
+function newCostEventObserver2(itemList, itemListUpdate) {
+  return (e) => {
+    let isCall = true;
+    let obs = itemList[e.index];
+
+    if (e.type === "updateAmount") {
+      obs.amount = e.amount;
+    } else if (e.type === "updateInserttime") {
+      obs["insertTime"] = e.insertTime;
+    } else if (e.type === "updatePaymentMethod") {
+      obs["payMethod"] = e.payMethod;
+    } else {
+      isCall = false;
+    }
+
+    if (isCall) {
+      let newArr = [...itemList]; // copying the old datas array
+      itemList[e.index] = obs; // replace e.target.value with whatever you want to change it to
+      itemListUpdate(newArr);
+    }
+  };
+}
+
+function Container(props) {
   return (
-    <div className={style.TextLineWrapper}>
-      <div className={style.TextTitle}>{props.title}</div>
-      <div style={{ width: "10px" }} />
-      <div className={style.TextContent}>{props.content}</div>
+    <div
+      style={{
+        display: "flex",
+        flex: 1,
+        //      justifyContent: "end",
+        flexDirection: "column",
+        overflow: "scroll",
+      }}
+    >
+      {props.children}
     </div>
   );
 }
 
-function RowComp(props) {
+function PaymentTypeSelectComp(props) {
+  if (props.item.payType === undefined || props.item.payType === null) {
+    return null;
+  }
+
   return (
-    <div className={style.TextLineWrapper}>
-      <div className={style.TextTitle}>{props.title}</div>
-      <div style={{ width: "10px" }}></div>
-      <div className={style.TextContent}>{props.children}</div>
+    <div style={props.style}>
+      <Select
+        //    showSearch
+        //  style={{ width: "100px" }}
+        style={{ width: "100%" }}
+        defaultValue={props.item.payType.name}
+        onChange={props.onChange}
+      >
+        {GlobalProps.PayTypeList.map((me) => {
+          return (
+            <Option key={me.type} value={me.type}>
+              {me.name}
+            </Option>
+          );
+        })}
+      </Select>
+    </div>
+  );
+}
+
+function PaymentMethodSelectComp(props) {
+  const selectedVal = props.defaultVal === undefined ? 0 : props.defaultVal;
+
+  return (
+    <div style={props.style}>
+      <Select
+        showSearch
+        // style={{ width: "100px" }}
+        style={{ width: "100%" }}
+        defaultValue={selectedVal}
+        onChange={props.onChange}
+      >
+        {GlobalProps.PayMethodList.map((me) => {
+          return (
+            <Option key={me.type} value={me.type}>
+              {me.name}
+            </Option>
+          );
+        })}
+      </Select>
     </div>
   );
 }
@@ -49,31 +150,120 @@ function CSpace() {
   return <div style={{ width: "2px" }} />;
 }
 
-function HSpace() {
-  return <div style={{ height: "2px" }} />;
-}
-
-function ButtonGroupView(props) {
+function ActionButtonViewComp(props) {
   return (
-    <div className={style.ButtonGroups}>
-      {props.buttons.map((buttonProp, index) => {
-        return (
-          <>
-            {index > 0 ? <div style={{ width: "10px" }} /> : null}
-            <Button onClick={buttonProp.onClick}>{buttonProp.name}</Button>
-          </>
-        );
-      })}
+    <div>
+      <div style={{ height: "20px" }}></div>
+
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "row-reverse",
+          // justifyContent: "start",
+          //        alignItems:"stretch",
+          //      backgroundColor:"black"
+        }}
+      >
+        {props.buttons.map((buttonProp, index) => {
+          return (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                width: "80px",
+                //              flexDirection: "row-reverse",
+              }}
+            >
+              {index > 0 ? <div style={{ marginRight: "-2px" }} /> : null}
+              <Button onClick={buttonProp.onClick}>{buttonProp.name}</Button>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ height: "20px" }}></div>
     </div>
   );
 }
 
-function ActionButtonView(props) {
+const AddButtonView = (props) => {
+  if (props.index === props.total - 1) {
+    return <Button onClick={props.onClick}>+</Button>;
+  }
+  return null;
+};
+
+function CostItemComp(props) {
   return (
-    <div style={{ display: "flex", flex: 1, flexDirection: "row" }}>
-      <div style={{ display: "flex", flex: 1 }} />
-      <div style={{ display: "flex", flex: 1 }}>
-        <ButtonGroupView buttons={props.buttons} />
+    <div
+      style={{
+        display: "flex",
+        flex: 1,
+        //    backgroundColor:"black",
+        // flexDirection: "row",
+        // justifyContent:"space-between",
+        //    alignContent:"stretch"
+      }}
+    >
+      <PaymentTypeSelectComp
+        item={props.item}
+        style={{ width: "15%", padding: "10" }}
+      />
+      <CSpace />
+      <PaymentMethodSelectComp
+        style={{ width: "20%", padding: "10" }}
+        defaultVal={props.item.payMethod}
+        onChange={(e) => {
+          props.eObserver({
+            index: props.index,
+            type: "updatePaymentMethod",
+            payMethod: e.type,
+          });
+        }}
+      />
+      <CSpace />
+      <InputNumber
+        //        style={{ width: "120px" }}
+        style={{ width: "25%" }}
+        maxLength={20}
+        placeholder="금액"
+        formatter={(value) => intl.formatNumber(value)}
+        defaultValue={props.item.amount}
+        onChange={(e) => {
+          //          e.preventDefault();
+          // let textVal = e.target.value;
+          // if(textVal === null || textVal === undefined) {
+          //   return;
+          // }
+
+          props.eObserver({
+            index: props.index,
+            type: "updateAmount",
+            amount: parseInt(e),
+          });
+        }}
+      />
+      <CSpace />
+      <DatePicker
+        style={{ width: "25%" }}
+        value={props.item.insertTime}
+        format={"YYYY-MM-DD"}
+        onChange={(e) => {
+          props.eObserver({
+            index: props.index,
+            type: "updateInserttime",
+            insertTime: e,
+          });
+        }}
+      />
+      <CSpace />
+      <div>
+        <AddButtonView
+          index={props.index}
+          total={props.itemLen}
+          onClick={props.addOnClick}
+        />
+        <Button onClick={props.removeOnClick}>-</Button>
       </div>
     </div>
   );
@@ -85,7 +275,12 @@ function newCancelHandler(props) {
   };
 }
 
+const passtiveFunc = (e) => {};
+
 function TextAreaInput(props) {
+  const onChangeFunc =
+    props.onChange === undefined ? passtiveFunc : props.onChange;
+
   return (
     <div
       style={{
@@ -96,240 +291,198 @@ function TextAreaInput(props) {
       }}
     >
       <CSpace />
-      <TextArea rows={7} placeholder={"메모"} />
+      <TextArea rows={7} placeholder={"메모"} onChange={onChangeFunc} />
+    </div>
+  );
+}
+
+function getRoomListOf(roomMap, key) {
+  return roomMap[key].roomList;
+}
+
+function RoomLevelComp(props) {
+  const selectedVal = props.defaultVal === undefined ? 0 : props.defaultVal;
+  //  console.log("SelectValue",props.defaultVal,props.roomMap)
+
+  return (
+    <div className="field small select">
+      <Select
+        defaultValue={selectedVal}
+        //showSearch
+        style={{ width: "100%" }}
+        onChange={props.onChange}
+      >
+        {Object.keys(props.roomMap).map((key) => {
+          const name = props.roomMap[key].name;
+          return (
+            <Option key={key} value={key}>
+              {name}
+            </Option>
+          );
+        })}
+      </Select>
+    </div>
+  );
+}
+
+function RoomListComp(props) {
+  const selectedVal = props.defaultVal === undefined ? 0 : props.defaultVal;
+
+  return (
+    <div className="field small select">
+      <Select
+        defaultValue={selectedVal}
+        showSearch
+        style={{ width: "100%" }}
+        placeholder="객실"
+        onChange={props.onChange}
+      >
+        {props.roomList.map((e) => {
+          return (
+            <Option key={e.no} value={e.no}>
+              {e.name}
+            </Option>
+          );
+        })}
+      </Select>
     </div>
   );
 }
 
 //개실이동
+//complete 21.08.04 22:37
 function MoveRoomForm(props) {
+  //1,새로움직이는 방은 원래 데이터의 from ~ to 날짜 않에서만 이동가능하다
+
   const sourceObj = props.eventObj.source;
   //  console.log("SourceObj", sourceObj);
   const roomMap = props.roomMap;
-  //  console.log("roomMap",roomMap)
-  const [roomList, updateRoomList] = useState([]);
-  let selectedRoomNo = null;
-  let rangeDate;
+
+  const defaultRoomList = getRoomListOf(roomMap,sourceObj.roomGradeNo)
+  const defaultRoom = defaultRoomList.filter(newRoomFilter(sourceObj.room))[0]
+
+
+  let [inParam, updateObj] = useState({
+    roomGradeNo:sourceObj.roomGradeNo,
+    roomObj:defaultRoom,
+    roomList:defaultRoomList,
+    rangeDate: [moment(sourceObj.fromDate), moment(sourceObj.toDate)],
+  });
+
 
   const okHandler = (e) => {
-    if (selectedRoomNo == null) {
-      message.info("이동방 선택");
-      return;
+
+    // if (inParam.roomNo == null) {
+    //   message.info("이동방 선택");
+    //   return;
+    // }
+
+    // if (inParam.rangeDate == null) {
+    //   message.info("이동날짜 선택");
+    //   return;
+    // }
+
+    const currentRoomList = getRoomListOf(roomMap,inParam.roomGradeNo)
+    if(currentRoomList.filter((e)=>{
+        return e.no === inParam.roomObj.no
+    }).length < 1) {
+
+      message.info("룸과 레벨이 불일치")
+      return 
     }
 
-    if (rangeDate == null) {
-      message.info("이동날짜 선택");
-      return;
-    }
+
+    const rangeDate = inParam.rangeDate;
+
+    let param = {
+      reservation_no: sourceObj.no,
+      reservation_room_no: sourceObj.reserRoomNo,
+      room_no: sourceObj.room,
+      from_date: sourceObj.fromDate,
+      to_date: sourceObj.toDate,
+      t_room_no: inParam.roomNo,
+      t_from_date: rangeDate[0].format("YYYY-MM-DD"),
+      t_to_date: rangeDate[1].format("YYYY-MM-DD"),
+    };
+
+    // if (sourceObj.reserRoomNo > 0) {
+    //   param.reservation_room_no = sourceObj.reserRoomNo;
+    // }
 
     props.dispach({
       type: "PostChangeRoom",
-      params: {
-        reservation_no: sourceObj.no,
-        reservation_room_no: sourceObj.reservationRoom,
-        room_no: sourceObj.room,
-        from_date: sourceObj.fromDate,
-        to_date: sourceObj.toDate,
-        t_room_no: selectedRoomNo,
-        t_from_date: rangeDate[0].format("YYYY-MM-DD"),
-        t_to_date: rangeDate[1].format("YYYY-MM-DD"),
-      },
+      params: param,
     });
   };
 
   return (
     <div
       style={{
-        marginTop: "2px",
-        width: "550px",
-        // display: "flex",
-        // flex: 1,
-        //        flexDirection: "column",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          //          backgroundColor:"black"
-        }}
-      >
-        <HSpace />
-        <RowComp title="개실등급">
-          <Select
-            showSearch
-            style={{ width: 200 }}
-            // placeholder="개실등급"
-            //optionFilterProp="children"
-            onChange={(e) => {
-              updateRoomList(roomMap[e]);
-            }}
-          >
-            {Object.keys(roomMap).map((key) => {
-              return <Option value={key}>{key}</Option>;
-            })}
-          </Select>
-        </RowComp>
-
-        <HSpace />
-
-        <RowComp title="객실">
-          <Select
-            showSearch
-            style={{ width: 200 }}
-            placeholder="객실"
-            onChange={(v) => {
-              selectedRoomNo = v;
-            }}
-          >
-            {roomList.map((e) => {
-              return <Option value={e.no}>{e.name}</Option>;
-            })}
-          </Select>
-        </RowComp>
-
-        <HSpace />
-        <div style={{ display: "flex", flex: 1 }}>
-          <RowComp title="날짜">
-            <RangePicker
-              format="YYYY-MM-DD"
-              onCalendarChange={(val) => (rangeDate = val)}
-            />
-          </RowComp>
-        </div>
-      </div>
-      <HSpace />
-      <div style={{ display: "flex", flex: 1, flexDirection: "row" }}>
-        <div style={{ display: "flex", flex: 1 }} />
-        <div style={{ display: "flex", flex: 1 }}>
-          <ButtonGroupView
-            buttons={[
-              { name: "객실이동", onClick: okHandler },
-              { name: "취소", onClick: newCancelHandler(props) },
-            ]}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-//연장
-function YenzangForm(props) {
-  const source = props.eventObj.source;
-  const defaultRange = [moment(source.fromDate), moment(source.toDate)];
-  let [itemList, updateItems] = useState([]);
-
-  useEffect(() => {
-    updateItems([defaultItem]);
-
-    // return function () {
-    //   console.log("UseEffect clear");
-    // };
-  }, [props]);
-
-  const AddButtonView = (props) => {
-    if (props.index === itemList.length - 1) {
-      const sIndex = props.index + 1;
-      return (
-        <Button
-          onClick={(be) => {
-            updateItems([
-              ...itemList,
-              {
-                i: sIndex,
-                type: moneyTypeList[0],
-                amount: 0,
-              },
-            ]);
-          }}
-        >
-          +
-        </Button>
-      );
-    }
-    return null;
-  };
-
-  const okHandler = function (bEvent) {};
-
-  return (
-    <div
-      style={{
-        marginTop: "2px",
-        padding: "3px",
         display: "flex",
         flexDirection: "column",
-        overlfow: "scroll",
+        marginBottom: "20px",
       }}
     >
-      <div>
-        <RangePicker
-          format="YYYY-MM-DD"
-          defaultValue={defaultRange}
-          //      onChange={onChange}
-        />
-      </div>
-      <HSpace />
-      <Input
-        style={{ width: "100px" }}
-        placeholder="기존금액"
-        readOnly
-        value={"9,600,000원"}
-      />
-      <HSpace />
-      <div className={style.BalanceCostList}>
-        {itemList.map((e, index) => {
-          return (
-            <div style={{ display: "flex", flexDirection: "row" }}>
-              <PaymentTypeSelectComp />
-              <CSpace />
-              <Input
-                style={{ width: "100px" }}
-                maxLength={10}
-                placeholder="금액"
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">객실 등급</th>
+            <td>
+              <RoomLevelComp
+                roomMap={roomMap}
+                defaultVal={sourceObj.rgName}
+                onChange={(e) => {
+//                  updateRoomList(getRoomListOf(roomMap, e));
+                   updateObj({
+                    ...inParam,
+                    roomGradeNo: e,
+                    roomList: getRoomListOf(roomMap, e),
+                  });
+                }}
               />
-              <CSpace />
-              <DatePicker
-                defaultValue={moment("2021-01-01", "YYYY-MM-DD")}
-                format={"YYYY-MM-DD"}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">객실</th>
+            <td>
+              <RoomListComp
+                defaultVal={sourceObj.roomName}
+                roomList={inParam.roomList}
+                onChange={(v) => {
+                  let currentRoom = inParam.roomList.filter(newRoomFilter(v))[0]
+                  updateObj({
+                    ...inParam,
+                    roomNo: v,
+                    roomObj:currentRoom
+                  });
+                }}
               />
-              <CSpace />
-              <div style={{ display: "flex", flex: 1 }}>
-                <CSpace />
-                <AddButtonView show={index === e.i} index={index} />
-                <Button
-                  onClick={(be) => {
-                    if (itemList.length <= 1) {
-                      return;
-                    }
-                    updateItems(itemList.filter((item) => item.i !== index));
-                  }}
-                >
-                  -
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-
-        {/* <div
-          style={{
-            display: "flex",
-            flex: 1,
-            padding: "1px",
-            marginTop: "10px",
-          }}
-        >
-          <CSpace />
-          <TextArea rows={7} placeholder={"메모"} />
-        </div> */}
-        <TextAreaInput />
-      </div>
-      <HSpace />
-      <ActionButtonView
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">날짜</th>
+            <td>
+              <RangePicker
+                format="YYYY-MM-DD"
+                value={inParam.rangeDate}
+                onCalendarChange={(val) => {
+                  updateObj({
+                    ...inParam,
+                    rangeDate: val,
+                  });
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ActionButtonViewComp
         buttons={[
-          { name: "기간연장", onClick: okHandler },
+          { name: "객실이동", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
         ]}
       />
@@ -337,83 +490,186 @@ function YenzangForm(props) {
   );
 }
 
+//기간연장
+//complete 21.08.04 22:37
+function YenzangForm(props) {
+
+  const source = props.eventObj.source;
+  
+  let [sParam, updateParam] = useState({
+    memoStr: "",
+    itemList: [newDefaultItem()],
+    rangeDate: [moment(source.fromDate,), moment(source.toDate)],
+  });
+
+  let itemList = sParam.itemList;
+
+  const eObserver = newCostEventObserver2(sParam.itemList, function (dataList) {
+    updateParam({
+      ...sParam,
+      itemList: dataList,
+    });
+  });
+
+  const okHandler = function (bEvent) {
+    // console.log("Memo",sParam,sParam.rangeDate[0].format("YYYY-MM-DD"))
+    let param = {
+      reservation_no: source.no,
+      memo: sParam.memoStr,
+      from_date: sParam.rangeDate[0].format("YYYY-MM-DD"),
+      to_date: sParam.rangeDate[1].format("YYYY-MM-DD"),
+      pay_count: itemList.length,
+      real_money: source.realMoney,
+    };
+
+    itemList.forEach((e) => {
+      console.log("itemEelement", e);
+      const index = e.i;
+      param["pay_type_" + index] = GlobalProps.ExtendDateTypeCode.type;
+      param["inserttime_" + index] = e["insertTime"].format("YYYY-MM-DD");
+      param["pay_method_" + index] = e["payMethod"];
+      param["payment_" + index] = e["amount"];
+    });
+
+    props.dispach({
+      type: "ExtendReDates", //기간연장
+      params: param,
+    });
+  };
+
+  return (
+    <Container>
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">예약기간</th>
+            <td>
+              <RangePicker
+                format="YYYY-MM-DD"
+                value={sParam.rangeDate}
+                onCalendarChange={(e) => {
+                  sParam.rangeDate = e;
+                  updateParam({
+                    ...sParam,
+                    rangeDate: e,
+                  });
+                }}
+              />
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">기존 금액</th>
+            <td className="e_real_money">
+              {intl.formatNumber(source.realMoney)}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">추가금액</th>
+            <td>
+              {itemList.map((e, index) => {
+                return (
+                  <CostItemComp
+                    item={e}
+                    index={index}
+                    itemLen={itemList.length}
+                    eObserver={eObserver}
+                    addOnClick={(ae) => {
+                      const sIndex = index + 1;
+                      let newArray = [...sParam.itemList];
+                      newArray.push({
+                        i: sIndex,
+                        //                        type: moneyTypeList[0],
+                        payMethod: GlobalProps.PayMethodList[0].type,
+                        amount: 0,
+                        insertTime: moment(),
+                      });
+                      updateParam({
+                        ...sParam,
+                        itemList: newArray,
+                      });
+                    }}
+                    removeOnClick={(re) => {
+                      if (itemList.length <= 1) {
+                        return;
+                      }
+                      //updateItems(itemList.filter((item) => item.i !== index));
+                    }}
+                  />
+                );
+              })}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">메모</th>
+            <td>
+              <div className="field full">
+                <TextAreaInput
+                  onChange={(e) => {
+                    e.preventDefault();
+                    sParam.memoStr = e.target.value;
+                    updateParam({
+                      ...sParam,
+                      memoStr: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ActionButtonViewComp
+        buttons={[
+          { name: "기간연장", onClick: okHandler },
+          { name: "취소", onClick: newCancelHandler(props) },
+        ]}
+      />
+    </Container>
+  );
+}
+
 //퇴실확정
+//complete 21.08.04 22:37
 function ReversionCancelPopup(props) {
   const source = props.eventObj.source;
 
-  const okHandler = (e) => {};
+  const okHandler = (e) => {
+    ///reservation/confirmexit
+    const param = {
+      reservation_no: source.no,
+      name: source.name,
+    };
 
-  const dataList = [
-    {
-      name: "하유진",
-      value:toRangeString(source),
-    }
-  ];
+    // console.log("param", param);
+    props.dispach({
+      type: "CancelRoom",
+      params: param,
+    });
+  };
 
   return (
     <div>
       <table className="table-entry">
-          <colgroup>
-              <col width="120"/>
-              <col width="*"/>
-          </colgroup>
-          <tbody>
-
-          {dataList.map((e, index) => {
-            return (
-              <>
-                <tr>
-                  <th scope="row">{e.name}</th>
-                  <td id="name_d">하유진</td>
-                </tr>
-                <tr>
-                  <th scope="row">입실 기간</th>
-                  <td id="period_d">{e.value}</td>
-                </tr>
-              </>
-            )
-          })}
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">산모이름</th>
+            <td id="name_d">{source.name}</td>
+          </tr>
+          <tr>
+            <th scope="row">입실 기간</th>
+            <td id="period_d">{toRangeString(source)}</td>
+          </tr>
         </tbody>
       </table>
-      <HSpace />
-      <div className="ui-dialog-buttonpane right" >
-            <button className="btn-dialog-yes">
-                <i className="icon-dialog-yes"></i>
-                <span className="text">퇴실 확정</span>
-            </button>
-            <button  className="btn-dialog-no">
-                <i className="icon-dialog-no"></i>
-                <span className="text">취소</span>
-            </button>
-        </div>  
-      {/* <ActionButtonView
-        buttons={[
-          { name: "퇴실확정", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props) },
-        ]} */}
-    </div>
-  );
-}
-
-function ReversionCancelPopup_old(props) {
-  const source = props.eventObj.source;
-
-  const okHandler = (e) => {};
-
-  return (
-    <div
-      style={{
-        marginTop: "2px",
-        display: "flex",
-        justifyContent: "end",
-        flexDirection: "column",
-      }}
-    >
-      <TextLineWrapper title="산모이름" content={source.name} />
-      <HSpace />
-      <TextLineWrapper title="입실시간" content={toRangeString(source)} />
-      <HSpace />
-      <ActionButtonView
+      <ActionButtonViewComp
         buttons={[
           { name: "퇴실확정", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -424,32 +680,54 @@ function ReversionCancelPopup_old(props) {
 }
 
 //계약일자수정
+//complete 21.08.04 22:37
 function UpdateDueDateForm(props) {
-  const okHandler = (e) => {};
+  const source = props.eventObj.source;
+  //  console.log("ObjectSource",source)
+  let changeDate = moment(source.contractDate);
+
+  const okHandler = (e) => {
+    const param = {
+      reservation_no: props.eventObj.source.no,
+      contract_date: changeDate.format("YYYY-MM-DD"),
+    };
+
+    //    console.log("Change contract param", param);
+    props.dispach({
+      type: "UpdateContractDate",
+      params: param,
+    });
+  };
 
   return (
-    <div
-      style={{
-        marginTop: "2px",
-        display: "flex",
-        justifyContent: "end",
-        flexDirection: "column",
-      }}
-    >
-      <RowComp title="계약일">
-        <DatePicker
-          defaultValue={moment("2021-01-01", "YYYY-MM-DD")}
-          format={"YYYY-MM-DD"}
-        />
-      </RowComp>
-      <HSpace />
-      <ActionButtonView
+    <Container>
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">계약일</th>
+            <td>
+              <DatePicker
+                value={changeDate}
+                format={"YYYY-MM-DD"}
+                onChange={(e) => {
+                  changeDate = e;
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ActionButtonViewComp
         buttons={[
           { name: "수정", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
         ]}
       />
-    </div>
+    </Container>
   );
 }
 
@@ -462,223 +740,607 @@ function FinaceListView(props) {
       type: "FetchPaymentHistorylist",
       params: { reservation_no: props.eventObj.no, bno: 3 },
       resultHandler: function (data) {
-        console.log(data);
+        //        console.log(data);
         updatePaymentList(data.payment_history);
       },
     });
   }, [props]);
 
-  const columns = [
-    {
-      title: "결제종류",
-      dataIndex: "type",
-    },
-    {
-      title: "결제수단",
-      dataIndex: "method",
-      key: "phone",
-    },
-    {
-      title: "총금액",
-      dataIndex: "real_money",
-      key: "fdate",
-      render: (text, record, index) => {
-        const m = record["real_money"];
-        return <span>{intl.formatNumber(m)}원</span>;
-      },
-    },
-    {
-      title: "결제금액",
-      dataIndex: "payment",
-      render: (text, record, index) => {
-        const m = record["payment"];
-        return <span>{intl.formatNumber(m)}원</span>;
-      },
-    },
-
-    {
-      title: "잔금",
-      dataIndex: "days",
-      render: (text, record, index) => {
-        const m = record["real_money"] - record["payment"];
-        return <span>{intl.formatNumber(m)}원</span>;
-      },
-    },
-    {
-      title: "결제일",
-      dataIndex: "inserttime",
-      render: (text, record, index) => {
-        // console.log("inserttime", record["inserttime"]);
-        return <span>{moment(record["inserttime"]).format()}</span>;
-      },
-    },
-    {
-      title: "메모",
-      dataIndex: "memo",
-    },
-  ];
-
   return (
-    <>
-      <Table
-        //     style={{ height: "200px",overflow: "scroll", }}
-        height={200}
-        scroll={true}
-        columns={columns}
-        dataSource={paymentList}
-        pagination={false}
+    <Container>
+      <table className="normal-list">
+        <colgroup>
+          <col width="*" />
+          <col width="*" />
+          <col width="*" />
+          <col width="*" />
+          <col width="*" />
+          <col width="*" />
+          <col width="37.5%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">결제종류</th>
+            <th scope="col">결제수단</th>
+            <th scope="col">총금액</th>
+            <th scope="col">결제 금액</th>
+            <th scope="col">잔금</th>
+            <th scope="col">결제일</th>
+            <th scope="col">메모</th>
+          </tr>
+        </thead>
+        <tbody id="payment_history_list">
+          {paymentList.map((e, i) => {
+            const lastMoney = e["real_money"] - e["payment"];
+            let sTime = e["inserttime"] / 1000;
+            return (
+              <tr>
+                <td>{e.type}</td>
+                <td>[{e.method}]</td>
+                <td className="right">{intl.formatNumber(e["real_money"])}</td>
+                <td className="right">{intl.formatNumber(e["payment"])}</td>
+                <td className="right">{intl.formatNumber(lastMoney)}</td>
+                <td>{moment.unix(sTime).format("YYYY-MM-DD")}</td>
+                <td className="left">
+                  <span>{e.memo}</span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <ActionButtonViewComp
+        buttons={[{ name: "닫기", onClick: newCancelHandler(props) }]}
       />
-      <ActionButtonView
-        buttons={[{ name: "취소", onClick: newCancelHandler(props) }]}
-      />
-    </>
+    </Container>
   );
 }
 
-const moneyTypeList = [
-  { type: "0", name: "현금" },
-  { type: "1", name: "카드" },
-];
 
-const defaultItem = {
-  i: 0,
-  type: moneyTypeList[0],
-  amount: 0,
-};
+const newRoomFilter =(no) => {
+  return (e)=> {
+    return e.no === no
+  }
+} 
 
-//잔금결제
-function BalanceView(props) {
+//입실확정
+//complete 21.08.04 22:37
+function ReservationConfirmForm(props) {
   const sourceObj = props.eventObj.source;
 
-  //  let [update,updateList] = useState([defaultItem]);
-  let [itemList, updateItems] = useState([]);
+  const roomMap = props.roomMap;
 
-  //  console.log(itemList);
+  const defaultRoomList = getRoomListOf(roomMap, sourceObj.roomGradeNo);
+  const defaultRoom = defaultRoomList.filter((e) => {
+    return e.no === sourceObj.room;
+  })[0];
 
-  useEffect(() => {
-    updateItems([defaultItem]);
-    // return function(){
-    //   console.log("UseEffect clear")
-    // }
-  }, [props]);
+  const newItem = (index = 0, amount) => {
+    return {
+      ...newDefaultItem(),
+      i: index,
+      payType: GlobalProps.PayTypeList[0],
+      amount: amount,
+    };
+  };
 
-  const okHandler = function (bEvent) {};
+  const [inObj, updateObj] = useState({
+    // roomGrade: sourceObj.roomGradeNo,
+    // roomNo: sourceObj.room,
+    roomGradeNo:sourceObj.roomGradeNo,
+    roomObj: defaultRoom,
+    roomList: defaultRoomList,
+    itemList: [newItem(0, sourceObj.remainMoney)],
+    rangeDate: [moment(sourceObj.fromDate), moment(sourceObj.toDate)],
+    lastMoney: sourceObj.remainMoney,
+  });
 
-  const AddButtonView = (props) => {
-    if (props.index === itemList.length - 1) {
-      const sIndex = props.index + 1;
-      return (
-        <>
-          <Button
-            onClick={(be) => {
-              updateItems([
-                ...itemList,
-                {
-                  i: sIndex,
-                  type: moneyTypeList[0],
-                  amount: 0,
-                },
-              ]);
-            }}
-          >
-            +
-          </Button>
-          <CSpace />
-        </>
-      );
+  let itemList = inObj.itemList;
+
+  const calLastMoney = (itemList) => {
+    const calAmount = itemList.reduce((total, newEl) => {
+      return total + newEl.amount;
+    }, 0);
+
+    return sourceObj.remainMoney - calAmount;
+  };
+
+  const observer = newCostEventObserver2(itemList, function (dataList) {
+    updateObj({
+      ...inObj,
+      itemList: dataList,
+      lastMoney: calLastMoney(dataList),
+    });
+  });
+
+  const okHandler = (e) => {
+
+
+    const currentRoomList = getRoomListOf(roomMap,inObj.roomGradeNo)
+    if(currentRoomList.filter((e)=>{
+        return e.no === inObj.roomObj.no
+    }).length < 1) {
+
+      message.info("룸과 레벨이 불일치")
+      return 
     }
 
-    return null;
+    const param = {
+      reservation_no: sourceObj.no,
+      reservation_room_no: sourceObj.reserRoomNo,
+      from_date: inObj.rangeDate[0].formate("YYYY-MM-DD"),
+      to_date: inObj.rangeDate[1].formate("YYYY-MM-DD"),
+      pay_type: sourceObj.payType,
+      issetup: sourceObj.inState,
+      // t_room_no: inObj.roomNo,
+      // t_from_date: inObj.rangeDate[0].format("YYYY-MM-DD"),
+      // t_to_date: inObj.rangeDate[1].format("YYYY-MM-DD"),
+      room_no: inObj.roomObj.no,
+      room_grade_no:inObj.roomObj.gradeNo,
+      room_name:inObj.roomObj.name,
+      pay_count: itemList.length,
+      real_money: sourceObj.realMoney,
+      remain_money: sourceObj.remainMoney,
+    };
+
+    inObj.itemList.forEach((e) => {
+      const index = e.i;
+      param["pay_type_" + index] = sourceObj.payType;
+      param["inserttime_" + index] = e["insertTime"].format("YYYY-MM-DD");
+      param["pay_method_" + index] = e["payMethod"];
+      param["payment_" + index] = e["amount"];
+    });
+
+//    console.log("ConfirmCheckIn", param);
+
+    props.dispach({
+      type: "ConfirmCheckIn",
+      params: param,
+    });
   };
 
   return (
-    <div
-      style={{
-        marginTop: "2px",
-        display: "flex",
-        flex: 1,
-        justifyContent: "end",
-        //        alignItems: "stretch",
-        flexDirection: "column",
-        overflow: "scroll",
-      }}
-    >
-      <TextLineWrapper
-        title="총금액"
-        content={intl.formatNumber(sourceObj.realMoney)}
-      />
-      <HSpace />
-      <TextLineWrapper
-        title="잔금"
-        content={intl.formatNumber(sourceObj.remainMoney)}
-      />
-      <HSpace />
-      <div className={style.BalanceWrapper}>
-        <div className={style.BalanceTitle}>잔금 / 입금액</div>
-        <HSpace />
-        <div className={style.BalanceCostList}>
-          {itemList.map((e, index) => {
-            return (
-              <div
-                style={{
-                  display: "flex",
-                  flex: 1,
-                  flexDirection: "row",
-                  justifyContent: "space-between",
+    <Container>
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">객실 등급</th>
+            <td>
+              <RoomLevelComp
+                defaultVal={sourceObj.rgName}
+                roomMap={roomMap}
+                onChange={(e) => {
+                  updateObj({
+                    ...inObj,
+                    roomGradeNo: e,
+                    roomList: getRoomListOf(roomMap, e),
+                  });
+                  //                  updateRoomList(getRoomListOf(roomMap, e));
                 }}
-              >
-                <div style={{ display: "flex", flex: 1, flexDirection: "row" }}>
-                  {/* <div style={{ width: "2px" }}></div> */}
-                  <PaymentTypeSelectComp />
-                  <Input
-                    placeholder="0"
-                    style={{ width: "100px", marginLeft: "2px" }}
-                  />
-                  <div style={{ marginLeft: "2px", width: "100px" }}>
-                    <DatePicker
-                      defaultValue={moment("2021-01-01")}
-                      format={"YYYY-MM-DD"}
+              />
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">객실</th>
+            <td>
+              <RoomListComp
+                defaultVal={sourceObj.roomName}
+                roomList={inObj.roomList}
+                onChange={(v) => {
+
+                  let currentRoom = inObj.roomList.filter((e)=>{
+                    return e.no === v
+                  })[0]
+
+                  updateObj({
+                    ...inObj,
+                    roomNo: v,
+                    roomObj:currentRoom
+                  });
+                }}
+              />
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">예약기간</th>
+            <td>
+              <RangePicker
+                format="YYYY-MM-DD"
+                defaultValue={inObj.rangeDate}
+                onCalendarChange={(val) => {
+                  updateObj({
+                    ...inObj,
+                    rangeDate: val,
+                  });
+                }}
+              />
+            </td>
+          </tr>
+          {/* <tr className="pay_type_full" style={{display: "none;"}}>
+            <th scope="row">결제방법</th>
+            <td id="full_pay_type">완납</td>
+          </tr> */}
+          <tr className="pay_type_full" style={{ display: "none;" }}>
+            <th scope="row">총금액</th>
+            <td className="m_pretotal">
+              {intl.formatNumber(sourceObj.realMoney)}
+            </td>
+          </tr>
+          {/* <tr className="pay_type_deposit">
+            <th scope="row">총금액</th>
+            <td className="m_pretotal">6,300,000</td>
+          </tr> */}
+          <tr className="pay_type_deposit">
+            <th scope="row">잔금</th>
+            <td id="m_preremain">{intl.formatNumber(sourceObj.remainMoney)}</td>
+          </tr>
+          <tr className="pay_type_deposit">
+            <th scope="row">최종입금액</th>
+            <td>
+              {itemList.map((e, index) => {
+                return (
+                  <div style={{ display: "flex", flex: 1, padding: "2px" }}>
+                    <CostItemComp
+                      eObserver={observer}
+                      item={e}
+                      index={index}
+                      itemLen={itemList.length}
+                      addOnClick={(ae) => {
+                        const sIndex = index + 1;
+                        let newArray = [...itemList, newItem(sIndex)];
+                        updateObj({
+                          ...inObj,
+                          itemList: newArray,
+                        });
+                      }}
+                      removeOnClick={(re) => {
+                        if (itemList.length <= 1) {
+                          return;
+                        }
+                        const newItemArray = itemList.filter(
+                          (item) => item.i !== index
+                        );
+                        updateObj({
+                          ...inObj,
+                          itemList: newItemArray,
+                        });
+                      }}
                     />
                   </div>
-                </div>
-                <div style={{ display: "flex", flex: 1 }}>
-                  <CSpace />
-                  <AddButtonView show={index === e.i} index={index} />
-                  <Button
-                    onClick={(be) => {
+                );
+              })}
+            </td>
+          </tr>
+          <tr className="pay_type_deposit">
+            <th scope="row">잔액</th>
+            <td>
+              <div className="field xsmall">
+                <Input
+                  maxLength={20}
+                  disabled
+                  // value={intl.formatNumber(inObj.lastMoney)} />
+                  value={intl.formatNumber(inObj.lastMoney)}
+                />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ActionButtonViewComp
+        buttons={[
+          { name: "취소", onClick: newCancelHandler(props) },
+          { name: "입실확인", onClick: okHandler },
+        ]}
+      />
+    </Container>
+  );
+}
+
+//잔금결제 
+//complete 21.08.04 22:37
+// url = /reservation/pay/remain
+function BalanceView(props) {
+  let sourceObj = props.eventObj.source;
+
+  const newItem = (index = 0) => {
+    return {
+      ...newDefaultItem(),
+      i: index,
+      amount: sourceObj.remainMoney,
+    };
+  };
+
+  const calLastMoney = (itemList) => {
+    let calAmount = itemList.reduce((total, newEl) => {
+      return total + newEl.amount;
+    }, 0);
+
+    return sourceObj.remainMoney - calAmount;
+  };
+
+  let [sParam, updateParam] = useState(() => {
+    let initParam = {
+      memoStr: "",
+      itemList: [newItem()],
+      lastMoney: sourceObj.remainMoney,
+    };
+
+    return initParam;
+  });
+
+  let itemList = sParam.itemList;
+
+  const eObserver = newCostEventObserver2(sParam.itemList, function (dataList) {
+    updateParam({
+      ...sParam,
+      itemList: dataList,
+      lastMoney: calLastMoney(dataList),
+    });
+  });
+
+  const okHandler = function (bEvent) {
+    let param = {
+      reservation_no: sourceObj.no,
+      memo: sParam.memoStr,
+      pay_count: itemList.length,
+      real_money: sourceObj.realMoney,
+      remain_money: sourceObj.remainMoney,
+    };
+
+    sParam.itemList.forEach((e) => {
+      const index = e.i;
+      param["pay_type_" + index] = GlobalProps.BalancePayTypeCode();
+      param["inserttime_" + index] = e["insertTime"];
+      param["pay_method_" + index] = e["payMethod"];
+      param["payment_" + index] = e["amount"];
+    });
+
+    props.dispach({
+      type: "BalancePayment",
+      params: param,
+    });
+  };
+
+  return (
+    <Container>
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">총금액</th>
+            <td id="rp_pretotal">{intl.formatNumber(sourceObj.realMoney)}</td>
+          </tr>
+          <tr>
+            <th scope="row">잔금</th>
+            <td id="rp_preremain">
+              {intl.formatNumber(sourceObj.remainMoney)}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">잔금 / 입금액</th>
+            <td>
+              {itemList.map((e, index) => {
+                return (
+                  <CostItemComp
+                    item={e}
+                    index={index}
+                    itemLen={itemList.length}
+                    eObserver={eObserver}
+                    addOnClick={(ae) => {
+                      const sIndex = index + 1;
+                      let newArray = [...itemList, newItem(sIndex)];
+                      updateParam({
+                        ...sParam,
+                        itemList: newArray,
+                      });
+                    }}
+                    removeOnClick={(re) => {
                       if (itemList.length <= 1) {
-                        console.log("Last one");
                         return;
                       }
-                      updateItems(itemList.filter((item) => item.i !== index));
+                      const newItemArray = itemList.filter(
+                        (item) => item.i !== index
+                      );
+                      updateParam({
+                        ...sParam,
+                        itemList: newItemArray,
+                      });
                     }}
-                  >
-                    -
-                  </Button>
-                </div>
+                  />
+                );
+              })}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">잔액</th>
+            <td>
+              <div className="field xsmall">
+                <input
+                  id="rp_remain_money"
+                  type="text"
+                  className="i-text"
+                  value={sParam.lastMoney}
+                  disabled="true"
+                />
               </div>
-            );
-          })}
-        </div>
-      </div>
-      <CSpace />
-      <TextLineWrapper title="잔액" content="0" />
-      <CSpace />
-      {/* <div
-        style={{
-          display: "flex",
-          flex: 1,
-          padding: "1px",
-        }}
-      >
-        <TextAreaInput/>
-      </div> */}
-
-      <TextAreaInput />
-
-      <ActionButtonView
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">메모</th>
+            <td>
+              <TextAreaInput
+                onChange={(e) => {
+                  updateParam({
+                    ...sParam,
+                    memoStr: e.target.value,
+                  });
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ActionButtonViewComp
         buttons={[
-          { name: "기간연장", onClick: okHandler },
+          { name: "잔금결제", onClick: okHandler },
+          { name: "취소", onClick: newCancelHandler(props) },
+        ]}
+      />
+    </Container>
+  );
+}
+
+// PAY_TYPE_ADD_RESERVATION = 0;
+// PAY_TYPE_PAY_REMAIN = 1;
+// PAY_TYPE_SOME_REFUNDS = 2;
+// PAY_TYPE_CANCEL_RESERVATION = 3;
+// PAY_TYPE_ALL_REFUNDS = 4;
+// PAY_TYPE_GIVEUP_TOTAL = 5;
+// PAY_TYPE_GIVEUP_REFUND = 6;
+// PAY_TYPE_EXTEND_DATE = 7;
+
+//환불,예약취소  두기능이 같다 다만 type_code 가 틀릴뿐이다 
+//form은 같은걸 사용하고 type은 props를통해 외부에서 받기로한다 
+function RefundForm(props) {
+  const sourceObj = props.eventObj.source;
+
+  console.log("RefunType",props.type)
+  const title = props.type === 2 ? "환불" :"예약취소"
+
+  const isRefund = () => {
+    return props.type === 2
+  }
+
+  const fromToStr = sourceObj.fromDate + "~" + sourceObj.toDate;
+
+  const [sParam, updateObj] = useState({
+    memoStr: "",
+    amount: 0,
+    refundDate: moment(),
+  });
+
+  const okHandler = (e) => {
+    let param = {
+      reservation_no: sourceObj.no,
+      from_date: sourceObj.fromDate,
+      to_date: sourceObj.toDate,
+      isout: "",
+      out_date: "",
+      payment: sourceObj.payment,
+      real_money: sourceObj.realMoney,
+      refund_date: sParam.refundDate.format("YYYY-MM-DD"),
+      del_date: "",
+    };
+
+    props.dispach({
+      type: "PostRefund",
+      params: param,
+    });
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">환불 사유</th>
+            <td id="txt_why">{title}</td>
+          </tr>
+          <tr>
+            <th scope="row">기존 총금액</th>
+            <td id="r_pretotal">{intl.formatNumber(sourceObj.realMoney)}</td>
+          </tr>
+          <tr>
+            <th scope="row">기존 잔금</th>
+            <td id="r_preremain">{sourceObj.remainMoney}</td>
+          </tr>
+          {isRefund() && 
+              <tr id="r_rdate">
+              <th scope="row">퇴실여부</th>
+              <td>
+                <Radio.Group defaultValue="a" buttonStyle="solid">
+                  <Radio.Button value="a">입실유지</Radio.Button>
+                  <Radio.Button value="b">퇴실</Radio.Button>
+                </Radio.Group>
+              </td>
+            </tr>            
+          }
+
+          <tr id="r_rfdate">
+            <th scope="row">환불일</th>
+            <td>
+              <DatePicker defaultValue={moment()} format={"YYYY-MM-DD"} />
+            </td>
+          </tr>
+          <tr id="r_otdate" style={{ display: "none" }}>
+            <th scope="row">퇴실일</th>
+            <td>
+              <DatePicker defaultValue={moment()} format={"YYYY-MM-DD"} />
+            </td>
+          </tr>
+          {isRefund() && 
+            <tr id="r_period">
+            <th scope="row">기간</th>
+            <td>{fromToStr}</td>
+          </tr>
+          }
+          <tr>
+            <th scope="row">환불금액</th>
+            <td>
+              <InputNumber
+                style={{ width: "120px" }}
+                maxLength={20}
+                formatter={(value) => intl.formatNumber(value)}
+                defaultValue={sourceObj.realMoney - sourceObj.remainMoney}
+                onChange={(e) => {
+                  updateObj({
+                    ...sParam,
+                    amount: e,
+                  });
+                }}
+              />
+            </td>
+          </tr>
+          <tr>
+            <th scope="row" className="required">
+              메모
+            </th>
+            <td>
+              <div className="field full">
+                <textarea
+                  name=""
+                  id="r_memo"
+                  className="i-textarea"
+                  placeholder="사유 필수 기입"
+                  required=""
+                  onChange={(e) => {
+                    e.preventDefault();
+                    updateObj({
+                      ...sParam,
+                      memoStr: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ActionButtonViewComp
+        buttons={[
+          { name: "환불", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
         ]}
       />
@@ -686,85 +1348,169 @@ function BalanceView(props) {
   );
 }
 
-//환불
-function RefundForm(props) {
-  const eventObj = props.eventObj;
-  const sourceObj = eventObj.source;
-  //  console.log("EventObj",sourceObj)
-
-  //   const intl = useIntl()
-
-  const fromToStr = sourceObj.fromDate + "~" + sourceObj.toDate;
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <TextLineWrapper title="환불 사유" content="환불" />
-      <CSpace />
-      <TextLineWrapper
-        title="기존 총금액"
-        content={intl.formatNumber(sourceObj.realMoney)}
-      />
-      <CSpace />
-      <TextLineWrapper title="기존 잔금" content={sourceObj.remainMoney} />
-      <CSpace />
-      <RowComp title={"퇴실여부"}>
-        <Radio.Group defaultValue="a" buttonStyle="solid">
-          <Radio.Button value="a">입실유지</Radio.Button>
-          <Radio.Button value="b">퇴실</Radio.Button>
-        </Radio.Group>
-      </RowComp>
-      <CSpace />
-      <RowComp title="환불일">
-        <DatePicker
-          defaultValue={moment("2021-01-01", "YYYY-MM-DD")}
-          format={"YYYY-MM-DD"}
-        />
-      </RowComp>
-      <CSpace />
-      <TextLineWrapper title="기간" content={fromToStr} />
-      <CSpace />
-      <RowComp title="환불금액">
-        {/* <Input value={sourceObj.realMoney-sourceObj.remainMoney} /> */}
-        <FormattedNumber
-          value={sourceObj.realMoney - sourceObj.remainMoney}
-          //                    style="currency"
-          currency={"kor"}
-          // minimumFractionDigits={minimum}
-          // maximumFractionDigits={maximum}
-        />
-      </RowComp>
-      <CSpace />
-      <div
-        style={{
-          display: "flex",
-          flex: 1,
-          padding: "1px",
-        }}
-      >
-        <div className={style.MemoInputBox}>
-          <span>메모</span>
-        </div>
-        <CSpace />
-        <TextArea rows={7} />
-      </div>
-    </div>
-  );
-}
-
 //예약삭제
+//complete 21.08.04 22:37
 function DelteReservationForm(props) {
   const eventObj = props.eventObj;
   const sourceObj = eventObj.source;
 
+  // const [sParam,updateObj] = useState({
+  // })
+
+  const okHandler = function (e) {
+    let param = {
+      reservation_no: sourceObj.no,
+    };
+
+    props.dispach({
+      type: "DeleteReservationExe",
+      params: param,
+    });
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <TextLineWrapper title="산모 이름" content={sourceObj.name} />
-      <CSpace />
-      <TextLineWrapper title="예약기간" content={toRangeString(sourceObj)} />
-      <CSpace />
-      <TextLineWrapper
-        title="총금액"
-        content={intl.formatNumber(sourceObj.realMoney)}
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">산모 이름</th>
+            <td id="name_d">{sourceObj.name}</td>
+          </tr>
+          <tr>
+            <th scope="row">예약기간</th>
+            <td id="period_d">{toRangeString(sourceObj)}</td>
+          </tr>
+          <tr>
+            <th scope="row">총금액</th>
+            <td id="realmoney_d">{intl.formatNumber(sourceObj.realMoney)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ActionButtonViewComp
+        buttons={[
+          { name: "예약삭제", onClick: okHandler },
+          { name: "취소", onClick: newCancelHandler(props) },
+        ]}
+      />
+    </div>
+  );
+}
+
+// PAY_TYPE_ADD_RESERVATION = 0;
+// PAY_TYPE_PAY_REMAIN = 1;
+// PAY_TYPE_SOME_REFUNDS = 2;
+// PAY_TYPE_CANCEL_RESERVATION = 3;
+// PAY_TYPE_ALL_REFUNDS = 4;
+// PAY_TYPE_GIVEUP_TOTAL = 5;
+// PAY_TYPE_GIVEUP_REFUND = 6;
+// PAY_TYPE_EXTEND_DATE = 7;
+
+//계약포기
+//complete 21.08.04 22:37
+function CancelContractForm(props) {
+  const sourceObj = props.eventObj.source;
+
+  const [inObj, updateObj] = useState({
+    amount: 0,
+    onDate:moment(),
+  });
+
+  const okHandler = (e) => {
+
+    let param = {
+      reservation_no: sourceObj.no,
+      from_date: sourceObj.fromDate,
+      to_date: sourceObj.toDate,
+      payment: sourceObj.payment,
+      refund:inObj.amount,
+      sleep_date: inObj.onDate.format("YYYY-MM-DD"),
+    };
+
+    props.dispach({
+      type: "SleepReservation",
+      params: param,
+    });
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <table className="table-entry">
+        <colgroup>
+          <col width="120" />
+          <col width="*" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">산모 이름</th>
+            <td id="sl_name">{sourceObj.name}</td>
+          </tr>
+          <tr>
+            <th scope="row">예약기간</th>
+            <td id="sl_from_to">{toRangeString(sourceObj)}</td>
+          </tr>
+          <tr>
+            <th scope="row">총금액</th>
+            <td id="sl_realmoney">{intl.formatNumber(sourceObj.realMoney)}</td>
+          </tr>
+          <tr>
+            <th scope="row">계약금</th>
+            <td id="sl_payment">{intl.formatNumber(sourceObj.payment)}</td>
+          </tr>
+          <tr>
+            <th scope="row">잔금</th>
+            <td id="sl_remain">{intl.formatNumber(sourceObj.remainMoney)}</td>
+          </tr>
+          <tr>
+            <th scope="row">환불금액</th>
+            <td>
+              {/* <FormattedNumber
+                value={sourceObj.realMoney - sourceObj.remainMoney}
+                currency={"kor"}
+              /> */}
+
+                <InputNumber
+                  style={{ width: "120px" }}
+                  maxLength={20}
+                  formatter={(value) => intl.formatNumber(value)}
+                  defaultValue={inObj.amount}
+                  onChange={(e) => {
+                    updateObj({
+                      ...inObj,
+                      amount: e,
+                    });
+                  }}
+                />
+
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">계약포기일</th>
+            <td>
+              <DatePicker
+                defaultValue={inObj.onDate}
+                format={"YYYY-MM-DD"}
+                onChange={(e)=>{
+                    updateObj({
+                      ...inObj,
+                      onDate:e
+                    })
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ActionButtonViewComp
+        buttons={[
+          { name: "취소", onClick: newCancelHandler(props) },
+          { name: "계약포기", onClick: okHandler },
+        ]}
       />
     </div>
   );
@@ -779,4 +1525,6 @@ export {
   BalanceView,
   RefundForm,
   DelteReservationForm,
+  CancelContractForm,
+  ReservationConfirmForm,
 };

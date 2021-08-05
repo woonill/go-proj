@@ -491,109 +491,8 @@ function toRoomData(record) {
 
 
 
-function toUrl(uri,params) {
-
-  if(params === null) {
-    return uri;
-  }
-
-  let query = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
-  //    let url = '/ajax/api/tableDataList?' + query;
-  return uri + "?" + query;
-
-}
-
-function doHttpGet(uri, params, fn) {
-
-//  console.log("call http request now")
-
-  const url = toUrl(uri,params)
-
-  fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json;charset=UTF-8'
-    },
-    mode: 'cors',
-    cache: 'default'
-  })
-    .then(res => {
-      return res.json()
-    }).then((resMessage) => {
-      let data = resMessage.data;
-      //         eventDispacher({type:"OnLoadCompletedResList",dataList:data})
-      fn(data)
-    }).catch(e => {
-      console.log("error", e)
-    })
-
-}
-
-function doHttpPost(uri, params, fn) {
-
-  //  console.log("call http request now")
-  
-    let formData = new FormData()
-    Object.keys(params).forEach((k)=>{
-      formData.append(k,params[k])
-    })
-
-
-    fetch(uri, {
-      method: 'POST',
-      body:formData,
-      // headers: {
-      //   'Content-Type': 'application/json;charset=UTF-8'
-      // },
-      mode: 'cors',
-      cache: 'default'
-    })
-      .then(res => {
-        return res.json()
-      }).then((resMessage) => {
-        let data = resMessage.data;
-        //         eventDispacher({type:"OnLoadCompletedResList",dataList:data})
-        fn(data)
-      }).catch(e => {
-        console.log("error", e)
-      })
-  
-  }
-
-
-function emitHttpEvent(event) {
-
-  if (event.type === "FetchTableDataList") {
-    doHttpGet("/ajax/api/tableDataList", event.params, event.resultHandler)
-    return
-  }
-
-  if (event.type === "FetchRoomList") {
-    doHttpGet("/ajax/api/roomList", null, event.resultHandler)
-    return 
-  }
-
-  if(event.type === "FetchPaymentHistorylist") {
-//    http://testg.tosky.co.kr/reservation/payment/list?reservation_no=7740&bno=3
-    doHttpGet("/reservation/payment/list",event.params,event.resultHandler)
-    return;
-  }
-
-
-  if (event.type === "PostChangeRoom") {
-    doHttpPost("/ajax/api/postChangeRoom",event.params,event.resultHandler)
-    return;
-
-  }
-
-
-
-}
-
-
-
 export const GantchartContext = createContext()
-export const ServerEventContext = createContext()
+//export const ServerEventContext = createContext()
 
 
 const _Right_Popup_fArray = [
@@ -615,7 +514,39 @@ const _Right_Popup_tArray = [
 ];
 
 
+
+
 const GlobalProps = {
+
+
+  SetupPayTypeList:[
+    {type:"0",name:"예약추가"},
+    {type:"1",name:"잔금결제"},
+    {type:"2",name:"환불"},
+    {type:"3",name:"예약취소"},
+    {type:"6",name:"계약포기(환불)"},
+    {type:"7",name:"기간연장"},
+  ],
+  ExtendDateTypeCode:function(){
+    return this.SetupPayTypeList[6]
+  },
+  BalancePayTypeCode:function() {
+    return this.SetupPayTypeList[1];
+  },
+  PayMethodList: [
+    { type: "cash", name: "현금" },
+    { type: "card", name: "카드" },
+    { type: "cashcard", name: "현금 + 카드" },
+  
+  ],
+  PayTypeList:[
+    {type:"full",name:"완납"},
+    {type:"deposit",name:"계약금선납"},
+  ],
+  RoomStateList:[
+    {type:"in",name:"입실유지"},
+    {type:"out",name:"퇴실"},
+  ],
   RightMenuProps: {
     RightPopupFArray: _Right_Popup_fArray,
     RightPopupSArray: _Right_Popup_sArray,
@@ -623,6 +554,9 @@ const GlobalProps = {
   }
 }
 
+
+
 export {
-  emitHttpEvent, toChartData, GlobalProps,buildReportDataList
+  //emitHttpEvent, 
+  toChartData, GlobalProps,buildReportDataList
 }

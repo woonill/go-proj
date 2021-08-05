@@ -65,7 +65,7 @@
 
 .MemoInputBox{
     background-color: rgb(245, 245, 245);
-    display:flex; 
+    display:flex;
     width: 300px; 
     align-items: center;
     justify-content:center;
@@ -75,10 +75,10 @@
 
 
 .ButtonGroups {
-    display: flex;
-    flex:1;
-    justify-content: end;
-//    align-items: flex-end;
+   display: flex;
+   flex:1;
+    justify-content: start;
+    align-items: start;
     flex-direction: row;
 //    align-items: end;
 }

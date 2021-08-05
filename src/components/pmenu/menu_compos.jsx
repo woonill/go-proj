@@ -39,7 +39,7 @@ function newMenuList(menus,eventDispacher) {
       menus.map((el) =>  {
 
         return (
-          <MenuItem
+          <MenuItem key={el.key}
             onClick={eventDispacher}
             data={el.data}
           >
@@ -52,15 +52,15 @@ function newMenuList(menus,eventDispacher) {
   )
 }
 
-function newSubMenuList(title,menus,eventDispacher) {
+function newSubMenuList(key,title,menus,eventDispacher) {
 
   return (
-    <SubMenu  title={title}>
+    <SubMenu key={key} title={title}>
     {
       menus.map((el) =>  {
 
         return (
-          <MenuItem
+          <MenuItem key={el.key}
             onClick={eventDispacher}
             data={el.data}
           >
@@ -89,11 +89,11 @@ function newMouseRightMenu(fArray,sArray,tArray) {
         </ContextMenuTrigger>
   
         <ContextMenu id={props.menuId}>
-          <SubMenu title="예약">
+          <SubMenu key="sf" title="예약">
               {newMenuList(fArray,props.handleClick)}
           </SubMenu>
-          {newSubMenuList("결제",sArray,props.handleClick)}
-          <SubMenu title="취소">
+          {newSubMenuList("psskey","결제",sArray,props.handleClick)}
+          <SubMenu key="sskey" title="취소">
               {newMenuList(tArray,props.handleClick)}
           </SubMenu>
         </ContextMenu>

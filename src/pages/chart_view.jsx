@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState,useEffect,useContext } from "react";
 
 import {
     Button,
@@ -11,7 +11,9 @@ import {
 
   import style from "./ChartView.module.scss"
   
-  import { ServerEventContext,emitHttpEvent } from "./chart_view_context";
+//  import {emitHttpEvent } from "./chart_view_context";
+  import {ServerEventContext} from "../server_event_context.js"
+
   import moment from "moment";
   import {ChartDataView} from "./table_data"
   import {GroupTable} from './group_table'
@@ -150,7 +152,7 @@ import {
             return;
           }
   
-          emitHttpEvent(
+          props.emitHttpEvent(
             {
               type:"FetchTableDataList",
               params:params,
@@ -334,7 +336,8 @@ import {
 
           </li>
 
-          <button className={style.showGridButton} onClick={(e)=>{
+          <button className={style.showGridButton}
+            onClick={(e)=>{
                 props.eventObserver({
                     type:"DataViewUpdate",currentDisplayState:props.displayState
                 })
@@ -492,8 +495,10 @@ import {
 
   }
   
-  export default function ChartView() {
+  export default function ChartView(props) {
 
+
+    let {serverEventEmmiter} = useContext(ServerEventContext);
     let [chartViewState,setChartViewState] = useState(0)
     let [reservationDataList,updateTableDataList] = useState([])
 
@@ -503,32 +508,34 @@ import {
     useEffect(() => {
 
 
-      let startDate = moment().subtract(15,"days").format("YYYY-MM-DD")
-      let endDate = moment().add(15,"days").format("YYYY-MM-DD")
+      if(props.headerInfo !== null) {
 
-      let param = {
-        from:startDate,
-        to:endDate,
+        let startDate = moment().subtract(15,"days").format("YYYY-MM-DD")
+        let endDate = moment().add(15,"days").format("YYYY-MM-DD")
+  
+        let param = {
+          from:startDate,
+          to:endDate,
+        }
+  
+        serverEventEmmiter(
+          {
+            type:"FetchTableDataList",
+            params:param,
+            resultHandler:(data)=>{
+  //              console.log("data",data)
+                dispach({type:"OnLoadCompletedResList",data:data})
+        }})
+  
+
       }
-
-      emitHttpEvent(
-        {
-          type:"FetchTableDataList",
-          params:param,
-          resultHandler:function(data){
-//              console.log("data",data)
-              dispach({type:"OnLoadCompletedResList",data:data})
-      }})
     }, [])//한번만 콜된다 , 그후로는 search button에 의해 동작하기때문에 
 
-//    let HeaderView = HeaderView(setSelectValue,selectedValue,eventDiapcher)
-//    let ListView = buildListView(chartViewState);
 
     return (
-      <ServerEventContext.Provider >
         <div className={style.main}>
           <div style={{ padding: 10 }}>
-            <HeaderView eventObserver={dispach}/>
+            <HeaderView eventObserver={dispach} emitHttpEvent={serverEventEmmiter}/>
           </div>
           <ActionBunttonGroupView 
             displayState={chartViewState} 
@@ -537,7 +544,6 @@ import {
               <ListView viewState={chartViewState} dataList={reservationDataList}/>
           </div>
         </div>
-      </ServerEventContext.Provider>
     );
   }
   
