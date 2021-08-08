@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect } from "react";
 import { Table, Button, Popover } from "antd";
 
+//import { styles } from "./ChartView.module.scss";
+
 import Moment from "moment";
 import { extendMoment } from "moment-range";
 import { newMouseRightMenu } from "../components/pmenu/menu_compos";
@@ -27,9 +29,11 @@ function RangeTimelineText(props) {
   let rtext = "(" + props.name + ")" + props.from + " ~ " + props.to + "";
   rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 5);
   return (
-    <div>
-      <span>{rtext}</span>
-    </div>
+    // <div style={{textAlign:"center"}}>
+    //   <span>{rtext}</span>
+    // </div>
+    <span>{rtext}</span>
+
   );
 }
 
@@ -115,11 +119,11 @@ function gridChartCompRender(eventObj, mergeCount) {
         height: "100%",
         display: "flex",
         flexDirection: "row",
+        // justifyContent:"center"
       }}
     >
       <div
         style={{
-          //        width: fWidth,
           flex: fWidth,
           borderColor: "red",
           borderBottomStyle: "solid",
@@ -133,7 +137,7 @@ function gridChartCompRender(eventObj, mergeCount) {
             width: "100%",
             height: "100%",
             backgroundColor: "red",
-            borderStyle: "none",
+            borderStyle: "none",            
           }}
           colData={eventObj}
         >
@@ -183,6 +187,7 @@ function gridChartCompRender(eventObj, mergeCount) {
           borderLeftColor: "green",
           borderBottomColor: "green",
           flex: trLen,
+
         }}
       >
         <SchedulerBarButton
@@ -192,6 +197,7 @@ function gridChartCompRender(eventObj, mergeCount) {
             height: "100%",
             backgroundColor: "green",
             borderStyle: "none",
+            justifyContent:"center",
           }}
         >
           <RangeTimelineText
@@ -349,8 +355,7 @@ function SchedulerBarButton(props) {
       }}
       menuId={uuidv4()}
     >
-      {/* {props.children} */}
-      <div style={{ width: "100%", padding: "2px", backgroundColor: bcState }}>
+      <div style={{ width: "100%", padding: "1px", backgroundColor: bcState,}}>
         <Button
           type="primary"
           style={props.style}
@@ -361,6 +366,13 @@ function SchedulerBarButton(props) {
           {props.children}
         </Button>
       </div>
+
+      {/* <div className="fn-label"
+          onMouseOver={mouseOverEventHandler}
+          onMouseOut={mouseOutEventHandler}
+      >
+      {props.children}
+      </div> */}
     </MouseRightMenuComp>
   );
 }
@@ -457,13 +469,21 @@ function newTotalFragment(record, date) {
 function DefaultSchedulerLine(props) {
   let eventObj = props.eventObj;
   return (
-    // <DefaultSchedulerBar colData={props.eventObj} style={{ width: "100%" }}>
     <SchedulerBarButton
       style={{
+        borderRadius:"4px",
+        borderWith:"2px",
+        minWidth:"31px",
         width: "100%",
+        height:"26px",
+        textAlign:"center",
+        display:"flex",
+        alignItems:"center",
+        justifyContent:"center",
       }}
       colData={props.eventObj}
     >
+
       <RangeTimelineText
         mergeCount={props.mergeCount}
         name={eventObj.name}
@@ -471,7 +491,6 @@ function DefaultSchedulerLine(props) {
         to={eventObj.to}
       />
     </SchedulerBarButton>
-    // </DefaultSchedulerBar>
   );
 }
 

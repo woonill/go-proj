@@ -495,23 +495,23 @@ export const GantchartContext = createContext()
 //export const ServerEventContext = createContext()
 
 
-const _Right_Popup_fArray = [
-  { text: "상세보기", data: { popupView: "1-1" } },
-  { text: "객실이동", data: { popupView: "1-2",title:"객실이동" } },
-  { text: "기간연장", data: { popupView: "1-3",title:"기간연장" } },
-  { text: "퇴실확정", data: { popupView: "1-4",title:"퇴실확정" } },
-  { text: "계약일수정", data: { popupView: "1-5",title:"계약일수정" } },
-];
+// const _Right_Popup_fArray = [
+//   { text: "상세보기", data: { popupView: "1-1" } },
+//   { text: "객실이동", data: { popupView: "1-2",title:"객실이동" } },
+//   { text: "기간연장", data: { popupView: "1-3",title:"기간연장" } },
+//   { text: "퇴실확정", data: { popupView: "1-4",title:"퇴실확정" } },
+//   { text: "계약일수정", data: { popupView: "1-5",title:"계약일수정" } },
+// ];
 
-const _Right_Popup_sArray = [
-  { text: "결제내역", data: { popupView: "2-1",title:"결제내역" } },
-  { text: "잔금결제", data: { popupView: "2-2",title:"잔금결제" } },
-];
+// const _Right_Popup_sArray = [
+//   { text: "결제내역", data: { popupView: "2-1",title:"결제내역" } },
+//   { text: "잔금결제", data: { popupView: "2-2",title:"잔금결제" } },
+// ];
 
-const _Right_Popup_tArray = [
-  { text: "환불", data: { popupView: "3-1",title:"환불" } },
-  { text: "에약삭제", data: { popupView: "3-2",title:"에약삭제" } },
-];
+// const _Right_Popup_tArray = [
+//   { text: "환불", data: { popupView: "3-1",title:"환불" } },
+//   { text: "에약삭제", data: { popupView: "3-2",title:"에약삭제" } },
+// ];
 
 
 
@@ -527,8 +527,11 @@ const GlobalProps = {
     {type:"6",name:"계약포기(환불)"},
     {type:"7",name:"기간연장"},
   ],
+  getDefaultSetupPayType:function() {
+    return this.SetupPayTypeList[1]
+  },
   ExtendDateTypeCode:function(){
-    return this.SetupPayTypeList[6]
+    return this.SetupPayTypeList[5]
   },
   BalancePayTypeCode:function() {
     return this.SetupPayTypeList[1];
@@ -547,13 +550,55 @@ const GlobalProps = {
     {type:"in",name:"입실유지"},
     {type:"out",name:"퇴실"},
   ],
-  RightMenuProps: {
-    RightPopupFArray: _Right_Popup_fArray,
-    RightPopupSArray: _Right_Popup_sArray,
-    RightPopupTArray: _Right_Popup_tArray
-  }
+  // RightMenuProps: {
+  //   RightPopupFArray: _Right_Popup_fArray,
+  //   RightPopupSArray: _Right_Popup_sArray,
+  //   RightPopupTArray: _Right_Popup_tArray
+  // }
 }
 
+
+export const ReservStateChecker = (() => {
+
+  return {
+    isPreInDespi:function(sourceObj) { //입실예정(미남)
+      return sourceObj.delState === 0 
+          && sourceObj.inState === 0
+          && sourceObj.remainMoeny > 0
+    },
+    isPreInFull:function(sourceObj) { //입실예정 (완납)
+      return sourceObj.delState === 0 
+          && sourceObj.inState === 0
+          && sourceObj.remainMoeny <= 0
+    },
+    isCheckInDespi:function(sourceObj) { //입실확정(미납)
+      return sourceObj.delState === 0 
+          && sourceObj.inState === 1
+          && sourceObj.remainMoeny > 0
+    },
+    isCheckinFull:function(sourceObj) { //입실확정(완납)
+      return sourceObj.delState === 0 
+          && sourceObj.inState === 1
+          && sourceObj.remainMoeny <= 0
+    },
+    isMoveRoom:function(sourceObj) { //객실이동
+      return sourceObj.delState === 0 && sourceObj.inState === 1
+    },
+    isDrop:function(sourceObj) {//계약포기
+      return sourceObj.delState === 0 && sourceObj.inState === 2
+    },
+    isCancel:function(sourceObj) {//예약취소
+      return sourceObj.delState === 1 && sourceObj.inState === 0 
+    },
+    isExitRoom:function(sourceObj) { //퇴실
+      return sourceObj.inState === 9 && sourceObj.delState === 0 
+    },
+    isRevisit:function(sourceObj) { //재방문
+      return sourceObj.revisit
+    },
+
+  }
+})()
 
 
 export {

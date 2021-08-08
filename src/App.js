@@ -79,8 +79,8 @@ function ChartViewWrapper(props) {
   const serverEventEmmiter = newServerEventDispach(headerInfo)
 
   return (
-    <ServerEventContext.Provider value={{serverEventEmmiter}}>
-    <ChartView></ChartView>
+    <ServerEventContext.Provider value={{serverEventEmmiter,headerInfo}}>
+    <ChartView/>
   </ServerEventContext.Provider>
 
   )

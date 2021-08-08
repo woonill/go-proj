@@ -1,22 +1,38 @@
 import { Table,Button } from 'antd';
+import {ReservStateChecker } from "./chart_view_context";
 
 
 
 function stateText(e) {
 
-  if(e.inState === 0 && e.payType === "deposit"){//filter 1 
+  if(ReservStateChecker.isPreInDespi(e)){//filter 1 
     return "입실예정(잔금미납)";
   }
-  else if(e.inState === 0 && e.payType === "full"){ //filter 2
+  else if(ReservStateChecker.isPreInFull(e)){ //filter 2
     return "입실예정(잔금완납)";
 
   }
-  else if(e.inState === 1 && e.payType === "deposit"){ //filter 3
+  else if(ReservStateChecker.isCheckInDespi(e)){ //filter 3
     return "입실완료(잔금미납)";
 
   }
-  else if(e.inState === 1 && e.payType === "full"){ //filter 4
+  else if(ReservStateChecker.isCheckinFull(e)){ //filter 4
     return "입실완료(잔금완납)";
+  }
+  else if(ReservStateChecker.isMoveRoom(e)){ //filter 4
+    return "입실완료(객실이동)";
+  }
+  else if(ReservStateChecker.isDrop(e)){ //filter 4
+    return "계약포기";
+  }
+  else if(ReservStateChecker.isRevisit(e)){ //filter 4
+    return "재방문";
+  }
+  else if(ReservStateChecker.isExitRoom(e)){ //filter 4
+    return "퇴실";
+  }
+  else if(ReservStateChecker.isCancel(e)){ //filter 4
+    return "취소";
   }
   else {
     return "none"

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useContext } from "react";
 import {
   Select,
   DatePicker,
@@ -9,12 +9,15 @@ import {
   message,
 } from "antd";
 import moment from "moment";
-import { FormattedNumber, createIntl } from "react-intl";
+import {createIntl } from "react-intl";
 import { GlobalProps } from "./chart_view_context";
-//import style from "./reservation_popup.module.scss";
+import styles from "./reservation_popup.module.scss";
 import TextArea from "antd/lib/input/TextArea";
-const { Option } = Select;
+import {ServerEventContext} from "../server_event_context.js"
 
+
+
+const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const newDefaultItem = (index = 0) => {
@@ -34,28 +37,6 @@ const intl = createIntl({
 
 const toRangeString = (event) => event.fromDate + " ~ " + event.toDate;
 
-function newCostEventObserver(itemList, fallback) {
-  const rfunc = fallback === undefined ? function (e, e2) {} : fallback;
-
-  return (e) => {
-    let isCall = true;
-    let obs = itemList[e.index];
-
-    if (e.type === "updateAmount") {
-      obs.amount = e.amount;
-    } else if (e.type === "updateInserttime") {
-      obs["insertTime"] = e.insertTime;
-    } else if (e.type === "updatePaymentMethod") {
-      obs["payMethod"] = e.payMethod;
-    } else {
-      isCall = false;
-    }
-
-    if (isCall) {
-      rfunc(obs, e);
-    }
-  };
-}
 
 function newCostEventObserver2(itemList, itemListUpdate) {
   return (e) => {
@@ -64,7 +45,11 @@ function newCostEventObserver2(itemList, itemListUpdate) {
 
     if (e.type === "updateAmount") {
       obs.amount = e.amount;
-    } else if (e.type === "updateInserttime") {
+    } 
+    else if(e.type === "updatePaymentType"){
+        obs["payType"] = e.payType;
+    }
+    else if (e.type === "updateInserttime") {
       obs["insertTime"] = e.insertTime;
     } else if (e.type === "updatePaymentMethod") {
       obs["payMethod"] = e.payMethod;
@@ -97,28 +82,31 @@ function Container(props) {
 }
 
 function PaymentTypeSelectComp(props) {
+
+
   if (props.item.payType === undefined || props.item.payType === null) {
     return null;
   }
 
   return (
-    <div style={props.style}>
-      <Select
-        //    showSearch
-        //  style={{ width: "100px" }}
-        style={{ width: "100%" }}
-        defaultValue={props.item.payType.name}
-        onChange={props.onChange}
-      >
-        {GlobalProps.PayTypeList.map((me) => {
-          return (
-            <Option key={me.type} value={me.type}>
-              {me.name}
-            </Option>
-          );
-        })}
-      </Select>
-    </div>
+    // <div style={props.style}>
+    // </div>
+    <Select
+    //    showSearch
+    //  style={{ width: "100px" }}
+    style={{ width: "100%" }}
+    defaultValue={props.item.payType}
+    onChange={props.onChange}
+  >
+    {GlobalProps.SetupPayTypeList.map((me) => {
+      return (
+        <Option key={me.type} value={me.type}>
+          {me.name}
+        </Option>
+      );
+    })}
+  </Select>
+
   );
 }
 
@@ -150,39 +138,54 @@ function CSpace() {
   return <div style={{ width: "2px" }} />;
 }
 
-function ActionButtonViewComp(props) {
-  return (
-    <div>
-      <div style={{ height: "20px" }}></div>
 
-      <div
-        style={{
-          display: "flex",
-          flex: 1,
-          flexDirection: "row-reverse",
-          // justifyContent: "start",
-          //        alignItems:"stretch",
-          //      backgroundColor:"black"
-        }}
-      >
+const ActionButtonGroupView =(props) => {
+
+  return (
+
+    <div style={{
+      display:"flex",
+      flex:1,
+      padding:"20px",
+//      height:"100px",
+    }}>
+        <div
+          style={{
+            display: "flex",
+            width:"100%",
+            flex:1,
+          }}>
+        </div>
         {props.buttons.map((buttonProp, index) => {
           return (
             <div
               key={index}
               style={{
-                display: "flex",
-                width: "80px",
-                //              flexDirection: "row-reverse",
+                // display: "flex",
+                // flex:1,
+                width: "120px",
               }}
             >
-              {index > 0 ? <div style={{ marginRight: "-2px" }} /> : null}
-              <Button onClick={buttonProp.onClick}>{buttonProp.name}</Button>
+              {/* {(index>0) &&
+                 <div style={{ width:"2px"}}/>
+              } */}
+              {/* <Button 
+              onClick={buttonProp.onClick}>
+                {buttonProp.name}
+              </Button> */}
+
+              <button 
+                type="button"
+                className={styles.ActionButton}
+                onClick={buttonProp.onClick}
+                >
+                  <i className="icon-dialog-yes"></i>
+                  <span className="text">{buttonProp.name}</span>
+              </button>
             </div>
           );
         })}
       </div>
-      <div style={{ height: "20px" }}></div>
-    </div>
   );
 }
 
@@ -199,43 +202,49 @@ function CostItemComp(props) {
       style={{
         display: "flex",
         flex: 1,
-        //    backgroundColor:"black",
-        // flexDirection: "row",
-        // justifyContent:"space-between",
-        //    alignContent:"stretch"
+        //backgroundColor:"black",
+        //flexDirection: "row",
+        //justifyContent:"space-between",
+        //alignContent:"stretch"
       }}
     >
-      <PaymentTypeSelectComp
-        item={props.item}
-        style={{ width: "15%", padding: "10" }}
-      />
+        <div style={{width:"140px",display:"flex"}}>
+          <PaymentTypeSelectComp
+            item={props.item}
+            style={{ width: "80px", padding: "10" }}
+            onChange={(e)=>{
+              props.eObserver({
+                index: props.index,
+                type: "updatePaymentType",
+                payType: e,
+              });
+            }}
+          />
+      </div>
+
+      <div style={{width:"400px",display:"flex"}}>
       <CSpace />
       <PaymentMethodSelectComp
-        style={{ width: "20%", padding: "10" }}
+        style={{ width: "30%", padding: "10" }}
         defaultVal={props.item.payMethod}
         onChange={(e) => {
           props.eObserver({
             index: props.index,
             type: "updatePaymentMethod",
-            payMethod: e.type,
+            payMethod: e,
           });
         }}
       />
       <CSpace />
       <InputNumber
         //        style={{ width: "120px" }}
-        style={{ width: "25%" }}
+        style={{ width: "35%" }}
         maxLength={20}
         placeholder="금액"
         formatter={(value) => intl.formatNumber(value)}
         defaultValue={props.item.amount}
         onChange={(e) => {
-          //          e.preventDefault();
-          // let textVal = e.target.value;
-          // if(textVal === null || textVal === undefined) {
-          //   return;
-          // }
-
+          //e.preventDefault();
           props.eObserver({
             index: props.index,
             type: "updateAmount",
@@ -245,7 +254,7 @@ function CostItemComp(props) {
       />
       <CSpace />
       <DatePicker
-        style={{ width: "25%" }}
+        style={{ width: "35%" }}
         value={props.item.insertTime}
         format={"YYYY-MM-DD"}
         onChange={(e) => {
@@ -256,8 +265,11 @@ function CostItemComp(props) {
           });
         }}
       />
+
+
+      </div>
       <CSpace />
-      <div>
+      <div style={{display:"flex",flex:1}}>
         <AddButtonView
           index={props.index}
           total={props.itemLen}
@@ -351,6 +363,8 @@ function RoomListComp(props) {
 
 //개실이동
 //complete 21.08.04 22:37
+//httpPost ok  
+//input check 해야함 
 function MoveRoomForm(props) {
   //1,새로움직이는 방은 원래 데이터의 from ~ to 날짜 않에서만 이동가능하다
 
@@ -372,10 +386,10 @@ function MoveRoomForm(props) {
 
   const okHandler = (e) => {
 
-    // if (inParam.roomNo == null) {
-    //   message.info("이동방 선택");
-    //   return;
-    // }
+    if (inParam.roomObj.no === sourceObj.room) {
+      message.info("같은방 입니다");
+      return;
+    }
 
     // if (inParam.rangeDate == null) {
     //   message.info("이동날짜 선택");
@@ -480,7 +494,7 @@ function MoveRoomForm(props) {
           </tr>
         </tbody>
       </table>
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
           { name: "객실이동", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -492,6 +506,8 @@ function MoveRoomForm(props) {
 
 //기간연장
 //complete 21.08.04 22:37
+//httpPsot ok 
+//로직 테스트 필요 
 function YenzangForm(props) {
 
   const source = props.eventObj.source;
@@ -523,9 +539,8 @@ function YenzangForm(props) {
     };
 
     itemList.forEach((e) => {
-      console.log("itemEelement", e);
       const index = e.i;
-      param["pay_type_" + index] = GlobalProps.ExtendDateTypeCode.type;
+      param["pay_type_" + index] = GlobalProps.ExtendDateTypeCode().type;
       param["inserttime_" + index] = e["insertTime"].format("YYYY-MM-DD");
       param["pay_method_" + index] = e["payMethod"];
       param["payment_" + index] = e["amount"];
@@ -582,7 +597,7 @@ function YenzangForm(props) {
                       let newArray = [...sParam.itemList];
                       newArray.push({
                         i: sIndex,
-                        //                        type: moneyTypeList[0],
+                        //type: moneyTypeList[0],
                         payMethod: GlobalProps.PayMethodList[0].type,
                         amount: 0,
                         insertTime: moment(),
@@ -622,7 +637,7 @@ function YenzangForm(props) {
           </tr>
         </tbody>
       </table>
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
           { name: "기간연장", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -669,7 +684,7 @@ function ReversionCancelPopup(props) {
           </tr>
         </tbody>
       </table>
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
           { name: "퇴실확정", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -679,11 +694,11 @@ function ReversionCancelPopup(props) {
   );
 }
 
-//계약일자수정
+//계약일수정
 //complete 21.08.04 22:37
+//httpPost 21.08.96 14:11 통과
 function UpdateDueDateForm(props) {
   const source = props.eventObj.source;
-  //  console.log("ObjectSource",source)
   let changeDate = moment(source.contractDate);
 
   const okHandler = (e) => {
@@ -711,7 +726,7 @@ function UpdateDueDateForm(props) {
             <th scope="row">계약일</th>
             <td>
               <DatePicker
-                value={changeDate}
+                defaultValue={changeDate}
                 format={"YYYY-MM-DD"}
                 onChange={(e) => {
                   changeDate = e;
@@ -721,7 +736,7 @@ function UpdateDueDateForm(props) {
           </tr>
         </tbody>
       </table>
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
           { name: "수정", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -732,6 +747,7 @@ function UpdateDueDateForm(props) {
 }
 
 //결제내역
+//httpGet 통과 
 function FinaceListView(props) {
   const [paymentList, updatePaymentList] = useState([]);
 
@@ -776,7 +792,7 @@ function FinaceListView(props) {
             return (
               <tr>
                 <td>{e.type}</td>
-                <td>[{e.method}]</td>
+                <td>{e.method}</td>
                 <td className="right">{intl.formatNumber(e["real_money"])}</td>
                 <td className="right">{intl.formatNumber(e["payment"])}</td>
                 <td className="right">{intl.formatNumber(lastMoney)}</td>
@@ -789,7 +805,7 @@ function FinaceListView(props) {
           })}
         </tbody>
       </table>
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[{ name: "닫기", onClick: newCancelHandler(props) }]}
       />
     </Container>
@@ -805,6 +821,7 @@ const newRoomFilter =(no) => {
 
 //입실확정
 //complete 21.08.04 22:37
+//httpPost 통과
 function ReservationConfirmForm(props) {
   const sourceObj = props.eventObj.source;
 
@@ -815,11 +832,11 @@ function ReservationConfirmForm(props) {
     return e.no === sourceObj.room;
   })[0];
 
-  const newItem = (index = 0, amount) => {
+  const newItem = (index = 0, amount=0) => {
     return {
       ...newDefaultItem(),
       i: index,
-      payType: GlobalProps.PayTypeList[0],
+      payType: GlobalProps.getDefaultSetupPayType().type,
       amount: amount,
     };
   };
@@ -845,13 +862,15 @@ function ReservationConfirmForm(props) {
     return sourceObj.remainMoney - calAmount;
   };
 
-  const observer = newCostEventObserver2(itemList, function (dataList) {
-    updateObj({
-      ...inObj,
-      itemList: dataList,
-      lastMoney: calLastMoney(dataList),
+  const observer = newCostEventObserver2(
+    itemList, 
+    function (dataList) {
+      updateObj({
+        ...inObj,
+        itemList: dataList,
+        lastMoney: calLastMoney(dataList),
+      });
     });
-  });
 
   const okHandler = (e) => {
 
@@ -868,8 +887,8 @@ function ReservationConfirmForm(props) {
     const param = {
       reservation_no: sourceObj.no,
       reservation_room_no: sourceObj.reserRoomNo,
-      from_date: inObj.rangeDate[0].formate("YYYY-MM-DD"),
-      to_date: inObj.rangeDate[1].formate("YYYY-MM-DD"),
+      from_date: inObj.rangeDate[0].format("YYYY-MM-DD"),
+      to_date: inObj.rangeDate[1].format("YYYY-MM-DD"),
       pay_type: sourceObj.payType,
       issetup: sourceObj.inState,
       // t_room_no: inObj.roomNo,
@@ -885,8 +904,9 @@ function ReservationConfirmForm(props) {
 
     inObj.itemList.forEach((e) => {
       const index = e.i;
-      param["pay_type_" + index] = sourceObj.payType;
-      param["inserttime_" + index] = e["insertTime"].format("YYYY-MM-DD");
+      const inerTimeStr = e["insertTime"].format("YYYY-MM-DD")
+      param["pay_type_" + index] = e["payType"];
+      param["inserttime_" + index] = inerTimeStr;
       param["pay_method_" + index] = e["payMethod"];
       param["payment_" + index] = e["amount"];
     });
@@ -950,7 +970,7 @@ function ReservationConfirmForm(props) {
             <td>
               <RangePicker
                 format="YYYY-MM-DD"
-                defaultValue={inObj.rangeDate}
+                value={inObj.rangeDate}
                 onCalendarChange={(val) => {
                   updateObj({
                     ...inObj,
@@ -1031,10 +1051,10 @@ function ReservationConfirmForm(props) {
         </tbody>
       </table>
 
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
-          { name: "취소", onClick: newCancelHandler(props) },
           { name: "입실확인", onClick: okHandler },
+          { name: "취소", onClick: newCancelHandler(props) },
         ]}
       />
     </Container>
@@ -1043,16 +1063,21 @@ function ReservationConfirmForm(props) {
 
 //잔금결제 
 //complete 21.08.04 22:37
-// url = /reservation/pay/remain
+//httpEvent 통과
+//로직처리
 function BalanceView(props) {
   let sourceObj = props.eventObj.source;
 
-  const newItem = (index = 0) => {
-    return {
+  const newItem = (index = 0,amount=0) => {
+
+
+    let obj =  {
       ...newDefaultItem(),
       i: index,
-      amount: sourceObj.remainMoney,
+      amount: amount,
     };
+
+    return obj;
   };
 
   const calLastMoney = (itemList) => {
@@ -1066,7 +1091,7 @@ function BalanceView(props) {
   let [sParam, updateParam] = useState(() => {
     let initParam = {
       memoStr: "",
-      itemList: [newItem()],
+      itemList: [newItem(0,sourceObj.remainMoney)],
       lastMoney: sourceObj.remainMoney,
     };
 
@@ -1074,6 +1099,7 @@ function BalanceView(props) {
   });
 
   let itemList = sParam.itemList;
+
 
   const eObserver = newCostEventObserver2(sParam.itemList, function (dataList) {
     updateParam({
@@ -1094,8 +1120,8 @@ function BalanceView(props) {
 
     sParam.itemList.forEach((e) => {
       const index = e.i;
-      param["pay_type_" + index] = GlobalProps.BalancePayTypeCode();
-      param["inserttime_" + index] = e["insertTime"];
+      param["pay_type_" + index] = GlobalProps.BalancePayTypeCode().type;
+      param["inserttime_" + index] = e["insertTime"].format("YYYY-MM-DD");
       param["pay_method_" + index] = e["payMethod"];
       param["payment_" + index] = e["amount"];
     });
@@ -1135,8 +1161,11 @@ function BalanceView(props) {
                     itemLen={itemList.length}
                     eObserver={eObserver}
                     addOnClick={(ae) => {
+
                       const sIndex = index + 1;
-                      let newArray = [...itemList, newItem(sIndex)];
+                      const newItemObj = newItem(sIndex)
+//                      console.log("updated",newItemObj)
+                      let newArray = [...itemList, newItemObj];
                       updateParam({
                         ...sParam,
                         itemList: newArray,
@@ -1188,7 +1217,7 @@ function BalanceView(props) {
           </tr>
         </tbody>
       </table>
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
           { name: "잔금결제", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -1209,10 +1238,14 @@ function BalanceView(props) {
 
 //환불,예약취소  두기능이 같다 다만 type_code 가 틀릴뿐이다 
 //form은 같은걸 사용하고 type은 props를통해 외부에서 받기로한다 
+//httpPost 환불 ok type=2
+//httpPost 예약취소는 type=3   ok 
 function RefundForm(props) {
+
+  let {headerInfo} = useContext(ServerEventContext);
+
   const sourceObj = props.eventObj.source;
 
-  console.log("RefunType",props.type)
   const title = props.type === 2 ? "환불" :"예약취소"
 
   const isRefund = () => {
@@ -1224,20 +1257,30 @@ function RefundForm(props) {
   const [sParam, updateObj] = useState({
     memoStr: "",
     amount: 0,
+    isout:GlobalProps.RoomStateList[0],
     refundDate: moment(),
   });
 
   const okHandler = (e) => {
+
+    if(sParam.memoStr === null 
+        || sParam.memoStr.length < 1) {
+          message.info("메모 필수입력")
+          return 
+    }
+
     let param = {
+      type:props.type,
       reservation_no: sourceObj.no,
       from_date: sourceObj.fromDate,
       to_date: sourceObj.toDate,
-      isout: "",
+      isout: sParam.isout.type,
       out_date: "",
       payment: sourceObj.payment,
       real_money: sourceObj.realMoney,
       refund_date: sParam.refundDate.format("YYYY-MM-DD"),
-      del_date: "",
+      del_date: moment().format("YYYY-MM-DD"),
+      del_manager:headerInfo.userName,
     };
 
     props.dispach({
@@ -1270,9 +1313,17 @@ function RefundForm(props) {
               <tr id="r_rdate">
               <th scope="row">퇴실여부</th>
               <td>
-                <Radio.Group defaultValue="a" buttonStyle="solid">
-                  <Radio.Button value="a">입실유지</Radio.Button>
-                  <Radio.Button value="b">퇴실</Radio.Button>
+                <Radio.Group defaultValue={sParam.isout}
+                  onChange={(e) => {
+
+                    updateObj({
+                      ...sParam,
+                      isout:e
+                    })
+                  }}
+                buttonStyle="solid">
+                  <Radio.Button value={GlobalProps.RoomStateList[0]}>입실유지</Radio.Button>
+                  <Radio.Button value={GlobalProps.RoomStateList[1]}>퇴실</Radio.Button>
                 </Radio.Group>
               </td>
             </tr>            
@@ -1338,7 +1389,7 @@ function RefundForm(props) {
           </tr>
         </tbody>
       </table>
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
           { name: "환불", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -1350,6 +1401,7 @@ function RefundForm(props) {
 
 //예약삭제
 //complete 21.08.04 22:37
+//httpPost ok 
 function DelteReservationForm(props) {
   const eventObj = props.eventObj;
   const sourceObj = eventObj.source;
@@ -1391,7 +1443,7 @@ function DelteReservationForm(props) {
         </tbody>
       </table>
 
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
           { name: "예약삭제", onClick: okHandler },
           { name: "취소", onClick: newCancelHandler(props) },
@@ -1401,18 +1453,13 @@ function DelteReservationForm(props) {
   );
 }
 
-// PAY_TYPE_ADD_RESERVATION = 0;
-// PAY_TYPE_PAY_REMAIN = 1;
-// PAY_TYPE_SOME_REFUNDS = 2;
-// PAY_TYPE_CANCEL_RESERVATION = 3;
-// PAY_TYPE_ALL_REFUNDS = 4;
-// PAY_TYPE_GIVEUP_TOTAL = 5;
-// PAY_TYPE_GIVEUP_REFUND = 6;
-// PAY_TYPE_EXTEND_DATE = 7;
 
 //계약포기
 //complete 21.08.04 22:37
+//httpPost 완성 
 function CancelContractForm(props) {
+
+
   const sourceObj = props.eventObj.source;
 
   const [inObj, updateObj] = useState({
@@ -1506,10 +1553,10 @@ function CancelContractForm(props) {
         </tbody>
       </table>
 
-      <ActionButtonViewComp
+      <ActionButtonGroupView
         buttons={[
-          { name: "취소", onClick: newCancelHandler(props) },
           { name: "계약포기", onClick: okHandler },
+          { name: "취소", onClick: newCancelHandler(props) },
         ]}
       />
     </div>

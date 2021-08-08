@@ -11,7 +11,7 @@ import {
 
   import style from "./ChartView.module.scss"
   
-//  import {emitHttpEvent } from "./chart_view_context";
+  import {ReservStateChecker } from "./chart_view_context";
   import {ServerEventContext} from "../server_event_context.js"
 
   import moment from "moment";
@@ -326,12 +326,12 @@ import {
 
           <li>
           <div className ={style.actionButton3}>
-              {/* <i className="icon_dialog_yes"></i> */}
-              <span className={style.text}>
-                <a href="/reservation/calendar">
+              <span className={style.text}
+              onClick={(e)=>{
+                window.location.href="/reservation/calendar";
+             }}>
                 입퇴실 달력
-                </a>
-                </span>
+            </span>
           </div>
 
           </li>
@@ -395,70 +395,68 @@ import {
         //   setSelectValue(e.item)
         // }
         else if(e.type === "filter-0"){
-          console.log(allReservationList.length)
+//          console.log(allReservationList.length)
           updateTableDataList(allReservationList)
         }
         else if(e.type === "filter-1"){
 
 //          console.log("size:",allReservationList.length)
           let list = allReservationList.filter((e)=>{
-              return e.inState === 0 && e.payType === "deposit"
+              // return e.inState === 0 && e.payType === "deposit"
+              return ReservStateChecker.isPreInDespi(e)
           })
           updateTableDataList(list)
         }
         else if(e.type === "filter-2"){
           let list = allReservationList.filter((e)=>{
-            return e.inState === 0 && e.payType === "full"
-        })
+            return ReservStateChecker.isPreInFull(e)
+          })
         updateTableDataList(list)
 
         }     
         else if(e.type === "filter-3"){
-
           let list = allReservationList.filter((e)=>{
-            return e.inState === 1 && e.payType === "deposit"
+            return ReservStateChecker.isCheckInDespi(e)
           })
           updateTableDataList(list)
         }     
         else if(e.type === "filter-4"){
 
           let list = allReservationList.filter((e)=>{
-            return e.inState === 1 && e.payType === "full"
+            return ReservStateChecker.isCheckinFull(e)
           })
           updateTableDataList(list)
         }     
         else if(e.type === "filter-5"){
 
           let list = allReservationList.filter((e)=>{
-            return e.isMove === 1 
+            return ReservStateChecker.isMoveRoom(e)
           })
           updateTableDataList(list)
 
         }     
         else if(e.type === "filter-6"){
           let list = allReservationList.filter((e)=>{
-            return e.inState === 2 || e.inState === 3000
+            return ReservStateChecker.isDrop(e)
           })
           updateTableDataList(list)
         }     
         else if(e.type === "filter-7"){
 
           let list = allReservationList.filter((e)=>{
-            return e.delState === 1
+            return ReservStateChecker.isCancel(e)
           })
           updateTableDataList(list)
         }     
         else if(e.type === "filter-8"){
 
           let list = allReservationList.filter((e)=>{
-            return e.revisit
+            return ReservStateChecker.isRevisit(e)
           })
           updateTableDataList(list)
         }     
         else if(e.type === "filter-9"){
-          let list = allReservationList.filter((e)=>{
-            return e.delState === 2
-          })
+          let list = allReservationList.filter(ReservStateChecker.isExitRoom)
           updateTableDataList(list)
 
         }

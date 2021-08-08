@@ -2,6 +2,52 @@
 @import "../globle.scss";
 
 
+.ActionButton {
+    appearance: auto;
+//    -webkit-writing-mode: horizontal-tb !important;
+    // text-rendering: auto;
+    // color: -internal-light-dark(black, white);
+    // letter-spacing: normal;
+    // word-spacing: normal;
+    // text-transform: none;
+    // text-indent: 0px;
+    // text-shadow: none;
+    // text-align: center;
+    // box-sizing: border-box;
+    // margin: 0em;
+    font: 400 13.3333px Arial;
+    border-width: 2px;
+    border-style: outset;
+    border-color: -internal-light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
+    border-image: initial;
+    overflow: visible;
+
+    // cursor: default;
+    // cursor: pointer;
+    background: none;
+    border: 0;
+    margin: 0 5px;
+
+    height: 36px;
+    font-size: 14px;
+    line-height: 1em;
+    color: #fff;
+    // vertical-align: top;
+    // white-space: nowrap;
+    border-radius: 3px;
+//    background-color: #000;    
+    background-color: #919191;
+    // outline-style: none;
+    // outline-width: medium;
+    display: flex;
+    align-items: flex-start;
+    text-align: center;
+
+    // display: inline-block;
+    padding: 11px 18px;
+
+}
+
 .TextLineWrapper {
 
     @include RowLine;
@@ -53,9 +99,9 @@
         margin-left: 10px;
 //        height: 40px;
     //        background-color: black;
-        justify-content: end;
+        justify-content: flex-end;
         flex-direction: column;
-        align-items: end;
+        align-items: flex-end;
     }
     
 
@@ -63,22 +109,22 @@
 }
 
 
-.MemoInputBox{
-    background-color: rgb(245, 245, 245);
-    display:flex;
-    width: 300px; 
-    align-items: center;
-    justify-content:center;
-}
+// .MemoInputBox{
+//     background-color: rgb(245, 245, 245);
+//     display:flex;
+//     width: 300px; 
+//     align-items: center;
+//     justify-content:center;
+// }
 
 
 
 
-.ButtonGroups {
-   display: flex;
-   flex:1;
-    justify-content: start;
-    align-items: start;
-    flex-direction: row;
-//    align-items: end;
-}
+// .ButtonGroups {
+//    display: flex;
+//    flex:1;
+//     justify-content: start;
+//     align-items: start;
+//     flex-direction: row;
+// //    align-items: end;
+// }

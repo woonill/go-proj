@@ -74,7 +74,7 @@ function doHttpPost(uri, params, fn) {
   function emitHttpEvent(event,extendParam) {
   
 
-    console.log("httpEvent",event)
+//    console.log("httpEvent",event)
     if (event.type === "FetchTableDataList") {
       doHttpGet("/ajax/api/tableDataList", event.params, event.resultHandler)
       return
@@ -86,20 +86,18 @@ function doHttpPost(uri, params, fn) {
     }
   
     if(event.type === "FetchPaymentHistorylist") {
-  //    http://testg.tosky.co.kr/reservation/payment/list?reservation_no=7740&bno=3
       doHttpGet("/reservation/payment/list",event.params,event.resultHandler)
       return;
     }
   
   
     if (event.type === "PostChangeRoom") {
-      console.log("PostChangeRoom",event)
-//      doHttpPost("/reservation/change/room",event.params,event.resultHandler)
+       doHttpPost("/reservation/change/room",event.params,event.resultHandler)
       return;
     }
 
     if(event.type === "ExtendReDates") {
-//      doHttpPost("/reservation/extend/date",event.params,event.resultHandler)
+      doHttpPost("/reservation/extend/date",event.params,event.resultHandler)
       return;
     }
 
@@ -109,22 +107,35 @@ function doHttpPost(uri, params, fn) {
     }
 
     if(event.type === "UpdateContractDate") {
-//      doHttpPost("/reservation/change/contract",event.params,event.resultHandler)
+      doHttpPost("/reservation/change/contract",event.params,event.resultHandler)
       return;
     }
 
     if(event.type === "ConfirmCheckIn") {
-//      doHttpPost("/reservation/setupexe",event.params,event.resultHandler)
+      doHttpPost("/reservation/setupexe",event.params,event.resultHandler)
       return;
     }
 
     if(event.type === "BalancePayment") {
-//      doHttpPost("/reservation/pay/remain",event.params,event.resultHandler)
+      doHttpPost("/reservation/pay/remain",event.params,event.resultHandler)
       return;
-
     }
 
+    if (event.type === "DeleteReservationExe") {
+      doHttpPost("/reservation/deleteexe",event.params,event.resultHandler)
+      return;
+    }
+
+
+    if(event.type === "SleepReservation") {
+      doHttpPost("/reservation/sleep",event.params,event.resultHandler)
+      return;
+    }
     
+    if(event.type === "PostRefund") {
+        doHttpPost("/reservation/refund",event.params,event.resultHandler)
+        return;
+    }
   }
 
 
