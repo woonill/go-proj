@@ -418,13 +418,15 @@ function allOfRoomCountingVal() {
 
   return function(cDate,eventObj) {
 
-    let roomReport = roomGraceReport[eventObj.source.roomLevel]
+//    let roomReport = roomGraceReport[eventObj.source.roomLevel]
+    let roomReport = roomGraceReport[eventObj.source.roomGradeNo]
+
     if (roomReport === undefined) {
       roomReport = {
         name: eventObj.source.rgName,
         dataList: {}
       }
-      roomGraceReport[eventObj.source.roomLevel] = roomReport;
+      roomGraceReport[eventObj.source.roomGradeNo] = roomReport;
     }
 
     let countVal = roomReport.dataList[cDate];
@@ -564,22 +566,22 @@ export const ReservStateChecker = (() => {
     isPreInDespi:function(sourceObj) { //입실예정(미남)
       return sourceObj.delState === 0 
           && sourceObj.inState === 0
-          && sourceObj.remainMoeny > 0
+          && sourceObj.remainMoney > 0
     },
     isPreInFull:function(sourceObj) { //입실예정 (완납)
       return sourceObj.delState === 0 
           && sourceObj.inState === 0
-          && sourceObj.remainMoeny <= 0
+          && sourceObj.remainMoney <= 0
     },
     isCheckInDespi:function(sourceObj) { //입실확정(미납)
       return sourceObj.delState === 0 
           && sourceObj.inState === 1
-          && sourceObj.remainMoeny > 0
+          && sourceObj.remainMoney > 0
     },
     isCheckinFull:function(sourceObj) { //입실확정(완납)
       return sourceObj.delState === 0 
           && sourceObj.inState === 1
-          && sourceObj.remainMoeny <= 0
+          && sourceObj.remainMoney <= 0
     },
     isMoveRoom:function(sourceObj) { //객실이동
       return sourceObj.delState === 0 && sourceObj.inState === 1

@@ -1,4 +1,6 @@
 import { createContext } from 'react'
+//import { ajax,from } from 'rxjs/ajax';
+import { from } from 'rxjs';
 
 function toUrl(uri,params) {
 
@@ -49,7 +51,27 @@ function doHttpPost(uri, params, fn) {
       })
   
   
-      fetch(uri, {
+      // fetch(uri, {
+      //   method: 'POST',
+      //   body:formData,
+      //   // headers: {
+      //   //   'Content-Type': 'application/json;charset=UTF-8'
+      //   // },
+      //   mode: 'cors',
+      //   cache: 'default'
+      // })
+      //   .then(res => {
+      //     return res.json()
+      //   }).then((resMessage) => {
+      //     let data = resMessage.data;
+      //     //         eventDispacher({type:"OnLoadCompletedResList",dataList:data})
+      //     fn(data)
+      //   }).catch(e => {
+      //     console.log("error", e)
+      //   })
+    
+        
+      let promise = fetch(uri, {
         method: 'POST',
         body:formData,
         // headers: {
@@ -60,14 +82,9 @@ function doHttpPost(uri, params, fn) {
       })
         .then(res => {
           return res.json()
-        }).then((resMessage) => {
-          let data = resMessage.data;
-          //         eventDispacher({type:"OnLoadCompletedResList",dataList:data})
-          fn(data)
-        }).catch(e => {
-          console.log("error", e)
         })
-    
+
+      return from(promise)
     }
   
   
@@ -92,13 +109,11 @@ function doHttpPost(uri, params, fn) {
   
   
     if (event.type === "PostChangeRoom") {
-       doHttpPost("/reservation/change/room",event.params,event.resultHandler)
-      return;
+       return doHttpPost("/reservation/change/room",event.params,event.resultHandler)
     }
 
     if(event.type === "ExtendReDates") {
-      doHttpPost("/reservation/extend/date",event.params,event.resultHandler)
-      return;
+      return doHttpPost("/reservation/extend/date",event.params,event.resultHandler)
     }
 
     if(event.type === "CancelRoom") {
@@ -107,34 +122,28 @@ function doHttpPost(uri, params, fn) {
     }
 
     if(event.type === "UpdateContractDate") {
-      doHttpPost("/reservation/change/contract",event.params,event.resultHandler)
-      return;
+      return doHttpPost("/reservation/change/contract",event.params,event.resultHandler)
     }
 
     if(event.type === "ConfirmCheckIn") {
-      doHttpPost("/reservation/setupexe",event.params,event.resultHandler)
-      return;
+      return doHttpPost("/reservation/setupexe",event.params,event.resultHandler)
     }
 
     if(event.type === "BalancePayment") {
-      doHttpPost("/reservation/pay/remain",event.params,event.resultHandler)
-      return;
+      return doHttpPost("/reservation/pay/remain",event.params,event.resultHandler)
     }
 
     if (event.type === "DeleteReservationExe") {
-      doHttpPost("/reservation/deleteexe",event.params,event.resultHandler)
-      return;
+      return doHttpPost("/reservation/deleteexe",event.params,event.resultHandler)
     }
 
 
     if(event.type === "SleepReservation") {
-      doHttpPost("/reservation/sleep",event.params,event.resultHandler)
-      return;
+      return doHttpPost("/reservation/sleep",event.params,event.resultHandler)
     }
     
     if(event.type === "PostRefund") {
-        doHttpPost("/reservation/refund",event.params,event.resultHandler)
-        return;
+        return doHttpPost("/reservation/refund",event.params,event.resultHandler)
     }
   }
 

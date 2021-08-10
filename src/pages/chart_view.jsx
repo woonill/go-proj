@@ -126,12 +126,14 @@ import {
 //          console.log("search value",textVal,dateRangeVals)
   
           let params = {}
+          let searchType;
   
           if(selectedValue === "0") {
   
             let startDate = dateRangeVals[0].format("YYYY-MM-DD");
             let endDate = dateRangeVals[1].format("YYYY-MM-DD");
   
+            searchType = "range";
             params['from'] = startDate;
             params['to'] =endDate;
           }
@@ -157,8 +159,11 @@ import {
               type:"FetchTableDataList",
               params:params,
               resultHandler:function(data){
-//                console.log("http data","return",data)
-                props.eventObserver({type:"OnLoadCompletedResList",data:data})
+                const sParam = {
+                  type:searchType,
+                  condition:params
+                }
+                props.eventObserver({type:"OnLoadCompletedResList",data:data,eParam:sParam})
           }})        
   
       }       
@@ -325,15 +330,14 @@ import {
 
 
           <li>
-          <div className ={style.actionButton3}>
-              <span className={style.text}
-              onClick={(e)=>{
-                window.location.href="/reservation/calendar";
-             }}>
-                입퇴실 달력
-            </span>
-          </div>
-
+            <div className ={style.actionButton3}>
+                <span className={style.text}
+                onClick={(e)=>{
+                  window.location.href="/reservation/calendar";
+              }}>
+                  입퇴실 달력
+              </span>
+            </div>
           </li>
 
           <button className={style.showGridButton}
@@ -387,9 +391,9 @@ import {
             }
         }
         else if(e.type ==="OnLoadCompletedResList") {
-          console.log("update reservation data list",e.data)
+//          console.log("update reservation data list",e.data)
           allReservationList = Array.from(e.data.dataList);
-          updateTableDataList(allReservationList)
+          updateTableDataList(allReservationList,e.eParam)
         }
         // else if(e.type === "UpdateSearchCondition")  {
         //   setSelectValue(e.item)
@@ -411,8 +415,7 @@ import {
           let list = allReservationList.filter((e)=>{
             return ReservStateChecker.isPreInFull(e)
           })
-        updateTableDataList(list)
-
+          updateTableDataList(list)
         }     
         else if(e.type === "filter-3"){
           let list = allReservationList.filter((e)=>{
@@ -464,32 +467,27 @@ import {
   }
 
 
+  // function ChartViewWrapper(props) {
+  // }
+
   function ListView(props) {
 
-    let TableComponent = React.memo(
-      (props) => {
-  
-        return (
-          <GroupTable dataList={props.dataList}/>
-        );
-      },
-//      [props.dataList]
-      (prevProps, nextProps) => {
-        return prevProps.dataList.length !== nextProps.dataList.length;
-      }
-    );
+
+    const dataList = props.reservationObj.dataList
+
+    if(dataList.length <1) {
+      return <div>loading.......</div>
+    } 
 
     if(props.viewState === 0) {
-
       return (
-          <TableComponent dataList={props.dataList}/>
+        <GroupTable
+          dataList={dataList} 
+          query={props.reservationObj.query}
+        />
       )
-    }else{
-        return (
-            <ChartDataView dataList={props.dataList}/>
-        )
     }
-
+    return <ChartDataView dataList={dataList}/>
 
   }
   
@@ -497,10 +495,39 @@ import {
 
 
     let {serverEventEmmiter} = useContext(ServerEventContext);
-    let [chartViewState,setChartViewState] = useState(0)
-    let [reservationDataList,updateTableDataList] = useState([])
+//    let [chartViewState,setChartViewState] = useState(0)
+    let [reservationObj,updateTableDataList] = useState({
+      dataList:[],
+      query:{},
+      chartViewState:0,
+    })
 
-    let dispach = newEventDispach(setChartViewState,updateTableDataList)
+    console.log(reservationObj)
+
+    let dispach = newEventDispach((newChartState)=>{
+      updateTableDataList({
+        ...reservationObj,
+        chartViewState:newChartState,
+      })
+
+    },function(dataList,eParam=null){
+
+      
+      if(eParam !== null) {
+//        reservationDataList
+        updateTableDataList({
+          ...reservationObj,
+          dataList:dataList,
+          query:eParam,
+        })
+      }
+      else{
+        updateTableDataList({
+          ...reservationObj,
+          dataList:dataList,
+        })  
+      }      
+    }) 
 
     
     useEffect(() => {
@@ -521,13 +548,15 @@ import {
             type:"FetchTableDataList",
             params:param,
             resultHandler:(data)=>{
-  //              console.log("data",data)
-                dispach({type:"OnLoadCompletedResList",data:data})
-        }})
-  
+                const sParam = {
+                  type:"range",
+                  condition:param
+                }
 
+                dispach({type:"OnLoadCompletedResList",data:data,eParam:sParam})
+        }})
       }
-    }, [])//한번만 콜된다 , 그후로는 search button에 의해 동작하기때문에 
+    }, [props.headerInfo])//한번만 콜된다 , 그후로는 search button에 의해 동작하기때문에 
 
 
     return (
@@ -536,10 +565,12 @@ import {
             <HeaderView eventObserver={dispach} emitHttpEvent={serverEventEmmiter}/>
           </div>
           <ActionBunttonGroupView 
-            displayState={chartViewState} 
+            displayState={reservationObj.chartViewState} 
             eventObserver={dispach}/>
           <div style={{ padding: 10 }}>
-              <ListView viewState={chartViewState} dataList={reservationDataList}/>
+              <ListView 
+                viewState={reservationObj.chartViewState} 
+                reservationObj={reservationObj}/>
           </div>
         </div>
     );

@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Table, Button, Popover } from "antd";
+import { Table,Modal, Button, Popover } from "antd";
 
 //import { styles } from "./ChartView.module.scss";
 
@@ -19,9 +19,13 @@ import {
   ReservationConfirmForm,
   DelteReservationForm,
 } from "./chart_view_modal";
-import { PopupView } from "../components/popup";
-import { GantchartContext, toChartData,buildReportDataList } from "./chart_view_context";
-import {ServerEventContext} from "../server_event_context.js"
+import {
+  GantchartContext,
+  toChartData,
+  buildReportDataList,
+  ReservStateChecker,
+} from "./chart_view_context";
+import { ServerEventContext } from "../server_event_context.js";
 
 const moment = extendMoment(Moment);
 
@@ -33,7 +37,6 @@ function RangeTimelineText(props) {
     //   <span>{rtext}</span>
     // </div>
     <span>{rtext}</span>
-
   );
 }
 
@@ -64,6 +67,55 @@ function OverrideTimline(dataList) {
       })}
     </div>
   );
+}
+
+
+function newSchButtonBGColorOfRGB(sourceObj) {
+
+  // if(sourceObj.name === "조수진") {
+  //   console.log("ZhaoShuZhen",sourceObj)
+  // }
+
+  let colorValue = "40,40,40";
+
+  if(ReservStateChecker.isPreInDespi(sourceObj)) {
+    colorValue="238,131,95"
+  }
+  else if(ReservStateChecker.isPreInFull(sourceObj)) {
+    colorValue="113,186,217"
+  }
+  else if(ReservStateChecker.isCheckInDespi(sourceObj)){
+    colorValue="113,186,217"
+
+  }
+  else if(ReservStateChecker.isCheckinFull(sourceObj)) {
+    colorValue="220,167,169"
+  }
+  else if(ReservStateChecker.isMoveRoom(sourceObj)) {
+    colorValue="96,183,156"
+  }
+  else if(ReservStateChecker.isDrop(sourceObj)) {
+    colorValue="243,189,92"
+  }
+  else if(ReservStateChecker.isCancel(sourceObj)) {
+    colorValue="128,128,128"
+  }
+  else if(ReservStateChecker.isRevisit(sourceObj)) {
+    colorValue="255,255,255"
+  }
+  else if(ReservStateChecker.isRevisit(sourceObj)) {
+    colorValue="189,189,189"
+  }
+
+
+
+  return colorValue;
+  // return {
+  //   width: "100%",
+  //   height: "100%",
+  //   backgroundColor: `rgb(${colorValue})`,
+  //   borderStyle: "none",
+  // }
 }
 
 //중첩구간에대한 View 생성함수
@@ -103,14 +155,12 @@ function gridChartCompRender(eventObj, mergeCount) {
 
   let fname = "";
 
-  overTimeArray.forEach((e,i)=>{
-
-    if(i>0) {
-      fname = fname+","
+  overTimeArray.forEach((e, i) => {
+    if (i > 0) {
+      fname = fname + ",";
     }
-    fname = fname+e.name
-  })
-
+    fname = fname + e.name;
+  });
 
   return (
     <div
@@ -136,8 +186,8 @@ function gridChartCompRender(eventObj, mergeCount) {
           style={{
             width: "100%",
             height: "100%",
-            backgroundColor: "red",
-            borderStyle: "none",            
+            backgroundColor:`rgb(${newSchButtonBGColorOfRGB(eventObj.source)})` ,
+            borderStyle: "none",
           }}
           colData={eventObj}
         >
@@ -161,20 +211,32 @@ function gridChartCompRender(eventObj, mergeCount) {
           borderLeftStyle: "solid",
           borderBottomStyle: "solid",
           borderBottomColor: "green",
-          //        borderStyle: "solid",
+          //borderStyle: "solid",
         }}
       >
         <Popover content={overrideTimeline} title="중첩구간">
-          <Button
+          {/* <Button
             style={{
               width: "100%",
               height: "100%",
-              backgroundColor: "red",
+              backgroundColor: "green",
               borderStyle: "none",
+              
             }}
           >
             <span>{fname}</span>
-          </Button>
+          </Button> */}
+
+            <div style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: "green",
+              borderStyle: "none",
+            }}
+            >
+            <span>{fname}</span>
+          </div>
+
         </Popover>
       </div>
       <div
@@ -187,7 +249,6 @@ function gridChartCompRender(eventObj, mergeCount) {
           borderLeftColor: "green",
           borderBottomColor: "green",
           flex: trLen,
-
         }}
       >
         <SchedulerBarButton
@@ -195,9 +256,10 @@ function gridChartCompRender(eventObj, mergeCount) {
           style={{
             width: "100%",
             height: "100%",
-            backgroundColor: "green",
+//            backgroundColor: "green",
+            backgroundColor:`rgb(${newSchButtonBGColorOfRGB(lastNode.source)})` ,
             borderStyle: "none",
-            justifyContent:"center",
+            justifyContent: "center",
           }}
         >
           <RangeTimelineText
@@ -212,56 +274,145 @@ function gridChartCompRender(eventObj, mergeCount) {
   );
 }
 
-
-
-const MouseRightMenuFunc = function(){
-
+const MouseRightMenuFunc = (function () {
   const _Right_Popup_fArray = [
-    { text: "상세보기",key:"1", data: { popupView: "1-1" } },
-    { text: "객실이동",key:"2", data: { popupView: "1-2", title: "객실이동",size:{width:530,height:"auto"} } },
-    { text: "기간연장",key:"3", data: { popupView: "1-3", title: "기간연장",size:{width:610,height:"auto"} } },
-    { text: "퇴실확정",key:"4", data: { popupView: "1-4", title: "퇴실확정",size:{width:610,height:"auto"} } },
-    { text: "계약일수정",key:"5", data: { popupView: "1-5", title: "계약일수정",size:{width:530,height:"auto"} } },
-    { text: "입실확정",key:"6", data: { popupView: "1-6", title: "입실확정",size:{width:800,height:"auto"} } },    
+    { text: "상세보기", key: "1", data: { popupView: "1-1" } },
+    {
+      text: "객실이동",
+      key: "2",
+      data: {
+        popupView: "1-2",
+        title: "객실이동",
+        size: { width: 530, height: "auto" },
+      },
+    },
+    {
+      text: "기간연장",
+      key: "3",
+      data: {
+        popupView: "1-3",
+        title: "기간연장",
+        size: { width: 610, height: "auto" },
+      },
+    },
+    {
+      text: "퇴실확정",
+      key: "4",
+      data: {
+        popupView: "1-4",
+        title: "퇴실확정",
+        size: { width: 610, height: "auto" },
+      },
+    },
+    {
+      text: "계약일수정",
+      key: "5",
+      data: {
+        popupView: "1-5",
+        title: "계약일수정",
+        size: { width: 530, height: "auto" },
+      },
+    },
+    {
+      text: "입실확정",
+      key: "6",
+      data: {
+        popupView: "1-6",
+        title: "입실확정",
+        size: { width: 800, height: "auto" },
+      },
+    },
   ];
-  
+
   const _Right_Popup_sArray = [
-    { key:"7",text: "결제내역", data: { popupView: "2-1", title: "결제내역" ,size:{width:800,height:"auto"}} },
-    { key:"8",text: "잔금결제", data: { popupView: "2-2", title: "잔금결제" ,size:{width:610,height:"auto"}} },
+    {
+      key: "7",
+      text: "결제내역",
+      data: {
+        popupView: "2-1",
+        title: "결제내역",
+        size: { width: 800, height: "auto" },
+      },
+    },
+    {
+      key: "8",
+      text: "잔금결제",
+      data: {
+        popupView: "2-2",
+        title: "잔금결제",
+        size: { width: 610, height: "auto" },
+      },
+    },
   ];
-  
+
   const _Right_Popup_tArray = [
-    { key:"9",text: "환불", data: { popupView: "3-1", title: "환불" ,size:{width:610,height:"auto"}} },
-    { key:"10",text: "예약삭제", data: { popupView: "3-2", title: "예약삭제" ,size:{width:610,height:"auto"}} },
-    { key:"11",text: "예약취소", data: { popupView: "3-3", title: "예약취소" ,size:{width:610,height:"auto"}} },
-    { key:"12",text: "계약포기", data: { popupView: "3-4", title: "계약포기" ,size:{width:530,height:"auto"}} },
-
+    {
+      key: "9",
+      text: "환불",
+      data: {
+        popupView: "3-1",
+        title: "환불",
+        size: { width: 610, height: "auto" },
+      },
+    },
+    {
+      key: "10",
+      text: "예약삭제",
+      data: {
+        popupView: "3-2",
+        title: "예약삭제",
+        size: { width: 610, height: "auto" },
+      },
+    },
+    {
+      key: "11",
+      text: "예약취소",
+      data: {
+        popupView: "3-3",
+        title: "예약취소",
+        size: { width: 610, height: "auto" },
+      },
+    },
+    {
+      key: "12",
+      text: "계약포기",
+      data: {
+        popupView: "3-4",
+        title: "계약포기",
+        size: { width: 530, height: "auto" },
+      },
+    },
   ];
 
-
-  let fMouseArray = {f:["1","2","3","4","5"],s:["7","8"],t:["9","10"]};
-  let sMouseArray = {f:["1","5","6"],s:["7","8"],t:["11","12","10"]};
-  let tMouseArray = {f:["1","5"],s:["7","8"],t:["10"]}
+  let fMouseArray = {
+    f: ["1", "2", "3", "4", "5"],
+    s: ["7", "8"],
+    t: ["9", "10"],
+  };
+  let sMouseArray = {
+    f: ["1", "5", "6"],
+    s: ["7", "8"],
+    t: ["11", "12", "10"],
+  };
+  let tMouseArray = { f: ["1", "5"], s: ["7", "8"], t: ["10"] };
 
   const filterFunc = (tList) => {
-
     return (e) => {
-      for(let i = 0;i<tList.length;i++) {
+      for (let i = 0; i < tList.length; i++) {
         const fEle = tList[i];
-        if(fEle === e.key) {
+        if (fEle === e.key) {
           return true;
         }
-     }
-     return false;
-  
-    }
+      }
+      return false;
+    };
   };
 
   const fComp = newMouseRightMenu(
-      _Right_Popup_fArray.filter(filterFunc(fMouseArray.f)),
-      _Right_Popup_sArray.filter(filterFunc(fMouseArray.s)),
-      _Right_Popup_tArray.filter(filterFunc(fMouseArray.t))
-    );
+    _Right_Popup_fArray.filter(filterFunc(fMouseArray.f)),
+    _Right_Popup_sArray.filter(filterFunc(fMouseArray.s)),
+    _Right_Popup_tArray.filter(filterFunc(fMouseArray.t))
+  );
 
   const sComp = newMouseRightMenu(
     _Right_Popup_fArray.filter(filterFunc(sMouseArray.f)),
@@ -275,28 +426,38 @@ const MouseRightMenuFunc = function(){
     _Right_Popup_tArray.filter(filterFunc(tMouseArray.t))
   );
 
-
-
-  return function(source) {
-
-    if(source.last && source.isMove === 1){
-      return tComp
+  return function (source) {
+    if (source.last && source.isMove === 1) {
+      return tComp;
     }
 
-    if(source.inState === 0) {
-      return sComp
+    if (source.inState === 0) {
+      return sComp;
     }
 
-//    console.log("source",source)
+    //    console.log("source",source)
     return fComp;
   };
-}();
-  
+})();
+
+
+// function ShowButton(props) {
+
+//   return (
+//     <div className="fn-label"
+//     onMouseOver={props.onMouseOver}
+//     onMouseOut={props.props}
+//     >
+//       최아람(2021-07-14 ~ 2021-07-31), 입실확정
+//     </div>
+//   )
+// }
+
 function SchedulerBarButton(props) {
   const { eventDispach } = useContext(GantchartContext);
 
   const { groupState } = useContext(GantchartContext);
-  const [bcState, updateBgColor] = useState("black");
+  const [bcState, updateBgColor] = useState("green");
 
   let dataSource = props.colData.source;
   let isGroupping = dataSource.isMove === 1; //이동했는 여부
@@ -337,7 +498,7 @@ function SchedulerBarButton(props) {
     if (isGroupping) {
       let groupStateVal = groupState[props.colData.source.no]; //no 는 똑같은 값이므로 이걸로 group key 표시
       groupStateVal.forEach((fallback) => {
-        fallback({ bgColor: "black" });
+        fallback({ bgColor: "green" });
       });
     }
   };
@@ -355,30 +516,30 @@ function SchedulerBarButton(props) {
       }}
       menuId={uuidv4()}
     >
-      <div style={{ width: "100%", padding: "1px", backgroundColor: bcState,}}>
-        <Button
-          type="primary"
+      <div style={{ width: "100%", padding: "1px", backgroundColor: bcState }}>
+        {/* <Button
+//          type="primary"
           style={props.style}
+          // style={newSchedulerButtonStyle(props.colData.source)}
           //        onDoubleClick={onDoubleClickHandler}
           onMouseOver={mouseOverEventHandler}
           onMouseOut={mouseOutEventHandler}
         >
           {props.children}
-        </Button>
-      </div>
+        </Button> */}
 
-      {/* <div className="fn-label"
+
+      <div style={props.style}
           onMouseOver={mouseOverEventHandler}
           onMouseOut={mouseOutEventHandler}
-      >
-      {props.children}
-      </div> */}
+        >
+          {props.children}
+      </div>
+
+      </div>
     </MouseRightMenuComp>
   );
 }
-
-
-
 
 function tableColumnRender(record, currentDayFormate) {
   let eventObjectList = record["eventObjList"];
@@ -450,12 +611,12 @@ function newTotalFragment(record, date) {
   let dataOfMonth = colDataArray[date];
   //  console.log("date",dataOfMonth)
   if (dataOfMonth !== undefined) {
-
-    if(record["rtype"] !== undefined) { //report 타입이 룹을 카운팅할때 
+    if (record["rtype"] !== undefined) {
+      //report 타입이 룹을 카운팅할때
       // if(record["roomSize"] === 2) {
       //   console.log("total",record["roomSize"],dataOfMonth)
       // }
-      dataOfMonth = record["roomSize"] - dataOfMonth      
+      dataOfMonth = record["roomSize"] - dataOfMonth;
     }
 
     return (
@@ -468,22 +629,24 @@ function newTotalFragment(record, date) {
 
 function DefaultSchedulerLine(props) {
   let eventObj = props.eventObj;
+  let bgColor = newSchButtonBGColorOfRGB(eventObj.source)
+
   return (
     <SchedulerBarButton
       style={{
-        borderRadius:"4px",
-        borderWith:"2px",
-        minWidth:"31px",
+        borderRadius: "4px",
+        borderWith: "2px",
+        minWidth: "31px",
         width: "100%",
-        height:"26px",
-        textAlign:"center",
-        display:"flex",
-        alignItems:"center",
-        justifyContent:"center",
+        height: "26px",
+        textAlign: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: `rgb(${bgColor})`
       }}
       colData={props.eventObj}
     >
-
       <RangeTimelineText
         mergeCount={props.mergeCount}
         name={eventObj.name}
@@ -512,8 +675,8 @@ function newColumnRender(sdate, start, end) {
       dataIndex: "eventObjList",
       key: sdate + "-" + i,
       render: function (text, record, index) {
-//        if (record["key"] === "report") {
-        if(record["key"].startsWith("report")){
+        //        if (record["key"] === "report") {
+        if (record["key"].startsWith("report")) {
           return newTotalFragment(record, calDay.format("YYYY-MM-DD"));
         }
         return tableColumnRender(record, calDay.format("YYYY-MM-DD"));
@@ -550,13 +713,10 @@ function newColumnHeader(stObj) {
   let dateStart = sDate.clone();
   let dateEnd = eDate.clone();
 
-
-
   let yearObj = {};
   yearObj[dateStart.year()] = [];
 
   while (dateEnd > dateStart || dateStart.format("M") === dateEnd.format("M")) {
-
     let curYearOfMonth = yearObj[dateStart.year()];
 
     if (curYearOfMonth === undefined) {
@@ -574,7 +734,7 @@ function newColumnHeader(stObj) {
     dateStart.add(1, "month");
   }
 
-//  console.log("Range Month", yearObj);
+  //  console.log("Range Month", yearObj);
 
   const sDateStr = sDate.format("YYYY-MM");
   const eDateStr = eDate.format("YYYY-MM");
@@ -619,7 +779,7 @@ function newColumnHeader(stObj) {
       }
 
       let el = {
-        title: key + "-"+mkey,
+        title: key + "-" + mkey,
         key: mvalue,
         // dataIndex:"colDataArray",
         children: newColumnRender(mvalue, startIndex, endIndex),
@@ -645,162 +805,225 @@ function newViewEventObserver(listener) {
   };
 }
 
-
-//톨계데이터를 room별로 바꾸는 함수 
-function buildTableDataList(roomList,eventObjList) {
-
-  roomList.sort(function (a, b) {
-
-    if (a.level === 1) {
-      return a.level - b.level
+//톨계데이터를 room별로 바꾸는 함수
+function buildTableDataList(roomList, eventObjList) {
+  roomList.sort((a, b) => {
+    if (a.roomLevel === 1) {
+//      return b.roomGradeNo - a.roomGradeNo;
+      return b.roomLevel - a.roomLevel;
+}
+    if (b.roomLevel === 1) {
+      return a.roomLevel - b.roomLevel;
     }
-    if (b.level === 1) {
-      return b.level - a.level
-    }
+    return 0
 
-    return ('' + a.name).localeCompare(b.name);
-  })
-
+//    return ("" + a.name).localeCompare(b.name);
+  });
 
   let eList = [];
 
   const selector = (roomNo) => {
-
-    for(let i=0;i<eventObjList.length;i++) {
+    for (let i = 0; i < eventObjList.length; i++) {
       const eventObjWrapper = eventObjList[i];
-//      console.log("Eventwrapper",eventObjWrapper)
-      if(eventObjWrapper.roomNo === roomNo) {
-        return eventObjWrapper
+      //      console.log("Eventwrapper",eventObjWrapper)
+      if (eventObjWrapper.roomNo === roomNo) {
+        return eventObjWrapper;
       }
     }
     return null;
-  }
+  };
 
-
-  for(let i=0;i<roomList.length;i++) {
+  for (let i = 0; i < roomList.length; i++) {
     let room = roomList[i];
-    let eventObjWarraper = selector(room.no)
+    let eventObjWarraper = selector(room.no);
 
-    const key = room.gradeName + "-" + room.name
-    const columnName = room.gradeName + "," + room.name
-    const eventList = eventObjWarraper == null ? [] : eventObjWarraper.eventObjList
-
+    const key = room.gradeName + "-" + room.name;
+    const columnName = room.gradeName + "," + room.name;
+    const eventList =
+      eventObjWarraper == null ? [] : eventObjWarraper.eventObjList;
 
     eList.push({
       key: key,
       name: columnName,
       roomLevel: room.level,
       eventObjList: eventList,
-    })
-
+    });
   }
   return eList;
 }
 
+// const groupBy = function (xs, key) {
+//   return xs.reduce(function (rv, x) {
+//     (rv[x[key]] = rv[x[key]] || []).push(x);
+//     return rv;
+//   }, {});
+// };
 
-const groupBy = function(xs, key) {
-  return xs.reduce(function(rv, x) {
-    (rv[x[key]] = rv[x[key]] || []).push(x);
-    return rv;
-  }, {});
-};
+const roomLevelGroupBy = function (roomList) {
+  //  console.log("RoomList",roomList)
 
-const roomLevelGroupBy = function(roomList) {
-//  console.log("RoomList",roomList)
-
-  let obj =  {}
-  for(let i = 0;i<roomList.length;i++) {
+  let obj = {};
+  for (let i = 0; i < roomList.length; i++) {
     const room = roomList[i];
-    const key = room["gradeNo"]
-    let roomLevel = obj[key]
-    if(roomLevel === undefined) {
+    const key = room["gradeNo"];
+    let roomLevel = obj[key];
+    if (roomLevel === undefined) {
       roomLevel = {
-        name:room["gradeName"],
-        roomList:[]
-      }
-      obj[key]  = roomLevel
+        name: room["gradeName"],
+        roomList: [],
+      };
+      obj[key] = roomLevel;
     }
-    roomLevel["roomList"].push(room)    
+    roomLevel["roomList"].push(room);
   }
   return obj;
+};
+
+
+/**
+ * @param {date|moment} start The start date
+ * @param {date|moment} end The end date
+ * @param {string} type The range type. eg: 'days', 'hours' etc
+ */
+function getRange(startDate, endDate, type) {
+  let fromDate = moment(startDate)
+  let toDate = moment(endDate)
+  let diff = toDate.diff(fromDate, type)
+  let range = []
+  for (let i = 0; i < diff; i++) {
+    range.push(moment(startDate).add(i, type))
+  }
+  return range
 }
 
 
-function ChartTableView(props) {
+function buildReportData(dataList, roomList, query) {
 
- 
+//  console.log("QueryObjc", query);
 
-  const roomList = props.roomList;
- 
-  let chartData = toChartData(props.dataList);
+  if (
+    query !== undefined &&
+    query !== null &&
+    query.type === "range") {
 
-  let data = buildTableDataList(roomList,chartData.list);
-  let columns = newColumnHeader(chartData.stObj);
+    let from = moment(query.condition["from"])
+    let to = (query.condition["to"])
 
-  let totalReportMap = buildReportDataList(chartData.list,roomList)//chartData["totalReport"];
+    //Logic for getting rest of the dates between two dates("FromDate" to "EndDate")
+    let colDate = getRange(from,to,"days").map((e)=>{
+      return e.format("YYYY-MM-DD")
+    })
 
-  let babyReport = totalReportMap["baby"];
-  let roomGradeReport = totalReportMap["roomGrade"];
+//    console.log("Reporting range date",colDate)
 
-  const roomLevelGroup = groupBy(roomList,"level")
-//  console.log("RoomGroup",roomLevelGroup)
+    let totalReportMap = buildReportDataList(dataList, roomList); //chartData["totalReport"];
+    let babyReport = totalReportMap["baby"];
+    let roomGradeReport = totalReportMap["roomGrade"];
+    const roomLevelGroup = roomLevelGroupBy(roomList);
 
-  Object.keys(roomGradeReport)
-    .reverse()
-    .forEach((key,i) => {
-      let totalReport = roomGradeReport[key];
-      let groupLength = roomLevelGroup[key].length
-//      console.log(key,"count",groupLength)
+
+    const resBabyCount=  {}
+
+    colDate.forEach((e) => {
+      const babyCount = babyReport[e]
+      resBabyCount[e] = babyCount === undefined ? 0 : babyCount
+    })
+
+
+//    console.log("roomGra",roomLevelGroup)
+//    console.log("BabyCount",babyReport)
+
+
+    return (data) => {
+      Object.keys(roomLevelGroup)
+        .reverse()
+        .forEach((key, i) => {
+
+          const roomGroupInfo = roomLevelGroup[key];
+          const roomLeng = roomGroupInfo.roomList.length;
+          const name = roomGroupInfo.name+",총객실수:"+roomLeng
+
+          let totalReport = roomGradeReport[key];
+//          let groupLength = roomLevelGroup[key].length;
+          let reportDataList = [];
+          
+          if(totalReport !== undefined && totalReport !== null) {
+            reportDataList = totalReport.dataList;
+          }
+
+          let colDataArray = {}
+          colDate.forEach((me)=>{
+            const dateStrVal = reportDataList[me];
+            colDataArray[me] = dateStrVal === undefined ? 0 : dateStrVal;
+          })
+
+//          console.log(colDataArray)
+
+          data.unshift({
+            key: "report" + i,
+            rtype: "room",
+            roomSize: roomLeng,
+            name: name,
+            colDataArray: colDataArray,
+          });
+        });
 
       data.unshift({
-        key: "report"+i,
-        rtype:"room",
-        roomSize:groupLength,
-        name: totalReport.name,
-        colDataArray: totalReport.dataList,
+        key: "report",
+        name: "신생아",
+        colDataArray: resBabyCount,
       });
-    });
+      return data;
+    };
+  }
 
-  data.unshift({
-    key: "report",
-    name: "신생아",
-    colDataArray: babyReport,
-  });
-
-  let TableComponent = React.memo(
-    (props) => {
-      //      console.log("render table2",props.columns);
-
-      return (
-        <Table
-          rowKey="key"
-          scroll={{ y: 1100 }}
-          columns={props.columns}
-          dataSource={props.data}
-          bordered
-          pagination={false}
-          size="middle"
-        />
-      );
-    },
-    (prevProps, nextProps) => {
-      return prevProps.data.length !== nextProps.data.length;
-    }
-  );
-
-  // return TableComponent;
-
-  return <TableComponent data={data} columns={columns} />;
+  return (data) => {
+    return data;
+  };
 }
 
-function newInPopupView(listeners,emitHttpEvent) {
+function ChartTableView(props) {
+  const roomList = props.roomList;
 
-  const defaultObj = { pageIndex: "0-0", title: "Basic Modal",size:{width:700,height:500} };
+  let chartData = toChartData(props.dataList);
+
+  let data = buildTableDataList(roomList, chartData.list);
+  let columns = newColumnHeader(chartData.stObj);
+
+  const reportColumnFunc = buildReportData(
+    chartData.list,
+    roomList,
+    props.query
+  );
+
+
+  data = reportColumnFunc(data);
+
+  return (
+    <Table
+      rowKey="data-table"
+      scroll={{ y: 1100 }}
+      columns={columns}
+      dataSource={data}
+      bordered
+      pagination={false}
+      size="middle"
+    />
+  );
+}
+
+function newInPopupView(listeners, emitHttpEvent) {
+  const defaultObj = {
+    pageIndex: "0-0",
+    title: "Basic Modal",
+    size: { width: 700, height: 500 },
+  };
 
   return function (props) {
     //parent 에서 공유 state 를 사용하면 팝업이뜰때마다 전체가 다시 랜들링이 되기때문에
     //이건 내부에 state 를 가지고가야한다
     let [showPopupState, setShowPopup] = useState(defaultObj);
+//    const [confirmLoading, setConfirmLoading] = React.useState(false);
 
     listeners.push(function (e) {
       if (e.type === "onClickRightMenu") {
@@ -808,13 +1031,13 @@ function newInPopupView(listeners,emitHttpEvent) {
           window.location.href = scheduleDetailURL(e.eventObj.no);
           return;
         } else {
-
-//          console.log("Event",e)
-          setShowPopup({ 
-            pageIndex: e.data.popupView, 
+          //          console.log("Event",e)
+          setShowPopup({
+            pageIndex: e.data.popupView,
             title: e.data.title,
-            eventObj:e.eventObj,
-            size:e.data.size });
+            eventObj: e.eventObj,
+            size: e.data.size,
+          });
           return;
         }
       }
@@ -825,126 +1048,189 @@ function newInPopupView(listeners,emitHttpEvent) {
       }
     });
 
-
-    const eventUpdate = function(sEvent) {
-
-      if(sEvent.type !== "Cancel" ) {
-        console.log("event",sEvent)
-        emitHttpEvent(sEvent)
+    const eventUpdate = function (sEvent) {
+      if (sEvent.type !== "Cancel") {
+        console.log("event", sEvent);
+        let respo = emitHttpEvent(sEvent);
+        console.log(respo)
+        
+        respo.subscribe(
+          (next)=>{
+            Modal.info({
+              title: 'Message',
+              content: (
+                <div>
+                  <p>Success...</p>
+                </div>
+              ),
+              onOk() {
+                setShowPopup(defaultObj)
+              },
+            });
+          },
+          (error)=>{
+            Modal.error({
+              title: 'Message',
+              content: (
+                <div>
+                  <p>Error...</p>
+                </div>
+              ),
+            });
+          }
+        )
+      
       }
-      console.log("cancel popup")
-      setShowPopup(defaultObj);
+      // console.log("cancel popup");
+      // setShowPopup(defaultObj);
+    };
 
-    }
-
-//    const roomDataMap = groupBy(props.roomList,"level")
-    const roomDataMap = roomLevelGroupBy(props.roomList)
+    //    const roomDataMap = groupBy(props.roomList,"level")
+    const roomDataMap = roomLevelGroupBy(props.roomList);
 
     return (
-      <PopupView
-        title={showPopupState.title}
-        size={showPopupState.size}
-        onOk={(e2) => {
-          setShowPopup(defaultObj);
+      // <PopupView
+      //   title={showPopupState.title}
+      //   size={showPopupState.size}
+      //   onOk={(e2) => {
+      //     setShowPopup(defaultObj);
+      //   }}
+      //   visible={showPopupState.pageIndex !== defaultObj.pageIndex}
+      //   handleCancel={(e) => {
+      //     setShowPopup(defaultObj);
+      //   }}
+      // >
 
-        }}
-        visible={showPopupState.pageIndex !== defaultObj.pageIndex}
-        handleCancel={(e) => {
-          setShowPopup(defaultObj);
-        }}
-      >
-        <SubViewComponent 
-          pageIndex={showPopupState.pageIndex} 
+
+      <Modal
+          width={showPopupState.size.width}
+          heigt={showPopupState.size.heigt}
+          // bodyStyle={{margin:0,padding:0}}
+          title={showPopupState.title}
+          visible={showPopupState.pageIndex !== defaultObj.pageIndex}
+          onOk={(e2) => {
+            setShowPopup(defaultObj);
+          }}
+          onCancel={(e) => {
+            setShowPopup(defaultObj);
+          }}
+          okButtonProps={{ disabled: true,visible:false }}
+          cancelButtonProps={{ disabled: true,visible:false }}
+//          confirmLoading={confirmLoading}
+          footer={null}
+          destroyOnClose
+        >
+
+
+        <SubViewComponent
+          pageIndex={showPopupState.pageIndex}
           eventObj={showPopupState.eventObj}
           roomList={props.roomList}
           dispach={eventUpdate}
           loadData={emitHttpEvent}
           roomMap={roomDataMap}
-          />
-      </PopupView>
+        />
+
+      {/* </PopupView> */}
+      </Modal>
+
     );
   };
 }
 
 function SubViewComponent(props) {
-
-//  console.log("Popup props:",props)
+  //  console.log("Popup props:",props)
 
   if ("1-2" === props.pageIndex) {
-    return <MoveRoomForm {...props} 
-      // loadData={emitHttpEvent} 
-      // roomMap={roomDataMap}
+    return (
+      <MoveRoomForm
+        {...props}
+        // loadData={emitHttpEvent}
+        // roomMap={roomDataMap}
       />
+    );
   }
 
   if ("1-3" === props.pageIndex) {
-    return <YenzangForm {...props}/>;
+    return <YenzangForm {...props} />;
   }
 
   if ("1-4" === props.pageIndex) {
-    return <ReversionCancelPopup {...props}/>
+    return <ReversionCancelPopup {...props} />;
   }
 
   if ("1-5" === props.pageIndex) {
-    return <UpdateDueDateForm  {...props}/>;
+    return <UpdateDueDateForm {...props} />;
   }
 
-  if("1-6" === props.pageIndex) {
-    return <ReservationConfirmForm {...props}/>
+  if ("1-6" === props.pageIndex) {
+    return <ReservationConfirmForm {...props} />;
   }
 
   if ("2-1" === props.pageIndex) {
-    return <FinaceListView {...props} />
+    return <FinaceListView {...props} />;
   }
   if ("2-2" === props.pageIndex) {
-    return <BalanceView {...props}/>
+    return <BalanceView {...props} />;
   }
 
   if ("3-1" === props.pageIndex) {
-    return <RefundForm {...props} type={2}/>
+    return <RefundForm {...props} type={2} />;
   }
 
-  if("3-3" === props.pageIndex) {
-    return <RefundForm {...props} type={3}/>
-
+  if ("3-3" === props.pageIndex) {
+    return <RefundForm {...props} type={3} />;
   }
 
   if ("3-2" === props.pageIndex) {
-    return <DelteReservationForm {...props}/>
+    return <DelteReservationForm {...props} />;
   }
 
-  if("3-4" === props.pageIndex) {
-    return <CancelContractForm {...props}/>
-
+  if ("3-4" === props.pageIndex) {
+    return <CancelContractForm {...props} />;
   }
 
-  return <ReversionCancelPopup {...props}/>;
+  return <div>error.....</div>
 }
 
 export default function GroupTable(props) {
+  
+  
+//  console.log("Query",props.query)
 
-  let {serverEventEmmiter} = useContext(ServerEventContext);
+  let { serverEventEmmiter } = useContext(ServerEventContext);
 
-  let [roomList,updateRoomList] = useState([])
+  let [ctxObj, updateRoomList] = useState(() => {
+    return {
+      roomList: [],
+      query: props.query,
+    };
+  });
 
-  useEffect(()=>{
-
-    if(roomList.length < 1) {
+  useEffect(() => {
+    if (ctxObj.roomList.length < 1) {
       serverEventEmmiter({
-        type:"FetchRoomList",
-        resultHandler:function(e) {
-//          console.log("RoomList",e)
-          updateRoomList(e.dataList)
-        }
-      })
+        type: "FetchRoomList",
+        resultHandler: function (e) {
+//          console.log("RoomList", e, "Query", props.query);
+          updateRoomList({
+            ...ctxObj,
+            roomList: e.dataList,
+          });
+        },
+      });
     }
-  },[1])
+  }, [props]);
 
+  let roomList = ctxObj.roomList;
 
-  if (props.dataList.length < 1 || roomList.length < 1) {
-    return (<div><span>loading.......</span></div>)
+  if (roomList.length < 1) {
+    return (
+      <div>
+        <span>loading.......</span>
+      </div>
+    );
   }
-
 
   let groupState = {};
   let listeners = [];
@@ -958,7 +1244,7 @@ export default function GroupTable(props) {
     }
   });
 
-  let InPopupView = newInPopupView(listeners,serverEventEmmiter);
+  let InPopupView = newInPopupView(listeners, serverEventEmmiter);
   let eventDispach = newViewEventObserver(listeners);
 
   return (
@@ -973,9 +1259,13 @@ export default function GroupTable(props) {
           pagination={false}
           size="middle"
         /> */}
-        <ChartTableView dataList={props.dataList} roomList={roomList} />
+        <ChartTableView
+          dataList={props.dataList}
+          roomList={roomList}
+          query={ctxObj.query}
+        />
         <InPopupView roomList={roomList}>
-          <SubViewComponent/>
+          <SubViewComponent />
         </InPopupView>
       </div>
     </GantchartContext.Provider>
