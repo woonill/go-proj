@@ -1,5 +1,4 @@
 import { createContext } from 'react'
-//import { ajax,from } from 'rxjs/ajax';
 import { from } from 'rxjs';
 
 function toUrl(uri,params) {
@@ -117,11 +116,11 @@ function doHttpPost(uri, params, fn) {
     }
 
     if(event.type === "CancelRoom") {
-//      doHttpPost("/reservation/confirmexit",event.params,event.resultHandler)
-      return;
+      return doHttpPost("/reservation/confirmexit",event.params,event.resultHandler)
     }
 
     if(event.type === "UpdateContractDate") {
+      console.log("doHttpPostUpdateContractDate")
       return doHttpPost("/reservation/change/contract",event.params,event.resultHandler)
     }
 

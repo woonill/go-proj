@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Table,Modal, Button, Popover } from "antd";
+import { Table, Modal, Popover } from "antd";
 
 //import { styles } from "./ChartView.module.scss";
 
@@ -19,25 +19,79 @@ import {
   ReservationConfirmForm,
   DelteReservationForm,
 } from "./chart_view_modal";
+
 import {
   GantchartContext,
-  toChartData,
   buildReportDataList,
   ReservStateChecker,
 } from "./chart_view_context";
+
 import { ServerEventContext } from "../server_event_context.js";
 
 const moment = extendMoment(Moment);
 
 function RangeTimelineText(props) {
+  let fontColor = props.color ? "black" : props.color;
   let rtext = "(" + props.name + ")" + props.from + " ~ " + props.to + "";
   rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 5);
-  return (
-    // <div style={{textAlign:"center"}}>
-    //   <span>{rtext}</span>
-    // </div>
-    <span>{rtext}</span>
-  );
+  return <span style={{ 
+    // width:"100%",height:"100%",
+    // display:"flex",
+    // flex:1,
+    // backgroundColor:"red",
+    textAlign: "center",
+    color: fontColor }}>{rtext}</span>;
+}
+
+function newSchButtonStyle(source, merge = 1) {
+  let bgColor = newSchButtonBGColorOfRGB(source);
+  let fontColor = newSchButtonFontColor(source)
+
+  if (
+    ReservStateChecker.isPreInDespi(source) ||
+    ReservStateChecker.isCheckInDespi(source)
+  ) {
+    return {
+      borderStyle: "solid",
+      borderWidth: "2px",
+      borderColor: `rgb(${bgColor})`,
+      borderRadius: "4px",
+      textAlign: "center",
+      // width:"100%",
+      // height:"100%",
+     display: "flex",
+     flex: merge,
+      alignItems: "center",
+      justifyContent: "center",
+    };
+  }
+
+  return {
+    bodyStyle: "solid",
+    borderRadius: "4px",
+    borderWith: "2px",
+    backgroundColor: `rgb(${bgColor})`,
+    textAlign: "center",
+    color:fontColor,
+    display:"flex",
+    flex:merge,
+
+    // width:"100%",
+    // height:"100%",
+
+
+    // flexGrow:1,
+    // alignSelf:"stretch",
+
+    // display: "flex",
+    // flex:1,
+    alignItems: "center",
+    justifyContent: "center",
+    // minWidth: "31px",
+    // width: "100%",
+    // height: "100%",
+    // padding:"1px",
+  };
 }
 
 function scheduleDetailURL(no) {
@@ -51,6 +105,7 @@ function OverrideTimline(dataList) {
         return (
           <p>
             <span
+              style={{ textAlign: "center" }}
               onClick={(e) =>
                 (window.location.href = scheduleDetailURL(eventObj.no))
               }
@@ -69,53 +124,54 @@ function OverrideTimline(dataList) {
   );
 }
 
+function newSchButtonFontColor(sourceObj) {
+  if (ReservStateChecker.isPreInDespi(sourceObj)) {
+    return "167,104,188";
+  } else if (ReservStateChecker.isCheckInDespi(sourceObj)) {
+    return "234,97,83";
+  } else {
+    return "255,255,255";
+  }
+}
 
 function newSchButtonBGColorOfRGB(sourceObj) {
-
   // if(sourceObj.name === "조수진") {
   //   console.log("ZhaoShuZhen",sourceObj)
   // }
 
   let colorValue = "40,40,40";
-
-  if(ReservStateChecker.isPreInDespi(sourceObj)) {
-    colorValue="238,131,95"
+  if (ReservStateChecker.isExitRoom(sourceObj)) {
+    return "230,230,230";
+  } else if (ReservStateChecker.isDrop(sourceObj)) {
+    return "253,203,110";
+  } else if (ReservStateChecker.isCancel(sourceObj)) {
+    return "125,125,125";
+  } else if (
+    ReservStateChecker.isPreInDespi(sourceObj) ||
+    ReservStateChecker.isPreInFull(sourceObj)
+  ) {
+    return "187,131,202";
+  } else if (
+    ReservStateChecker.isCheckInDespi(sourceObj) ||
+    ReservStateChecker.isCheckinFull(sourceObj)
+  ) {
+    return "255,137,118";
   }
-  else if(ReservStateChecker.isPreInFull(sourceObj)) {
-    colorValue="113,186,217"
-  }
-  else if(ReservStateChecker.isCheckInDespi(sourceObj)){
-    colorValue="113,186,217"
-
-  }
-  else if(ReservStateChecker.isCheckinFull(sourceObj)) {
-    colorValue="220,167,169"
-  }
-  else if(ReservStateChecker.isMoveRoom(sourceObj)) {
-    colorValue="96,183,156"
-  }
-  else if(ReservStateChecker.isDrop(sourceObj)) {
-    colorValue="243,189,92"
-  }
-  else if(ReservStateChecker.isCancel(sourceObj)) {
-    colorValue="128,128,128"
-  }
-  else if(ReservStateChecker.isRevisit(sourceObj)) {
-    colorValue="255,255,255"
-  }
-  else if(ReservStateChecker.isRevisit(sourceObj)) {
-    colorValue="189,189,189"
-  }
-
-
-
-  return colorValue;
-  // return {
-  //   width: "100%",
-  //   height: "100%",
-  //   backgroundColor: `rgb(${colorValue})`,
-  //   borderStyle: "none",
+  // else if (ReservStateChecker.isCheckinFull(sourceObj)) {
+  //   return "187,131,202";
   // }
+  // else if (ReservStateChecker.isMoveRoom(sourceObj)) {
+  //   return "96,183,156";
+  // }
+  // else if (ReservStateChecker.isRevisit(sourceObj)) {
+  //   return "255,255,255";
+  // }
+  // else if (ReservStateChecker.isRevisit(sourceObj)) {
+  //   colorValue = "189,189,189";
+  // }
+
+  console.log("No have color state", sourceObj);
+  return colorValue;
 }
 
 //중첩구간에대한 View 생성함수
@@ -165,110 +221,38 @@ function gridChartCompRender(eventObj, mergeCount) {
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
+        // width: "100%",
+        // height: "100%",
         display: "flex",
+        flex: 1,
         flexDirection: "row",
         // justifyContent:"center"
       }}
     >
-      <div
-        style={{
-          flex: fWidth,
-          borderColor: "red",
-          borderBottomStyle: "solid",
-          borderTopStyle: "solid",
-          borderLeftStyle: "solid",
-          height: "100%",
-        }}
-      >
-        <SchedulerBarButton
-          style={{
-            width: "100%",
-            height: "100%",
-            backgroundColor:`rgb(${newSchButtonBGColorOfRGB(eventObj.source)})` ,
-            borderStyle: "none",
-          }}
-          colData={eventObj}
-        >
-          <RangeTimelineText
-            mergeCount={fRange}
-            name={eventObj.name}
-            from={eventObj.from}
-            to={eventObj.source.to}
-          />
-        </SchedulerBarButton>
+      <div style={newSchButtonStyle(eventObj.source,fWidth)}>
+        <SchedulerBarButton 
+          buttonStyle={{width:"100%"}}
+        mergeCount={1} colData={eventObj}/>
       </div>
       <div
-        style={{
-          flex: ssMerge,
-          // opacity: 0.3,
-          borderTopStyle: "solid",
-          borderTopColor: "red",
-          borderRightColor: "red",
-          borderLeftColor: "green",
-          // borderLeftWidth:2,
-          borderLeftStyle: "solid",
-          borderBottomStyle: "solid",
-          borderBottomColor: "green",
-          //borderStyle: "solid",
-        }}
+        style={{flex: ssMerge,}}
       >
         <Popover content={overrideTimeline} title="중첩구간">
-          {/* <Button
+          <div
             style={{
               width: "100%",
               height: "100%",
               backgroundColor: "green",
               borderStyle: "none",
-              
+              textAlign: "center",
             }}
           >
-            <span>{fname}</span>
-          </Button> */}
-
-            <div style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "green",
-              borderStyle: "none",
-            }}
-            >
-            <span>{fname}</span>
+            <span style={{ textAlign: "center" }}>{fname}</span>
           </div>
-
         </Popover>
       </div>
-      <div
-        style={{
-          borderBottomStyle: "solid",
-          borderTopStyle: "solid",
-          borderRightStyle: "solid",
-          borderRightColor: "green",
-          borderTopColor: "green",
-          borderLeftColor: "green",
-          borderBottomColor: "green",
-          flex: trLen,
-        }}
-      >
-        <SchedulerBarButton
-          colData={lastNode}
-          style={{
-            width: "100%",
-            height: "100%",
-//            backgroundColor: "green",
-            backgroundColor:`rgb(${newSchButtonBGColorOfRGB(lastNode.source)})` ,
-            borderStyle: "none",
-            justifyContent: "center",
-          }}
-        >
-          <RangeTimelineText
-            mergeCount={trLen}
-            name={lastNode.name}
-            from={lastNode.from}
-            to={lastNode.to}
-          />
-        </SchedulerBarButton>
+      <div style={newSchButtonStyle(lastNode.source,trLen)}>
+        <SchedulerBarButton mergeCount={1} colData={lastNode}/>
       </div>
     </div>
   );
@@ -340,7 +324,7 @@ const MouseRightMenuFunc = (function () {
       data: {
         popupView: "2-2",
         title: "잔금결제",
-        size: { width: 610, height: "auto" },
+        size: { width: 700, height: "auto" },
       },
     },
   ];
@@ -440,24 +424,12 @@ const MouseRightMenuFunc = (function () {
   };
 })();
 
-
-// function ShowButton(props) {
-
-//   return (
-//     <div className="fn-label"
-//     onMouseOver={props.onMouseOver}
-//     onMouseOut={props.props}
-//     >
-//       최아람(2021-07-14 ~ 2021-07-31), 입실확정
-//     </div>
-//   )
-// }
-
 function SchedulerBarButton(props) {
   const { eventDispach } = useContext(GantchartContext);
 
   const { groupState } = useContext(GantchartContext);
   const [bcState, updateBgColor] = useState("green");
+  const eventObj = props.colData;
 
   let dataSource = props.colData.source;
   let isGroupping = dataSource.isMove === 1; //이동했는 여부
@@ -503,6 +475,9 @@ function SchedulerBarButton(props) {
     }
   };
 
+//    const buttonStyle = newSchButtonStyle(props.colData.source,props.fWidth);
+  // let bgColor = newSchButtonBGColorOfRGB(props.colData.source);
+  let fontColor = newSchButtonFontColor(props.colData.source);
   const MouseRightMenuComp = MouseRightMenuFunc(dataSource);
 
   return (
@@ -516,27 +491,23 @@ function SchedulerBarButton(props) {
       }}
       menuId={uuidv4()}
     >
-      <div style={{ width: "100%", padding: "1px", backgroundColor: bcState }}>
-        {/* <Button
-//          type="primary"
-          style={props.style}
-          // style={newSchedulerButtonStyle(props.colData.source)}
-          //        onDoubleClick={onDoubleClickHandler}
-          onMouseOver={mouseOverEventHandler}
-          onMouseOut={mouseOutEventHandler}
-        >
-          {props.children}
-        </Button> */}
-
-
-      <div style={props.style}
-          onMouseOver={mouseOverEventHandler}
-          onMouseOut={mouseOutEventHandler}
-        >
-          {props.children}
+      <div
+        style={props.buttonStyle}
+        // style={{backgroundColor:"black",width:"100%"}}
+        onMouseOver={mouseOverEventHandler}
+        onMouseOut={mouseOutEventHandler}
+      >
+        {/* {props.children} */}
+        <RangeTimelineText
+          color={fontColor}
+          mergeCount={props.mergeCount}
+          name={eventObj.name}
+          from={eventObj.from}
+          to={eventObj.source.to}
+        />
       </div>
 
-      </div>
+      {/* </div> */}
     </MouseRightMenuComp>
   );
 }
@@ -609,13 +580,8 @@ function tableColumnRender(record, currentDayFormate) {
 function newTotalFragment(record, date) {
   let colDataArray = record["colDataArray"];
   let dataOfMonth = colDataArray[date];
-  //  console.log("date",dataOfMonth)
   if (dataOfMonth !== undefined) {
     if (record["rtype"] !== undefined) {
-      //report 타입이 룹을 카운팅할때
-      // if(record["roomSize"] === 2) {
-      //   console.log("total",record["roomSize"],dataOfMonth)
-      // }
       dataOfMonth = record["roomSize"] - dataOfMonth;
     }
 
@@ -629,31 +595,16 @@ function newTotalFragment(record, date) {
 
 function DefaultSchedulerLine(props) {
   let eventObj = props.eventObj;
-  let bgColor = newSchButtonBGColorOfRGB(eventObj.source)
+  const bStyle = newSchButtonStyle(eventObj.source);
 
   return (
-    <SchedulerBarButton
-      style={{
-        borderRadius: "4px",
-        borderWith: "2px",
-        minWidth: "31px",
-        width: "100%",
-        height: "26px",
-        textAlign: "center",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: `rgb(${bgColor})`
-      }}
-      colData={props.eventObj}
-    >
-      <RangeTimelineText
-        mergeCount={props.mergeCount}
-        name={eventObj.name}
-        from={eventObj.from}
-        to={eventObj.to}
-      />
-    </SchedulerBarButton>
+    // <div style={bStyle}>
+    //   <SchedulerBarButton colData={props.eventObj} mergeCount={props.mergeCount}/>
+    // </div>
+    <SchedulerBarButton 
+      buttonStyle={bStyle}
+      colData={props.eventObj} 
+      mergeCount={props.mergeCount}/>
   );
 }
 
@@ -707,8 +658,11 @@ function calcuRangeDays(currentObj) {
 function newColumnHeader(stObj) {
   //  console.log("SRamge",searchRange)
 
-  const sDate = stObj.sDate.subtract(7, "days");
-  const eDate = stObj.eDate.add(7, "days");
+  // const sDate = stObj.sDate.subtract(7, "days");
+  // const eDate = stObj.eDate.add(7, "days");
+
+  const sDate = stObj.sDate.subtract(3, "days");
+  const eDate = stObj.eDate.add(3, "days");
 
   let dateStart = sDate.clone();
   let dateEnd = eDate.clone();
@@ -726,15 +680,12 @@ function newColumnHeader(stObj) {
       yearObj[newYear] = curYearOfMonth;
     }
 
-    //     timeValues.push(dateStart.format('YYYY-MM'));
     curYearOfMonth.push({
       mKey: dateStart.format("M"),
       mObj: dateStart.format("YYYY-MM"),
     });
     dateStart.add(1, "month");
   }
-
-  //  console.log("Range Month", yearObj);
 
   const sDateStr = sDate.format("YYYY-MM");
   const eDateStr = eDate.format("YYYY-MM");
@@ -757,9 +708,6 @@ function newColumnHeader(stObj) {
     ykey = ykey + key + "~";
 
     let value = yearObj[key];
-    //    const monthObj = value.mObj;
-
-    //    for (const mkey in monthObj) {
     for (let i = 0; i < value.length; i++) {
       const monthObj = value[i];
       const mkey = monthObj.mKey;
@@ -809,15 +757,15 @@ function newViewEventObserver(listener) {
 function buildTableDataList(roomList, eventObjList) {
   roomList.sort((a, b) => {
     if (a.roomLevel === 1) {
-//      return b.roomGradeNo - a.roomGradeNo;
+      //      return b.roomGradeNo - a.roomGradeNo;
       return b.roomLevel - a.roomLevel;
-}
+    }
     if (b.roomLevel === 1) {
       return a.roomLevel - b.roomLevel;
     }
-    return 0
+    return 0;
 
-//    return ("" + a.name).localeCompare(b.name);
+    //    return ("" + a.name).localeCompare(b.name);
   });
 
   let eList = [];
@@ -825,7 +773,6 @@ function buildTableDataList(roomList, eventObjList) {
   const selector = (roomNo) => {
     for (let i = 0; i < eventObjList.length; i++) {
       const eventObjWrapper = eventObjList[i];
-      //      console.log("Eventwrapper",eventObjWrapper)
       if (eventObjWrapper.roomNo === roomNo) {
         return eventObjWrapper;
       }
@@ -852,13 +799,6 @@ function buildTableDataList(roomList, eventObjList) {
   return eList;
 }
 
-// const groupBy = function (xs, key) {
-//   return xs.reduce(function (rv, x) {
-//     (rv[x[key]] = rv[x[key]] || []).push(x);
-//     return rv;
-//   }, {});
-// };
-
 const roomLevelGroupBy = function (roomList) {
   //  console.log("RoomList",roomList)
 
@@ -879,85 +819,74 @@ const roomLevelGroupBy = function (roomList) {
   return obj;
 };
 
-
 /**
  * @param {date|moment} start The start date
  * @param {date|moment} end The end date
  * @param {string} type The range type. eg: 'days', 'hours' etc
  */
 function getRange(startDate, endDate, type) {
-  let fromDate = moment(startDate)
-  let toDate = moment(endDate)
-  let diff = toDate.diff(fromDate, type)
-  let range = []
+  let fromDate = moment(startDate);
+  let toDate = moment(endDate);
+  let diff = toDate.diff(fromDate, type);
+  let range = [];
   for (let i = 0; i < diff; i++) {
-    range.push(moment(startDate).add(i, type))
+    range.push(moment(startDate).add(i, type));
   }
-  return range
+  return range;
 }
 
-
 function buildReportData(dataList, roomList, query) {
+  //  console.log("QueryObjc", query);
 
-//  console.log("QueryObjc", query);
-
-  if (
-    query !== undefined &&
-    query !== null &&
-    query.type === "range") {
-
-    let from = moment(query.condition["from"])
-    let to = (query.condition["to"])
+  if (query !== undefined && query !== null && query.type === "range") {
+    let from = moment(query.condition["from"]);
+    let to = moment(query.condition["to"]);
 
     //Logic for getting rest of the dates between two dates("FromDate" to "EndDate")
-    let colDate = getRange(from,to,"days").map((e)=>{
-      return e.format("YYYY-MM-DD")
-    })
+    let colDate = getRange(from, to, "days").map((e) => {
+      return e.format("YYYY-MM-DD");
+    });
 
-//    console.log("Reporting range date",colDate)
+    //    console.log("Reporting range date",colDate)
 
     let totalReportMap = buildReportDataList(dataList, roomList); //chartData["totalReport"];
     let babyReport = totalReportMap["baby"];
     let roomGradeReport = totalReportMap["roomGrade"];
     const roomLevelGroup = roomLevelGroupBy(roomList);
 
-
-    const resBabyCount=  {}
+    const resBabyCount = {};
 
     colDate.forEach((e) => {
-      const babyCount = babyReport[e]
-      resBabyCount[e] = babyCount === undefined ? 0 : babyCount
-    })
+      const babyCount = babyReport[e];
+      resBabyCount[e] = babyCount === undefined ? 0 : babyCount;
+    });
 
-
-//    console.log("roomGra",roomLevelGroup)
-//    console.log("BabyCount",babyReport)
-
+    //    console.log("roomGra",roomLevelGroup)
+    //    console.log("BabyCount",babyReport)
 
     return (data) => {
       Object.keys(roomLevelGroup)
         .reverse()
         .forEach((key, i) => {
-
           const roomGroupInfo = roomLevelGroup[key];
           const roomLeng = roomGroupInfo.roomList.length;
-          const name = roomGroupInfo.name+",총객실수:"+roomLeng
+          const name = roomGroupInfo.name + ",총객실수:" + roomLeng;
 
           let totalReport = roomGradeReport[key];
-//          let groupLength = roomLevelGroup[key].length;
+          //          let groupLength = roomLevelGroup[key].length;
           let reportDataList = [];
-          
-          if(totalReport !== undefined && totalReport !== null) {
+
+          if (totalReport !== undefined && totalReport !== null) {
             reportDataList = totalReport.dataList;
           }
 
-          let colDataArray = {}
-          colDate.forEach((me)=>{
+          let colDataArray = {};
+          colDate.forEach((me) => {
             const dateStrVal = reportDataList[me];
             colDataArray[me] = dateStrVal === undefined ? 0 : dateStrVal;
-          })
+          });
 
-//          console.log(colDataArray)
+          //          console.log(colDataArray)
 
           data.unshift({
             key: "report" + i,
@@ -984,25 +913,38 @@ function buildReportData(dataList, roomList, query) {
 
 function ChartTableView(props) {
   const roomList = props.roomList;
-
-  let chartData = toChartData(props.dataList);
+  let chartData = props.chartData;
+  const query = props.query;
 
   let data = buildTableDataList(roomList, chartData.list);
-  let columns = newColumnHeader(chartData.stObj);
 
-  const reportColumnFunc = buildReportData(
-    chartData.list,
-    roomList,
-    props.query
-  );
+  // const sDate = chartData.stObj.sDate;
+  // const eDate = chartData.stObj.eDate//moment(query.condition.to);
+  const qStartDate = moment(query.condition.from);
+  const qEndDate = moment(query.condition.to);
 
+  const sDate = qStartDate.isBefore(chartData.stObj.sDate)
+    ? qStartDate
+    : chartData.stObj.sDate;
+  const eDate = qEndDate.isAfter(chartData.stObj.eDate)
+    ? qEndDate
+    : chartData.stObj.eDate;
+
+  const stObj = {
+    sDate: sDate,
+    eDate: eDate,
+  };
+
+  let columns = newColumnHeader(stObj);
+
+  const reportColumnFunc = buildReportData(chartData.list, roomList, query);
 
   data = reportColumnFunc(data);
 
   return (
     <Table
       rowKey="data-table"
-      scroll={{ y: 1100 }}
+      scroll={{ y: 700 }}
       columns={columns}
       dataSource={data}
       bordered
@@ -1012,10 +954,11 @@ function ChartTableView(props) {
   );
 }
 
-function newInPopupView(listeners, emitHttpEvent) {
+function newInPopupView(listeners, emitHttpEvent, parentDispach) {
   const defaultObj = {
     pageIndex: "0-0",
-    title: "Basic Modal",
+    title: "Popup",
+    reload: 0,
     size: { width: 700, height: 500 },
   };
 
@@ -1023,7 +966,12 @@ function newInPopupView(listeners, emitHttpEvent) {
     //parent 에서 공유 state 를 사용하면 팝업이뜰때마다 전체가 다시 랜들링이 되기때문에
     //이건 내부에 state 를 가지고가야한다
     let [showPopupState, setShowPopup] = useState(defaultObj);
-//    const [confirmLoading, setConfirmLoading] = React.useState(false);
+    //    const [confirmLoading, setConfirmLoading] = React.useState(false);
+
+    if (showPopupState.reload === 1) {
+      parentDispach({ type: "reloeadData" });
+      return <div>Reloading.....</div>;
+    }
 
     listeners.push(function (e) {
       if (e.type === "onClickRightMenu") {
@@ -1031,7 +979,7 @@ function newInPopupView(listeners, emitHttpEvent) {
           window.location.href = scheduleDetailURL(e.eventObj.no);
           return;
         } else {
-          //          console.log("Event",e)
+          //console.log("Event",e)
           setShowPopup({
             pageIndex: e.data.popupView,
             title: e.data.title,
@@ -1050,27 +998,30 @@ function newInPopupView(listeners, emitHttpEvent) {
 
     const eventUpdate = function (sEvent) {
       if (sEvent.type !== "Cancel") {
-        console.log("event", sEvent);
+        // console.log("event", sEvent);
         let respo = emitHttpEvent(sEvent);
-        console.log(respo)
-        
+
         respo.subscribe(
-          (next)=>{
+          (next) => {
             Modal.info({
-              title: 'Message',
+              title: "Message",
               content: (
                 <div>
                   <p>Success...</p>
                 </div>
               ),
               onOk() {
-                setShowPopup(defaultObj)
+                setShowPopup({
+                  ...defaultObj,
+                  reload: 1,
+                });
               },
             });
           },
-          (error)=>{
+          (error) => {
+            //            console.log(error)
             Modal.error({
-              title: 'Message',
+              title: "Message",
               content: (
                 <div>
                   <p>Error...</p>
@@ -1078,50 +1029,35 @@ function newInPopupView(listeners, emitHttpEvent) {
               ),
             });
           }
-        )
-      
+        );
+      } else {
+        //        console.log("cancel popup");
+        setShowPopup(defaultObj);
       }
-      // console.log("cancel popup");
-      // setShowPopup(defaultObj);
     };
 
     //    const roomDataMap = groupBy(props.roomList,"level")
     const roomDataMap = roomLevelGroupBy(props.roomList);
 
     return (
-      // <PopupView
-      //   title={showPopupState.title}
-      //   size={showPopupState.size}
-      //   onOk={(e2) => {
-      //     setShowPopup(defaultObj);
-      //   }}
-      //   visible={showPopupState.pageIndex !== defaultObj.pageIndex}
-      //   handleCancel={(e) => {
-      //     setShowPopup(defaultObj);
-      //   }}
-      // >
-
-
       <Modal
-          width={showPopupState.size.width}
-          heigt={showPopupState.size.heigt}
-          // bodyStyle={{margin:0,padding:0}}
-          title={showPopupState.title}
-          visible={showPopupState.pageIndex !== defaultObj.pageIndex}
-          onOk={(e2) => {
-            setShowPopup(defaultObj);
-          }}
-          onCancel={(e) => {
-            setShowPopup(defaultObj);
-          }}
-          okButtonProps={{ disabled: true,visible:false }}
-          cancelButtonProps={{ disabled: true,visible:false }}
-//          confirmLoading={confirmLoading}
-          footer={null}
-          destroyOnClose
-        >
-
-
+        width={showPopupState.size.width}
+        heigt={showPopupState.size.heigt}
+        bodyStyle={{ margin: 0, padding: 0 }}
+        title={showPopupState.title}
+        visible={showPopupState.pageIndex !== defaultObj.pageIndex}
+        onOk={(e2) => {
+          setShowPopup(defaultObj);
+        }}
+        onCancel={(e) => {
+          setShowPopup(defaultObj);
+        }}
+        okButtonProps={{ disabled: true, visible: false }}
+        cancelButtonProps={{ disabled: true, visible: false }}
+        //          confirmLoading={confirmLoading}
+        footer={null}
+        destroyOnClose
+      >
         <SubViewComponent
           pageIndex={showPopupState.pageIndex}
           eventObj={showPopupState.eventObj}
@@ -1131,9 +1067,8 @@ function newInPopupView(listeners, emitHttpEvent) {
           roomMap={roomDataMap}
         />
 
-      {/* </PopupView> */}
+        {/* </PopupView> */}
       </Modal>
-
     );
   };
 }
@@ -1190,47 +1125,11 @@ function SubViewComponent(props) {
     return <CancelContractForm {...props} />;
   }
 
-  return <div>error.....</div>
+  return <div>error.....</div>;
 }
 
 export default function GroupTable(props) {
-  
-  
-//  console.log("Query",props.query)
-
   let { serverEventEmmiter } = useContext(ServerEventContext);
-
-  let [ctxObj, updateRoomList] = useState(() => {
-    return {
-      roomList: [],
-      query: props.query,
-    };
-  });
-
-  useEffect(() => {
-    if (ctxObj.roomList.length < 1) {
-      serverEventEmmiter({
-        type: "FetchRoomList",
-        resultHandler: function (e) {
-//          console.log("RoomList", e, "Query", props.query);
-          updateRoomList({
-            ...ctxObj,
-            roomList: e.dataList,
-          });
-        },
-      });
-    }
-  }, [props]);
-
-  let roomList = ctxObj.roomList;
-
-  if (roomList.length < 1) {
-    return (
-      <div>
-        <span>loading.......</span>
-      </div>
-    );
-  }
 
   let groupState = {};
   let listeners = [];
@@ -1244,27 +1143,23 @@ export default function GroupTable(props) {
     }
   });
 
-  let InPopupView = newInPopupView(listeners, serverEventEmmiter);
+  let InPopupView = newInPopupView(
+    listeners,
+    serverEventEmmiter,
+    props.dispach
+  );
   let eventDispach = newViewEventObserver(listeners);
 
   return (
     <GantchartContext.Provider value={{ eventDispach, groupState, listeners }}>
       <div style={{ padding: 10 }}>
-        {/* <Table
-          rowKey="key"
-          scroll={{ y: 1100 }}
-          columns={columns}
-          dataSource={data}
-          bordered
-          pagination={false}
-          size="middle"
-        /> */}
         <ChartTableView
-          dataList={props.dataList}
-          roomList={roomList}
-          query={ctxObj.query}
+          chartData={props.chartData}
+          //          dataList={props.dataList}
+          roomList={props.roomList}
+          query={props.query}
         />
-        <InPopupView roomList={roomList}>
+        <InPopupView roomList={props.roomList}>
           <SubViewComponent />
         </InPopupView>
       </div>

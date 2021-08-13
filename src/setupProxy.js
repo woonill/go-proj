@@ -2,7 +2,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 
 function resetProxyHeader(proxyReq) {
-  proxyReq.setHeader('cookie', 'JSESSIONID=23A2AEAFB2497E16BE4B21B12DB56AFA; shared_session_id=23A2AEAFB2497E16BE4B21B12DB56AFA');
+  proxyReq.setHeader('cookie', 'JSESSIONID=A6E799EB069D8D783115134078A51D12; shared_session_id=A6E799EB069D8D783115134078A51D12');
   proxyReq.setHeader('Access-Control-Allow-Origin', 'true');
 
 }
@@ -26,6 +26,17 @@ module.exports = function (app) {
 
     app.use(createProxyMiddleware(
       '/reservation',
+      {
+        target: 'http://192.168.101.8:8080', changeOrigin: true,
+        onProxyReq(proxyReq, req, res) {
+          resetProxyHeader(proxyReq)
+//          proxyReq.setHeader('cookie', 'JSESSIONID=917BE2C28401ABCC7CF9105C32736D18; shared_session_id=917BE2C28401ABCC7CF9105C32736D18');
+        }
+      },      
+    ))
+
+    app.use(createProxyMiddleware(
+      '/login',
       {
         target: 'http://192.168.101.8:8080', changeOrigin: true,
         onProxyReq(proxyReq, req, res) {

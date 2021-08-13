@@ -82,8 +82,6 @@ function PaymentTypeSelectComp(props) {
   }
 
   return (
-    // <div style={props.style}>
-    // </div>
     <Select
       //    showSearch
       //  style={{ width: "100px" }}
@@ -136,58 +134,46 @@ const ActionButtonGroupView = (props) => {
       style={{
         display: "flex",
         flex: 1,
-        padding: "20px",
-        //      height:"100px",
+        padding: "10px",
+        // backgroundColor: "red",
       }}
     >
       <div
         style={{
-          display: "flex",
+  //        display: "flex",
           width: "100%",
-          flex: 1,
+//          flex: 9,
         }}
-      ></div>
+      />
       {props.buttons.map((buttonProp, index) => {
         const isCancel = buttonProp.isCancel;
-
-        if (isCancel !== undefined && isCancel) {
-          return (
-            <div
-              key={index}
-              style={{
-                width: "120px",
-              }}
-            >
-              <button
-                type="button" 
-                // className="btn-dialog-no"
-                className={styles.ActionButton}
-                onClick={buttonProp.onClick}
-              >
-                <i className="icon-dialog-no"></i>
-                <span className="text">{buttonProp.name}</span>
-              </button>
-            </div>
-          );
-        }
+        let iconClassName =
+          isCancel !== undefined && isCancel
+            ? "icon-dialog-no"
+            : "icon-dialog-yes";
 
         return (
           <div
             key={index}
             style={{
-              width: "120px",
+              width: "100px",
+//              backgroundColor: "black",
             }}
           >
-            {/* {
-                buttonProp.isCancel()
-              } */}
-
             <button
               type="button"
               className={styles.ActionButton}
               onClick={buttonProp.onClick}
             >
-              <i className="icon-dialog-yes"></i>
+              <span style={{
+                display:"flex",
+                // backgroundColor:"black",
+                height:"100%",
+                alignItems:"center",
+                marginRight:"1px",
+                }}>
+                <i className={iconClassName}/>
+              </span>
               <span className="text">{buttonProp.name}</span>
             </button>
           </div>
@@ -216,7 +202,7 @@ function CostItemComp(props) {
         //alignContent:"stretch"
       }}
     >
-      <div style={{ width: "140px", display: "flex" }}>
+      {/* <div style={{ width: "140px", display: "flex" }}>
         <PaymentTypeSelectComp
           item={props.item}
           style={{ width: "80px", padding: "10" }}
@@ -228,7 +214,23 @@ function CostItemComp(props) {
             });
           }}
         />
-      </div>
+      </div> */}
+
+      {props.item.payType !== undefined && (
+        <div style={{ width: "140px", display: "flex" }}>
+          <PaymentTypeSelectComp
+            item={props.item}
+            style={{ width: "80px", padding: "10" }}
+            onChange={(e) => {
+              props.eObserver({
+                index: props.index,
+                type: "updatePaymentType",
+                payType: e,
+              });
+            }}
+          />
+        </div>
+      )}
 
       <div style={{ width: "400px", display: "flex" }}>
         <CSpace />
@@ -502,7 +504,7 @@ function MoveRoomForm(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "객실이동", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props),isCancel:true },
+          { name: "취소", onClick: newCancelHandler(props), isCancel: true },
         ]}
       />
     </div>
@@ -644,7 +646,7 @@ function YenzangForm(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "기간연장", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props),isCancel:true,},
+          { name: "취소", onClick: newCancelHandler(props), isCancel: true },
         ]}
       />
     </Container>
@@ -1040,7 +1042,7 @@ function ReservationConfirmForm(props) {
               <div className="field xsmall">
                 <Input
                   maxLength={20}
-                  disabled
+                  disabled={true}
                   // value={intl.formatNumber(inObj.lastMoney)} />
                   value={intl.formatNumber(inObj.lastMoney)}
                 />
@@ -1053,7 +1055,7 @@ function ReservationConfirmForm(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "입실확인", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props) ,isCancel:true },
+          { name: "취소", onClick: newCancelHandler(props), isCancel: true },
         ]}
       />
     </Container>
@@ -1192,7 +1194,7 @@ function BalanceView(props) {
                   type="text"
                   className="i-text"
                   value={sParam.lastMoney}
-                  disabled="true"
+                  disabled={true}
                 />
               </div>
             </td>
@@ -1215,7 +1217,7 @@ function BalanceView(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "잔금결제", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props),isCancel:true  },
+          { name: "취소", onClick: newCancelHandler(props), isCancel: true },
         ]}
       />
     </Container>
@@ -1389,7 +1391,7 @@ function RefundForm(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "환불", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props),isCancel:true  },
+          { name: "취소", onClick: newCancelHandler(props), isCancel: true },
         ]}
       />
     </div>
@@ -1548,7 +1550,7 @@ function CancelContractForm(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "계약포기", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props) ,isCancel:true },
+          { name: "취소", onClick: newCancelHandler(props), isCancel: true },
         ]}
       />
     </div>

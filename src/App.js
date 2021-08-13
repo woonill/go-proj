@@ -114,16 +114,20 @@ function App() {
       .then(res => {
 //        console.log("Request", res);
         console.log("request status cocde",res.status,res)
-        if(res.type === "basic") {
-//          window.location.href= res.url
-//          return
+        if(res.type === "basic" && res.status !== 200) {
+          window.location.href= "/login/login?uri=/html/index.html"
+          return
+        }
+        else if(res.status ===200 && res.redirected) {
+         window.location.href= "/login/login?uri=/html/index.html"
+         return;
         }
 
         return res.json()
       })
       .then((resMessage) => {
         
-        console.log("dataResult",resMessage)
+//        console.log("dataResult",resMessage)
         // console.log(data)
 
         let data = resMessage.data;

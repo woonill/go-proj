@@ -11,8 +11,10 @@ import {
 
   import style from "./ChartView.module.scss"
   
-  import {ReservStateChecker } from "./chart_view_context";
+  import {ReservStateChecker,toChartData,rangeOfDates  } from "./chart_view_context";
   import {ServerEventContext} from "../server_event_context.js"
+
+
 
   import moment from "moment";
   import {ChartDataView} from "./table_data"
@@ -105,25 +107,19 @@ import {
         setSelectValue(item);
       };
   
-//      let SearchInputView = newSubSearchInputRender(selectedValue)
       let textVal;
-//      let rangeDate;
   
       function updateVal(c) {
   
         if(selectedValue === "0") { //date range 로 처리  [moment,moment]  array 로 온다 
           updateDateRange(c)
-//           rangeDate = c;
         }else{
           c.preventDefault()
           textVal = c.target.value;
         }
       }
   
-  
       function searchReservations(event){
-
-//          console.log("search value",textVal,dateRangeVals)
   
           let params = {}
           let searchType;
@@ -193,7 +189,7 @@ import {
               marginRight: 10, 
               justifyContent: "center", 
               height: "100%" }}>
-                최소 예약 가능 객실수 펜트하우스 : 0 / 골드 : 3
+                {props.totalReportText}
             </div>
             <Select
               defaultValue="기간"
@@ -222,6 +218,50 @@ import {
       );
   }
   
+
+  // const searchConditions= [
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-0",
+  //   },
+  //   {
+  //     title:"입실예정(잔금미납)",
+  //     filterType:"filter-1",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-2",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-3",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-4",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-5",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-6",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-7",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-8",
+  //   },
+  //   {
+  //     title:"전체보기",
+  //     filterType:"filter-9",
+  //   },
+  // ]
+
   function ActionBunttonGroupView(props) {
 
     let eventObserver = props.eventObserver
@@ -324,10 +364,6 @@ import {
           </div>
 
           </li>
-          {/* <button className={style.actionButton3} >
-            입퇴실 달력
-          </button> */}
-
 
           <li>
             <div className ={style.actionButton3}>
@@ -375,10 +411,7 @@ import {
 
   let allReservationList=[]
 
-  function newEventDispach(
-    setChartViewState,
-    updateTableDataList) {
-
+  function newEventDispach(setChartViewState,updateTableDataList) {
 
     return function(e) {
 
@@ -392,21 +425,19 @@ import {
         }
         else if(e.type ==="OnLoadCompletedResList") {
 //          console.log("update reservation data list",e.data)
-          allReservationList = Array.from(e.data.dataList);
+          //allReservationList.splice(0,allReservationList.length)
+          allReservationList = e.data.dataList;
           updateTableDataList(allReservationList,e.eParam)
         }
         // else if(e.type === "UpdateSearchCondition")  {
         //   setSelectValue(e.item)
         // }
         else if(e.type === "filter-0"){
-//          console.log(allReservationList.length)
           updateTableDataList(allReservationList)
         }
         else if(e.type === "filter-1"){
 
-//          console.log("size:",allReservationList.length)
           let list = allReservationList.filter((e)=>{
-              // return e.inState === 0 && e.payType === "deposit"
               return ReservStateChecker.isPreInDespi(e)
           })
           updateTableDataList(list)
@@ -466,11 +497,78 @@ import {
     }
   }
 
+const groupBy = function (xs, key) {
+  return xs.reduce(function (rv, x) {
+    (rv[x[key]] = rv[x[key]] || []).push(x);
+    return rv;
+  }, {});
+};
 
-  // function ChartViewWrapper(props) {
-  // }
+  function ChartDataViewWrapper(props) {
+
+
+    let { serverEventEmmiter } = useContext(ServerEventContext);
+
+    // let [chartObj, updateChartObj] = useState(() => {
+    //   return {
+    //     roomList: props.roomList,
+    //     chartData:{},
+    //     state:0,
+    //     query: props.query,
+    //   };
+    // });
+
+     const dispach = (sEvent)=>{
+        
+      serverEventEmmiter(
+        {
+          type:"FetchTableDataList",
+          params:props.query.condition,
+          resultHandler:(data)=>{
+              const sParam = {
+                type:"range",
+                condition:props.query.condition
+              }
+
+              props.dispach({type:"OnLoadCompletedResList",data:data,eParam:sParam})
+      }})
+    }
+
+//    console.log("Update",chartObj)
+    // useEffect(()=>{
+
+    //   let chartData = toChartData(props.dataList);
+
+    //   updateChartObj({
+    //     ...chartObj,
+    //     state:1,
+    //     chartData:chartData,            
+    //   })
+
+
+    // },[props.dataList])
+
+    // if(chartObj.state === 0 ) {
+    //   return <div>Loading.......</div>
+    // }
+
+//    console.log("Start render ChartView")
+
+    let chartData = toChartData(props.dataList);
+
+    return (
+      <GroupTable
+        dispach={dispach}
+        dataList={props.dataList}
+        roomList={props.roomList}
+        chartData={chartData}
+        query={props.query}
+      />
+    )
+  }
 
   function ListView(props) {
+
 
 
     const dataList = props.reservationObj.dataList
@@ -480,41 +578,111 @@ import {
     } 
 
     if(props.viewState === 0) {
-      return (
-        <GroupTable
-          dataList={dataList} 
-          query={props.reservationObj.query}
-        />
-      )
+        return <ChartDataViewWrapper
+                  roomList={props.roomList}
+                  dispach={props.dispach}
+                  dataList={dataList} 
+                  query={props.reservationObj.query}
+               />
     }
     return <ChartDataView dataList={dataList}/>
+  }
 
+  function ReportTextInfo(props) {
+
+    let [robj,updater] = useState({
+      smin:0,
+      tmin:0,
+    })
+
+    useEffect(()=>{
+
+      if(props.dataList.length > 0) {
+
+//        console.log("start update ReportText")
+
+        let roomReport = {}
+
+        props.dataList.forEach((sourceObj)=>{
+
+//          console.log(sourceObj)
+          let reDataRepo = roomReport[sourceObj.roomGradeNo]
+          if (reDataRepo === undefined) {
+            reDataRepo = {}
+            roomReport[sourceObj.roomGradeNo] = reDataRepo
+          }
+
+          let dateList = rangeOfDates(sourceObj.fromDate,sourceObj.toDate)
+          dateList.forEach((cDate)=>{
+            let countVal = reDataRepo[cDate];
+            if (countVal === undefined) {
+              countVal = 1;  //1 로 초기화 밑에서 체크기준에 따라 추가 
+              reDataRepo[cDate] = countVal;
+            }else{
+              reDataRepo[cDate] = countVal+1;
+            }
+          })      
+        })
+
+        const roomGradeGroup = groupBy(props.roomList,"gradeNo")
+
+        const reduceFn = (e,dataObj)=>{
+
+          const totalSize = roomGradeGroup[e].length
+          let mVal=totalSize;
+          const rObj = dataObj[e];
+
+          if(rObj === undefined) {
+            return totalSize
+          }
+
+
+          Object.keys(rObj).forEach((k)=>{
+            let dv = totalSize-rObj[k];
+            if(dv < mVal) {
+              mVal = dv;
+            }
+          })
+
+          return mVal
+        }
+
+        updater({
+          smin:reduceFn(3,roomReport),
+          tmin:reduceFn(4,roomReport),
+        })
+      }
+
+    },[props.dataList])
+
+    return (<span>최소 예약 가능 객실수 펜트하우스 : {robj.smin} / 골드 : {robj.tmin}</span>)
   }
   
   export default function ChartView(props) {
 
 
     let {serverEventEmmiter} = useContext(ServerEventContext);
-//    let [chartViewState,setChartViewState] = useState(0)
+
     let [reservationObj,updateTableDataList] = useState({
       dataList:[],
       query:{},
       chartViewState:0,
     })
 
-    console.log(reservationObj)
+    let [roomList,updateRoomList] = useState([])
 
-    let dispach = newEventDispach((newChartState)=>{
+
+    let dispach = newEventDispach(
+      (newChartState)=>{
       updateTableDataList({
         ...reservationObj,
         chartViewState:newChartState,
       })
-
-    },function(dataList,eParam=null){
-
+    },
+    (dataList,eParam=null)=>{
       
       if(eParam !== null) {
-//        reservationDataList
+
         updateTableDataList({
           ...reservationObj,
           dataList:dataList,
@@ -532,17 +700,30 @@ import {
     
     useEffect(() => {
 
-
       if(props.headerInfo !== null) {
+//        console.log("Update roomList")
+        serverEventEmmiter({
+          type: "FetchRoomList",
+          resultHandler: function (e) {
+              updateRoomList(e.dataList)
+          },
+        });
+      }
+    },[props.headerInfo])
+
+
+    useEffect(()=>{
+
+
+      if(roomList.length>0) {
 
         let startDate = moment().subtract(15,"days").format("YYYY-MM-DD")
         let endDate = moment().add(15,"days").format("YYYY-MM-DD")
-  
+
         let param = {
           from:startDate,
           to:endDate,
         }
-  
         serverEventEmmiter(
           {
             type:"FetchTableDataList",
@@ -552,23 +733,29 @@ import {
                   type:"range",
                   condition:param
                 }
-
                 dispach({type:"OnLoadCompletedResList",data:data,eParam:sParam})
         }})
       }
-    }, [props.headerInfo])//한번만 콜된다 , 그후로는 search button에 의해 동작하기때문에 
+
+    },[roomList])//roomList 가 변화되면 다시 콜된다 
+
 
 
     return (
         <div className={style.main}>
           <div style={{ padding: 10 }}>
-            <HeaderView eventObserver={dispach} emitHttpEvent={serverEventEmmiter}/>
+            <HeaderView
+               totalReportText={<ReportTextInfo dataList={reservationObj.dataList} roomList={roomList}/>}
+               eventObserver={dispach}
+               emitHttpEvent={serverEventEmmiter}/>
           </div>
           <ActionBunttonGroupView 
             displayState={reservationObj.chartViewState} 
             eventObserver={dispach}/>
-          <div style={{ padding: 10 }}>
-              <ListView 
+          <div style={{ padding: 10}}>
+              <ListView
+                dispach={dispach}
+                roomList={roomList}
                 viewState={reservationObj.chartViewState} 
                 reservationObj={reservationObj}/>
           </div>

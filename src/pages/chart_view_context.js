@@ -450,7 +450,7 @@ function allOfRoomCountingVal() {
 //   }, {});
 // };
 
-function buildReportDataList(eventObjList,roomList) {
+function buildReportDataList(eventObjList) {
 
   let totalCount = {};
 
@@ -593,6 +593,11 @@ export const ReservStateChecker = (() => {
       return sourceObj.delState === 1 && sourceObj.inState === 0 
     },
     isExitRoom:function(sourceObj) { //퇴실
+
+      if(sourceObj.delState === 2) { //임시추가 , 디비상태보고 사적으로 판단한거임 확인되지 않음 2021.08.12
+        return true;
+      }
+
       return sourceObj.inState === 9 && sourceObj.delState === 0 
     },
     isRevisit:function(sourceObj) { //재방문
@@ -605,5 +610,5 @@ export const ReservStateChecker = (() => {
 
 export {
   //emitHttpEvent, 
-  toChartData, GlobalProps,buildReportDataList
+  toChartData, GlobalProps,buildReportDataList,rangeOfDates,inDurationVal2
 }
