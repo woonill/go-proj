@@ -39,6 +39,23 @@ function toUrl(uri,params) {
   
   }
 
+  function doHttpFormGet(uri,params) {
+
+    const url = toUrl(uri,params)
+  
+    let promise = fetch(url, {
+      method: 'GET',
+//      body:formData,
+      // headers: {
+      //   'Content-Type': 'application/json;charset=UTF-8'
+      // },
+      responseTYpe:"blob",
+      mode: 'cors',
+      cache: 'default'
+    })
+    return from(promise)
+  }
+
 
 function doHttpPost(uri, params, fn) {
 
@@ -143,6 +160,13 @@ function doHttpPost(uri, params, fn) {
     
     if(event.type === "PostRefund") {
         return doHttpPost("/reservation/refund",event.params,event.resultHandler)
+    }
+
+
+    if(event.type === "DownloadExcel") {
+      // var url = "/excel/aesthetic?year="+$("#download_year").val()+"&month="+$("#download_month").val();
+      // $("<a>").attr("href", url).attr("target", "_blank")[0].click();
+      return doHttpFormGet("/excel/aesthetic", event.params)
     }
   }
 

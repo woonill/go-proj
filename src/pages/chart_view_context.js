@@ -132,30 +132,64 @@ function isDurationVal(currentObj, nextEvent) {
 
 //구간에 있는지 확인 함수
 function inDurationVal2(from, to, cdate) {
-  const range = moment.range(from, to);
-  let rangeVal = range.contains(cdate, { exclusive: true });
-  //  return range.contains(cTime,{ exclusive:true });
-  return rangeVal
+    const range = moment.range(from, to);
+    return range.contains(cdate,{ exclusive:true });
+}
+
+
+// function countReservationState(eventObj) {
+//   return !eventObj.isMove && eventObj.source.last
+// }
+
+function countReservationSourceState(source) {
+  return !isMove(source)&& source.last
+}
+
+
+function isValidCountReport(eventObj, from, to, ctimeFormatStr) {
+  return isValidSourceCountReport(eventObj.source,from,to,ctimeFormatStr)
+ 
+  // if(ctimeFormatStr === from || ctimeFormatStr === to) {
+  //   if(countReservationSourceState(eventObj.source)){
+  //     return true;
+  //   }
+  // }
+  
+  // let ctime = moment(ctimeFormatStr);
+
+  // return (inDurationVal2(moment(from), moment(to), ctime))
+  //           && countReservationSourceState(eventObj.source)
 
 }
 
-function isValidCountReport(eventObj, from, to, ctime) {
-
-  return (inDurationVal2(from, to, ctime)   && eventObj.source.last)
-
-}
-
-function validReportCounting(eventObj, ctimeFormatStr) {
-
+function isValidSourceCountReport(source, from, to, ctimeFormatStr) {
+ 
+  if(ctimeFormatStr === from || ctimeFormatStr === to) {
+    if(countReservationSourceState(source)){
+      return true;
+    }
+  }
+  
   let ctime = moment(ctimeFormatStr);
 
+  return (inDurationVal2(moment(from), moment(to), ctime))
+            && countReservationSourceState(source)
 
-  //eventObj 에 있는 전체구간에 포함되였을때 
-  if (inDurationVal2(eventObj.from, eventObj.lastTo, ctime)) {
+}
+
+
+
+function countRangeRoom(eventObj, ctimeFormatStr) {
+
+    let count = 0;
 
     //root eventObj 에 포함되였으면 return 한다 
-    if (isValidCountReport(eventObj, eventObj.from, eventObj.to, ctime)) {
-      return true;
+    if (isValidCountReport(eventObj, eventObj.from, eventObj.to, ctimeFormatStr)) {
+
+      // if(ctimeFormatStr === "2021-08-28") {
+      //   console.log("0828-data",eventObj.no,ctimeFormatStr)
+      // }
+      count = 1;
     }
 
     //false 인 상태면 subList 를 돌면서 체크한다 
@@ -164,16 +198,27 @@ function validReportCounting(eventObj, ctimeFormatStr) {
     if (eventObj.subList.length > 0) {
 
       for (let i = 0; i < eventObj.subList.length; i++) {
-
         let cuo = eventObj.subList[i];
-        if (isValidCountReport(cuo, cuo.from, cuo.to, ctime)) {
-          return true;
+        if (isValidCountReport(cuo, cuo.from, cuo.to, ctimeFormatStr)) {
+          
+          // if(ctimeFormatStr === "2021-08-28") {
+          //   console.log("0828-data",cuo.no)
+          // }
+          count=count+1
         }
+
+      
       }
     }
-  }
 
-  return false;
+
+
+  // if(ctimeFormatStr === "2021-08-28") {
+  //   console.log("0828-data",list)
+  // }
+
+
+  return count;
 }
 
 
@@ -242,56 +287,56 @@ function rebuildEventObj(eventObj) {
 }
 
 
-function newBabyCounter() {
+// function newBabyCounter() {
 
-  let bReport = {}
+//   let bReport = {}
 
 
-  let babyCountintFunc = function (eventObj,ctimeFormatStr) {
+//   let babyCountintFunc = function (eventObj,ctimeFormatStr) {
 
     
-    let ctime = moment(ctimeFormatStr);
+//     let ctime = moment(ctimeFormatStr);
 
-    let count = 0;
-    //eventObj 에 있는 전체구간에 포함되였을때 
-    if (inDurationVal2(eventObj.from, eventObj.lastTo, ctime)) {
+//     let count = 0;
+//     //eventObj 에 있는 전체구간에 포함되였을때 
+//     if (inDurationVal2(eventObj.from, eventObj.lastTo, ctime)) {
 
-      //root eventObj 에 포함되였으면 return 한다 
-      if (isValidCountReport(eventObj, eventObj.from, eventObj.to, ctime)) {
-        count = count+eventObj.source.baby;
-      }
+//       //root eventObj 에 포함되였으면 return 한다 
+//       if (isValidCountReport(eventObj, eventObj.from, eventObj.to, ctime)) {
+//         count = count+eventObj.source.baby;
+//       }
 
-      //false 인 상태면 subList 를 돌면서 체크한다 
-      //줃첩곤강이 있으므로 도든 sublist 를 다 처리해야한다 
+//       //false 인 상태면 subList 를 돌면서 체크한다 
+//       //줃첩곤강이 있으므로 도든 sublist 를 다 처리해야한다 
 
-      if (eventObj.subList.length > 0) {
+//       if (eventObj.subList.length > 0) {
 
-        for (let i = 0; i < eventObj.subList.length; i++) {
+//         for (let i = 0; i < eventObj.subList.length; i++) {
 
-          let cuo = eventObj.subList[i];
-          if (isValidCountReport(cuo, cuo.from, cuo.to, ctime)) {
-            count = count+cuo.source.baby;
-          }
-        }
-      }
-    }
-    return count;
-  }
+//           let cuo = eventObj.subList[i];
+//           if (isValidCountReport(cuo, cuo.from, cuo.to, ctime)) {
+//             count = count+cuo.source.baby;
+//           }
+//         }
+//       }
+//     }
+//     return count;
+//   }
 
-  return function (eventObj, dateFormate) {
+//   return function (eventObj, dateFormate) {
 
-    let count = bReport[dateFormate];
-    if (count === undefined) {
-      count=0;
-      bReport[dateFormate] = count;
-    }
+//     let count = bReport[dateFormate];
+//     if (count === undefined) {
+//       count=0;
+//       bReport[dateFormate] = count;
+//     }
 
-    const babyCount = babyCountintFunc(eventObj,dateFormate)
-    bReport[dateFormate] = count+babyCount
-    return bReport;
+//     const babyCount = babyCountintFunc(eventObj,dateFormate)
+//     bReport[dateFormate] = count+babyCount
+//     return bReport;
 
-  }
-}
+//   }
+// }
 
 
 function toChartData(dataList) {
@@ -396,17 +441,45 @@ function toChartData(dataList) {
 }
 
 
+function safeGetObjVal(obj,field,initFunc) {
+
+  if(obj[field] === undefined) {
+
+    if(initFunc !== undefined) {
+      obj[field] = initFunc()
+//      return obj;
+    }else{
+      obj[field] = {}
+//      return obj;
+    }
+  }
+  return obj[field]
+}
+
 function allOfBabyCountingVal() {
 
 
-  let babyCounter = newBabyCounter()
-  let _babyTotalCount = null;
+  let babyCounter = {}
+  const initFunc = ()=>{
+    return 0;
+  }
 
   return function(cDate,eventObj) {
 
-    let babyReport = babyCounter(eventObj,cDate);
-    _babyTotalCount = babyReport;
-    return _babyTotalCount;
+    let babyCount = safeGetObjVal(babyCounter,cDate,initFunc);
+    let eventList = toInRangedList(eventObj,cDate)
+
+//    console.log(babyCount)
+    let sumVal = 0;
+    eventList.forEach((el)=>{
+      sumVal = sumVal+el.source.baby
+    })
+
+    // if(cDate === "2021-08-28") {
+    //   console.log("2021-08-28 value",sumVal)
+    // }
+    babyCounter[cDate] = babyCount+sumVal
+    return babyCounter
   }
 }
 
@@ -431,15 +504,39 @@ function allOfRoomCountingVal() {
 
     let countVal = roomReport.dataList[cDate];
     if (countVal === undefined) {
-      countVal = 0;  //0으로 초기화 밑에서 체크기준에 따라 추가 
+      countVal = 0;  //1으로 초기화 밑에서 체크기준에 따라 추가 
       roomReport.dataList[cDate] = countVal;
     }
 
-    if (validReportCounting(eventObj, cDate)) {
-      roomReport.dataList[cDate] = countVal + 1;
+    let newCount = countRangeRoom(eventObj, cDate)
+    if (newCount > 0) {
+      roomReport.dataList[cDate] = countVal + newCount;
     }
     return roomGraceReport;
   }
+}
+
+
+
+function toInRangedList(eventObj, ctimeFormatStr) {
+
+
+  let eventList = []
+  //root eventObj 에 포함되였으면 return 한다 
+  if (isValidCountReport(eventObj, eventObj.from, eventObj.to, ctimeFormatStr)) {
+    eventList.push(eventObj)
+  }
+
+  if (eventObj.subList.length > 0) {
+
+    for (let i = 0; i < eventObj.subList.length; i++) {
+      let cuo = eventObj.subList[i];
+      if (isValidCountReport(cuo, cuo.from, cuo.to, ctimeFormatStr)) {
+        eventList.push(cuo)
+      }
+    }
+  }
+  return eventList;
 }
 
 
@@ -450,7 +547,7 @@ function allOfRoomCountingVal() {
 //   }, {});
 // };
 
-function buildReportDataList(eventObjList) {
+function buildReportDataList(eventObjList,dateList) {
 
   let totalCount = {};
 
@@ -460,11 +557,11 @@ function buildReportDataList(eventObjList) {
   eventObjList.forEach((e)=>{
 
 //    let roomNo = e.roomNo;
-    let eventObjectList = e.eventObjList
+    let dataList = e.eventObjList
 
-    eventObjectList.forEach((eventObj)=>{
+    dataList.forEach((eventObj)=>{
 
-      let dateList = rangeOfDates(eventObj.from, eventObj.lastTo)
+      // let dateList = rangeOfDates(eventObj.from, eventObj.lastTo)
 
       dateList.forEach((cDate) => {
         totalCount["baby"] = babyCouter(cDate,eventObj);
@@ -472,6 +569,8 @@ function buildReportDataList(eventObjList) {
       })
     })
   })
+
+  console.log("baby",totalCount)
 
 
   return totalCount
@@ -497,27 +596,6 @@ export const GantchartContext = createContext()
 //export const ServerEventContext = createContext()
 
 
-// const _Right_Popup_fArray = [
-//   { text: "상세보기", data: { popupView: "1-1" } },
-//   { text: "객실이동", data: { popupView: "1-2",title:"객실이동" } },
-//   { text: "기간연장", data: { popupView: "1-3",title:"기간연장" } },
-//   { text: "퇴실확정", data: { popupView: "1-4",title:"퇴실확정" } },
-//   { text: "계약일수정", data: { popupView: "1-5",title:"계약일수정" } },
-// ];
-
-// const _Right_Popup_sArray = [
-//   { text: "결제내역", data: { popupView: "2-1",title:"결제내역" } },
-//   { text: "잔금결제", data: { popupView: "2-2",title:"잔금결제" } },
-// ];
-
-// const _Right_Popup_tArray = [
-//   { text: "환불", data: { popupView: "3-1",title:"환불" } },
-//   { text: "에약삭제", data: { popupView: "3-2",title:"에약삭제" } },
-// ];
-
-
-
-
 const GlobalProps = {
 
 
@@ -529,6 +607,12 @@ const GlobalProps = {
     {type:"6",name:"계약포기(환불)"},
     {type:"7",name:"기간연장"},
   ],
+  getSetupPayType:function(typeCode){
+    const array =  this.SetupPayTypeList.filter((e)=>{
+      return parseInt(e.type) === typeCode
+    })
+    return array.length >0 ? array[0]:null
+  },
   getDefaultSetupPayType:function() {
     return this.SetupPayTypeList[1]
   },
@@ -537,6 +621,12 @@ const GlobalProps = {
   },
   BalancePayTypeCode:function() {
     return this.SetupPayTypeList[1];
+  },
+  getPayMethodOfCode:function(code){
+
+    return this.PayMethodList.filter((e)=>{
+      return e.type ===code
+    })[0]
   },
   PayMethodList: [
     { type: "cash", name: "현금" },
@@ -610,5 +700,5 @@ export const ReservStateChecker = (() => {
 
 export {
   //emitHttpEvent, 
-  toChartData, GlobalProps,buildReportDataList,rangeOfDates,inDurationVal2
+  toChartData, GlobalProps,buildReportDataList,rangeOfDates,inDurationVal2,isValidSourceCountReport
 }

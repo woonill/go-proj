@@ -1,4 +1,4 @@
-import { Table,Button } from 'antd';
+import { Table, } from 'antd';
 import {ReservStateChecker } from "./chart_view_context";
 
 
@@ -84,41 +84,24 @@ const columns = [
         </div>
       ),
     },
-
-    // {
-    //   title: '상셰보기',
-    //   key: 'tags',
-    //   dataIndex: 'tags',
-    //   render: tags => (
-    //     <>
-    //       {tags.map(tag => {
-    //         let color = tag.length > 5 ? 'geekblue' : 'green';
-    //         if (tag === 'loser') {
-    //           color = 'volcano';
-    //         }
-    //         return (
-    //           <Tag color={color} key={tag}>
-    //             {tag.toUpperCase()}
-    //           </Tag>
-    //         );
-    //       })}
-    //     </>
-    //   ),
-    // },
     {
       title: '상세보기',
-//      key: 'action',
       render: (text, record) => (
-        // <Space size="middle">
-        //   <a>Invite {record.name}</a>
-        //   <a>Delete</a>
-        // </Space>
-        <Button onClick={(e)=>{
-//          console.log("click now",record.no)
-          window.location.href="/reservation/view?reservation_no="+record.no
-        }}>
-          상세보기
-        </Button>
+        <a href={"/reservation/view?reservation_no="+record.no}
+           className="btn-middle bg-sky">
+
+          <div style={{display:"flex",flex:1}}>
+              <span style={{
+                  display:"flex",
+                  alignItems:"center",
+                  marginRight:"1px",
+                  }}>
+                  <i className="icon-detail"></i>
+                </span>              
+                <span className="text">상세보기</span>          
+
+          </div>
+        </a>
       ),
     },
   ];

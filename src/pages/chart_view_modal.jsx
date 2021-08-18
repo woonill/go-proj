@@ -693,7 +693,7 @@ function ReversionCancelPopup(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "퇴실확정", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props) },
+          { name: "취소", onClick: newCancelHandler(props),isCancel: true  },
         ]}
       />
     </div>
@@ -745,7 +745,7 @@ function UpdateDueDateForm(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "수정", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props) },
+          { name: "취소", onClick: newCancelHandler(props),isCancel: true  },
         ]}
       />
     </Container>
@@ -797,8 +797,8 @@ function FinaceListView(props) {
             let sTime = e["inserttime"] / 1000;
             return (
               <tr>
-                <td>{e.type}</td>
-                <td>{e.method}</td>
+                <td>{GlobalProps.getSetupPayType(e.type).name}</td>
+                <td>{GlobalProps.getPayMethodOfCode(e.method).name}</td>
                 <td className="right">{intl.formatNumber(e["real_money"])}</td>
                 <td className="right">{intl.formatNumber(e["payment"])}</td>
                 <td className="right">{intl.formatNumber(lastMoney)}</td>
@@ -812,7 +812,7 @@ function FinaceListView(props) {
         </tbody>
       </table>
       <ActionButtonGroupView
-        buttons={[{ name: "닫기", onClick: newCancelHandler(props) }]}
+        buttons={[{ name: "닫기", onClick: newCancelHandler(props),isCancel: true  }]}
       />
     </Container>
   );
@@ -1445,7 +1445,7 @@ function DelteReservationForm(props) {
       <ActionButtonGroupView
         buttons={[
           { name: "예약삭제", onClick: okHandler },
-          { name: "취소", onClick: newCancelHandler(props) },
+          { name: "취소", onClick: newCancelHandler(props),isCancel: true  },
         ]}
       />
     </div>
@@ -1568,4 +1568,5 @@ export {
   DelteReservationForm,
   CancelContractForm,
   ReservationConfirmForm,
+  ActionButtonGroupView,
 };

@@ -5,12 +5,14 @@
 // @import url(#{$REMOTE_CSS_ADDR}/resources/assets/css/style.css?ver=1.01);
 
 
+@import "antd/dist/antd.css";
+
+
 @import url(#{$REMOTE_CSS_ADDR}resources/assets/font/notosanskr/style.css);
 @import url(#{$REMOTE_CSS_ADDR}resources/assets/css/default.css);
 @import url(#{$REMOTE_CSS_ADDR}resources/assets/css/style.css?ver=1.01);
 //@import url(#{$REMOTE_CSS_ADDR}resources/assets/font/notosanskr/style.css);
 //@import url(#{$REMOTE_CSS_ADDR}resources/assets/css/gantt.css);
-@import "antd/dist/antd.css";
 
 
 .App{

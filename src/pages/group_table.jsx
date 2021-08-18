@@ -31,21 +31,28 @@ import { ServerEventContext } from "../server_event_context.js";
 const moment = extendMoment(Moment);
 
 function RangeTimelineText(props) {
-  let fontColor = props.color ? "black" : props.color;
+  let fontColor = props.color === undefined ? "black" : props.color;
   let rtext = "(" + props.name + ")" + props.from + " ~ " + props.to + "";
   rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 5);
-  return <span style={{ 
-    // width:"100%",height:"100%",
-    // display:"flex",
-    // flex:1,
-    // backgroundColor:"red",
-    textAlign: "center",
-    color: fontColor }}>{rtext}</span>;
+  return (
+    <span
+      style={{
+        // width:"100%",height:"100%",
+        // display:"flex",
+        // flex:1,
+        // backgroundColor:"red",
+        textAlign: "center",
+        color: fontColor,
+      }}
+    >
+      {rtext}
+    </span>
+  );
 }
 
 function newSchButtonStyle(source, merge = 1) {
   let bgColor = newSchButtonBGColorOfRGB(source);
-  let fontColor = newSchButtonFontColor(source)
+  let fontColor = newSchButtonFontColor(source);
 
   if (
     ReservStateChecker.isPreInDespi(source) ||
@@ -59,10 +66,11 @@ function newSchButtonStyle(source, merge = 1) {
       textAlign: "center",
       // width:"100%",
       // height:"100%",
-     display: "flex",
-     flex: merge,
+      display: "flex",
+      flex: merge,
       alignItems: "center",
       justifyContent: "center",
+      color:`rgb(${fontColor})`,
     };
   }
 
@@ -72,13 +80,12 @@ function newSchButtonStyle(source, merge = 1) {
     borderWith: "2px",
     backgroundColor: `rgb(${bgColor})`,
     textAlign: "center",
-    color:fontColor,
-    display:"flex",
-    flex:merge,
+    color:`rgb(${fontColor})`,
+    display: "flex",
+    flex: merge,
 
     // width:"100%",
     // height:"100%",
-
 
     // flexGrow:1,
     // alignSelf:"stretch",
@@ -126,9 +133,9 @@ function OverrideTimline(dataList) {
 
 function newSchButtonFontColor(sourceObj) {
   if (ReservStateChecker.isPreInDespi(sourceObj)) {
-    return "167,104,188";
-  } else if (ReservStateChecker.isCheckInDespi(sourceObj)) {
     return "234,97,83";
+  } else if (ReservStateChecker.isCheckInDespi(sourceObj)) {
+    return "167,104,188";
   } else {
     return "255,255,255";
   }
@@ -150,12 +157,12 @@ function newSchButtonBGColorOfRGB(sourceObj) {
     ReservStateChecker.isPreInDespi(sourceObj) ||
     ReservStateChecker.isPreInFull(sourceObj)
   ) {
-    return "187,131,202";
+    return "255,137,118";
   } else if (
     ReservStateChecker.isCheckInDespi(sourceObj) ||
     ReservStateChecker.isCheckinFull(sourceObj)
   ) {
-    return "255,137,118";
+    return "187,131,202";
   }
   // else if (ReservStateChecker.isCheckinFull(sourceObj)) {
   //   return "187,131,202";
@@ -229,30 +236,34 @@ function gridChartCompRender(eventObj, mergeCount) {
         // justifyContent:"center"
       }}
     >
-      <div style={newSchButtonStyle(eventObj.source,fWidth)}>
-        <SchedulerBarButton 
-          buttonStyle={{width:"100%"}}
-        mergeCount={1} colData={eventObj}/>
+      <div style={newSchButtonStyle(eventObj.source, fWidth)}>
+        <SchedulerBarButton
+          buttonStyle={{ width: "100%" }}
+          mergeCount={1}
+          colData={eventObj}
+        />
       </div>
-      <div
-        style={{flex: ssMerge,}}
-      >
+      <div style={{ flex: ssMerge }}>
         <Popover content={overrideTimeline} title="중첩구간">
           <div
             style={{
               width: "100%",
               height: "100%",
-              backgroundColor: "green",
-              borderStyle: "none",
+              backgroundColor: "#fc6363",
+//              borderStyle: "none",
+              borderStyle: "solid",
+//              borderWidth: "2px",
+              borderRadius: "4px",              
               textAlign: "center",
+              color:"white",
             }}
           >
             <span style={{ textAlign: "center" }}>{fname}</span>
           </div>
         </Popover>
       </div>
-      <div style={newSchButtonStyle(lastNode.source,trLen)}>
-        <SchedulerBarButton mergeCount={1} colData={lastNode}/>
+      <div style={newSchButtonStyle(lastNode.source, trLen)}>
+        <SchedulerBarButton mergeCount={1} colData={lastNode} />
       </div>
     </div>
   );
@@ -448,10 +459,9 @@ function SchedulerBarButton(props) {
 
       groupStateVal.push(bgStateDisapcher);
 
-      return function () {
-        console.log("clear groupStateVal function");
-        //        groupStateVal.remove(bgStateDisapcher)
-      };
+      // return function () {
+      //   console.log("clear groupStateVal function");
+      // };
     }
   }, [groupState, dataSource, isGroupping]);
 
@@ -475,7 +485,7 @@ function SchedulerBarButton(props) {
     }
   };
 
-//    const buttonStyle = newSchButtonStyle(props.colData.source,props.fWidth);
+  //    const buttonStyle = newSchButtonStyle(props.colData.source,props.fWidth);
   // let bgColor = newSchButtonBGColorOfRGB(props.colData.source);
   let fontColor = newSchButtonFontColor(props.colData.source);
   const MouseRightMenuComp = MouseRightMenuFunc(dataSource);
@@ -493,7 +503,6 @@ function SchedulerBarButton(props) {
     >
       <div
         style={props.buttonStyle}
-        // style={{backgroundColor:"black",width:"100%"}}
         onMouseOver={mouseOverEventHandler}
         onMouseOut={mouseOutEventHandler}
       >
@@ -601,12 +610,34 @@ function DefaultSchedulerLine(props) {
     // <div style={bStyle}>
     //   <SchedulerBarButton colData={props.eventObj} mergeCount={props.mergeCount}/>
     // </div>
-    <SchedulerBarButton 
+    <SchedulerBarButton
       buttonStyle={bStyle}
-      colData={props.eventObj} 
-      mergeCount={props.mergeCount}/>
+      colData={props.eventObj}
+      mergeCount={props.mergeCount}
+    />
   );
 }
+
+const weeklyMap = {
+  1: "월",
+  2: "화",
+  3: "수",
+  4: "목",
+  5: "금",
+  6: "토",
+  0: "일",
+};
+
+const weeklyTextTag = (day, text) => {
+  switch (day) {
+    case 6:
+      return <span style={{ color: "blue", textAlign: "center" }}>{text}</span>;
+    case 0:
+      return <span style={{ color: "red", textAlign: "center" }}>{text}</span>;
+    default:
+      return <span style={{ textAlign: "center" }}>{text}</span>;
+  }
+};
 
 function newColumnRender(sdate, start, end) {
   let mo = moment(sdate);
@@ -619,9 +650,19 @@ function newColumnRender(sdate, start, end) {
     calDay.month(mo.month());
     calDay.date(i);
 
+    const titleText = (i <= 9 ? "0" + i : i) + "\n";
+    const weeklyText = weeklyMap[calDay.day()];
+
+    const titleTag = (
+      <div style={{ textAlign: "center" }}>
+        {titleText}
+        {weeklyTextTag(calDay.day(), weeklyText)}
+      </div>
+    );
+
     let model = {
-      title: i,
-      width: 35,
+      title: titleTag,
+      width: 45,
       height: 15,
       dataIndex: "eventObjList",
       key: sdate + "-" + i,
@@ -695,8 +736,33 @@ function newColumnHeader(stObj) {
       dataIndex: "name",
       key: "name",
       width: 200,
-      height: 30,
+      height: 25,
       fixed: "left",
+      render: function (text, record, index) {
+        if (index === 1 || index === 2) {
+          let roomSplit = text.split(",");
+          let countTextArray = roomSplit[1].split(":");
+          return (
+            <div
+              style={{
+                display: "flex",
+                flex: 1,
+//                justifyContent: "space-between",
+                padding: "1px",
+              }}
+            >
+              <span style={{ textAlign: "center",width:"50%",textAlign:"left" }}>{roomSplit[0]}</span>
+              {/* <div style={{width:"100%",backgroundColor:"black"}}></div> */}
+              <div style={{display:"flex",flex:1}}>
+                <span>{countTextArray[0]}</span>
+                <span>:</span>
+                <span>{countTextArray[1]}</span>
+              </div>
+            </div>
+          );
+        }
+        return text;
+      },
     },
   ];
 
@@ -835,7 +901,7 @@ function getRange(startDate, endDate, type) {
   return range;
 }
 
-function buildReportData(dataList, roomList, query) {
+function buildReportData(dataList, roomList, stObj, query) {
   //  console.log("QueryObjc", query);
 
   if (query !== undefined && query !== null && query.type === "range") {
@@ -849,7 +915,7 @@ function buildReportData(dataList, roomList, query) {
 
     //    console.log("Reporting range date",colDate)
 
-    let totalReportMap = buildReportDataList(dataList, roomList); //chartData["totalReport"];
+    let totalReportMap = buildReportDataList(dataList, colDate); //chartData["totalReport"];
     let babyReport = totalReportMap["baby"];
     let roomGradeReport = totalReportMap["roomGrade"];
     const roomLevelGroup = roomLevelGroupBy(roomList);
@@ -937,7 +1003,12 @@ function ChartTableView(props) {
 
   let columns = newColumnHeader(stObj);
 
-  const reportColumnFunc = buildReportData(chartData.list, roomList, query);
+  const reportColumnFunc = buildReportData(
+    chartData.list,
+    roomList,
+    stObj,
+    query
+  );
 
   data = reportColumnFunc(data);
 

@@ -80,7 +80,7 @@ function newMouseRightMenu(fArray,sArray,tArray) {
   return function(props) {
 
     return (
-      <div>
+      <div style={{width:"100%"}}>
         {/* <div className="well">Right click to see the menu</div> */}
         <ContextMenuTrigger id={props.menuId}>
           <div className='pure-menu pure-menu-horizontal'>

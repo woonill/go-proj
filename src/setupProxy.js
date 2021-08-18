@@ -2,7 +2,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 
 function resetProxyHeader(proxyReq) {
-  proxyReq.setHeader('cookie', 'JSESSIONID=A6E799EB069D8D783115134078A51D12; shared_session_id=A6E799EB069D8D783115134078A51D12');
+  proxyReq.setHeader('cookie', 'JSESSIONID=0CD5FC6F52961089A9525EBAFCE55C39; shared_session_id=0CD5FC6F52961089A9525EBAFCE55C39');
   proxyReq.setHeader('Access-Control-Allow-Origin', 'true');
 
 }
@@ -35,6 +35,18 @@ module.exports = function (app) {
       },      
     ))
 
+
+    app.use(createProxyMiddleware(
+      '/excel',
+      {
+        target: 'http://192.168.101.8:8080', changeOrigin: true,
+        onProxyReq(proxyReq, req, res) {
+          resetProxyHeader(proxyReq)
+//          proxyReq.setHeader('cookie', 'JSESSIONID=917BE2C28401ABCC7CF9105C32736D18; shared_session_id=917BE2C28401ABCC7CF9105C32736D18');
+        }
+      },      
+    ))
+
     app.use(createProxyMiddleware(
       '/login',
       {
@@ -46,18 +58,16 @@ module.exports = function (app) {
       },      
     ))
 
-    app.use(createProxyMiddleware(
-      '/resources',
-    {
-//      target: 'http://testg.tosky.co.kr', changeOrigin: true,
-      target: 'http://192.168.101.8:8080', changeOrigin: true,
+    // app.use(createProxyMiddleware(
+    //   '/resources',
+    // {
+    //   target: 'http://192.168.101.8:8080', changeOrigin: true,
 
-      onProxyReq(proxyReq, req, res) {
-          resetProxyHeader(proxyReq)
-//        proxyReq.setHeader('Access-Control-Allow-Origin', 'true');
-      }      
-    }
-    ))
+    //   onProxyReq(proxyReq, req, res) {
+    //       resetProxyHeader(proxyReq)
+    //   }      
+    // }
+    // ))
 };
 
 
