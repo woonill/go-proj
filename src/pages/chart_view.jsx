@@ -32,11 +32,11 @@ function SearchConditionChoosherView(props) {
       //   value={hackValue || value}
       //   disabledDate={disabledDate}
       onCalendarChange={(val) => {
-        //             console.log("range date",val)
+        //console.log("range date",val)
         props.setValue(val);
       }}
-      //          onChange={val => console.log("change date",val)}
-      //   onOpenChange={onOpenChange}
+      //onChange={val => console.log("change date",val)}
+      //onOpenChange={onOpenChange}
     />
   );
 
@@ -162,7 +162,7 @@ function HeaderView(props) {
         flex: 1,
         justifyContent: "space-between",
         padding: 10,
-        borderBottom: "1px solid #dbdbdb",
+        // borderBottom: "1px solid #dbdbdb",
       }}
     >
       <div style={{ fontSize: 20 }}>예약관리</div>
@@ -380,7 +380,7 @@ function ActionBunttonGroupView(props) {
 
   return (
     <div
-      style={{ display: "flex", justifyContent: "space-between", padding: 10 }}
+      style={{ display: "flex", justifyContent: "space-between"}}
     >
       <div style={{ display: "flex", flexDirection: "row" }}>
         <i className="icon-dialog-no"></i>
@@ -897,14 +897,14 @@ export default function ChartView(props) {
         displayState={reservationObj.chartViewState}
         eventObserver={dispach}
       />
-      <div style={{ padding: 10 }}>
+      {/* <div style={{ padding: 5 }}> */}
         <ListView
           dispach={dispach}
           roomList={roomList}
           viewState={reservationObj.chartViewState}
           reservationObj={reservationObj}
         />
-      </div>
+      {/* </div> */}
     </div>
   );
 }

@@ -140,9 +140,7 @@ const ActionButtonGroupView = (props) => {
     >
       <div
         style={{
-  //        display: "flex",
           width: "100%",
-//          flex: 9,
         }}
       />
       {props.buttons.map((buttonProp, index) => {

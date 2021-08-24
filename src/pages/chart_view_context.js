@@ -570,8 +570,6 @@ function buildReportDataList(eventObjList,dateList) {
     })
   })
 
-  console.log("baby",totalCount)
-
 
   return totalCount
 }
