@@ -39,22 +39,21 @@
     width: 120px;
     margin-right: 5px;
     // background-color: #ff865d;
-    background-color: #fff;
+    background-color: #bbd86c;
     border-style: solid;
     border-width: 1px;
-    border-color: #ff8976;
-    color: #ea6153;
+    border-color: #bbd86c;
+    color: #fff;
 }
  
 .actionButton2 {
     @include linkBtn;
     width: 140px;
     margin-right: 5px;
-//    background-color: rgb(113,186,217);
     border-style: solid;
-    background-color: #ff8976;
-    border-color: #ff8976;
-    color: white;
+    background-color: rgb(255, 255, 255);
+    border-color: #bbd86c;
+    color: #4a823d;
 //    border-color: rgb(113,186,217);
 }
 

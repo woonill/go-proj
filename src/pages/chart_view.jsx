@@ -19,6 +19,7 @@ import { ChartDataView } from "./table_data";
 import { GroupTable } from "./group_table";
 import { SearchOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
+
 //import { of } from "rxjs";
 const { Option } = Select;
 
@@ -261,14 +262,14 @@ function SearchConditionView(props) {
       <ActionBunttonGroupView
         {...props}
         downloadExcel={(e) => {
-          console.log("call now");
+//          console.log("call now");
           updateShowPopup(true);
         }}
       />
       <DownloadExcelPopup
         showPopup={showPopup}
         onOk={(e) => {
-          console.log("onOk");
+//          console.log("onOk");
           updateShowPopup(false);
         }}
         onCancel={(e) => {
@@ -407,7 +408,7 @@ function ActionBunttonGroupView(props) {
           </div>
         </li>
 
-        <li>
+        {/* <li>
           <div className={style.actionButton3}>
             <span
               className={style.text}
@@ -418,7 +419,7 @@ function ActionBunttonGroupView(props) {
               입퇴실 달력
             </span>
           </div>
-        </li>
+        </li> */}
 
         <button
           className={style.showGridButton}
@@ -649,7 +650,7 @@ function ReportTextInfo(props) {
           }
         });
 
-        return mVal;
+        return mVal <=0 ? 0 : mVal;
       };
 
       updater({

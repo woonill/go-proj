@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom';
 import './index.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { ConfigProvider,  } from "antd";
+import 'moment/locale/ko'
+import locale from 'antd/es/locale/ko_KR';
 
 
 // ReactDOM.render(
@@ -14,7 +17,9 @@ import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <ConfigProvider locale={locale}>
+      <App />
+    </ConfigProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

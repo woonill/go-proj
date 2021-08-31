@@ -2,7 +2,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 
 function resetProxyHeader(proxyReq) {
-  proxyReq.setHeader('cookie', 'JSESSIONID=FDBEA50CDA92E14D096270983F5F51A3; shared_session_id=FDBEA50CDA92E14D096270983F5F51A3');
+  proxyReq.setHeader('cookie', 'JSESSIONID=A535DE39301A4A92F78297106A982DFD; shared_session_id=A535DE39301A4A92F78297106A982DFD');
   proxyReq.setHeader('Access-Control-Allow-Origin', 'true');
 
 }

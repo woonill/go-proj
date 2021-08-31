@@ -6,7 +6,7 @@ import React, { useEffect,useState } from 'react';
 import ReactDOM from 'react-dom';
 import {IntlProvider} from 'react-intl'
 import {ServerEventContext,newServerEventDispach} from "./server_event_context.js"
-
+import moment from "moment";
 
 
 function Header({headerInfo}) {
@@ -34,7 +34,7 @@ function Header({headerInfo}) {
         </h1>
         <div className="utils">
           <p className="account">
-            <span className="text date">2021-06-15</span>
+            <span className="text date">{moment().format("YYYY-MM-DD")}</span>
             <span className="text message">{headerInfo.userName}님 안녕하세요.</span>
           </p>
 
@@ -152,9 +152,9 @@ function App() {
   return (
     <IntlProvider locale='en'>
       <div className="App">
-            <Header key="header" headerInfo={initState.headerInfo}></Header>
+          <Header key="header" headerInfo={initState.headerInfo}></Header>
             <ChartViewWrapper currentState={initState}/>
-          </div>
+      </div>
     </IntlProvider>
   );
 }

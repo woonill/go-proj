@@ -615,7 +615,13 @@ function YenzangForm(props) {
                       if (itemList.length <= 1) {
                         return;
                       }
-                      //updateItems(itemList.filter((item) => item.i !== index));
+                      const newItemArray = itemList.filter(
+                        (item) => item.i !== index
+                      );
+                      updateParam({
+                        ...sParam,
+                        itemList: newItemArray,
+                      });
                     }}
                   />
                 );

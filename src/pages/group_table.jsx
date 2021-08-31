@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect } from "react";
 import { Table, Modal, Popover } from "antd";
 
+
+
 //import { styles } from "./ChartView.module.scss";
 
 import Moment from "moment";
@@ -31,9 +33,18 @@ import { ServerEventContext } from "../server_event_context.js";
 const moment = extendMoment(Moment);
 
 function RangeTimelineText(props) {
-  let fontColor = props.color === undefined ? "black" : props.color;
-  let rtext = "(" + props.name + ")" + props.from + " ~ " + props.to + "";
-  rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 5);
+   let fontColor = props.color === undefined ? "black" : props.color;
+  // let rtext = "(" + props.name + ")" + moment(props.from).format("mm-dd") + " ~ " + moment(props.to).format("mm-dd") + "";
+  // rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 5);
+  let rtext = props.name ;
+  
+  if(props.mergeCount>2) {
+    rtext=rtext+"("+moment(props.from).format("MM-DD") + " ~ " + moment(props.to).format("MM-DD") + ")";
+
+  }
+
+
+
   return (
     <span
       style={{
@@ -60,7 +71,7 @@ function newSchButtonStyle(source, merge = 1) {
   ) {
     return {
       borderStyle: "solid",
-      borderWidth: "2px",
+      borderWidth: "3px",
       borderColor: `rgb(${bgColor})`,
       borderRadius: "4px",
       textAlign: "center",
@@ -70,14 +81,16 @@ function newSchButtonStyle(source, merge = 1) {
       flex: merge,
       alignItems: "center",
       justifyContent: "center",
+      cursor: "pointer",
       color: `rgb(${fontColor})`,
     };
   }
 
   return {
+    cursor: "pointer",
     bodyStyle: "solid",
     borderRadius: "4px",
-    borderWith: "2px",
+    borderWith: "3px",
     backgroundColor: `rgb(${bgColor})`,
     textAlign: "center",
     color: `rgb(${fontColor})`,
@@ -106,10 +119,14 @@ function OverrideTimline(dataList) {
   return (
     <div>
       {dataList.map((eventObj) => {
+        let bgColor = ReservStateChecker.isNotFullyPaied(eventObj.source) ? "red":"black"
         return (
-          <div style={{borderBottom:"1px",borderStyle:"solid"}}>
+          <div style={{
+                borderBottom:"0.5px",
+                borderStyle:"solid",
+                cursor: "pointer"}}>
             <span
-              style={{ textAlign: "center" }}
+              style={{ textAlign: "center" ,color:bgColor}}
               onClick={(e) =>
                 (window.location.href = scheduleDetailURL(eventObj.no))
               }
@@ -128,45 +145,48 @@ function OverrideTimline(dataList) {
   );
 }
 
-// function OverrideTimline(dataList) {
-//   return (
-//     <table className="table-entry">
-//       <colgroup>
-//         <col width="120" />
-//         <col width="*" />
-//       </colgroup>
-//       <tbody>
-//           {dataList.map((eventObj) => {
-//               return (
-//                 <tr>
-//                 <th scope="row">{eventObj.name}</th>
-//                 <td>
-//                   <span
-//                       style={{ textAlign: "center" }}
-//                       onClick={(e) =>
-//                         (window.location.href = scheduleDetailURL(eventObj.no))
-//                       }
-//                     >
-//                       {
-//                         eventObj.from +
-//                         " ~ " +
-//                         eventObj.source.to +
-//                         ""}
-//                     </span>
-//                 </td>
-//               </tr>
-//               );
-//             })}
-//       </tbody>
-//     </table>
-//   );
-// }
+
+function newOverrideRangeTitle(dataList,ssMerge) {
+
+  if(ssMerge < 2) {
+    return "중첩구간"
+  }
+  else if(ssMerge < 7) {
+
+    let text;
+    for(let i=0;i<dataList.length;i++) {
+      let eventObj = dataList[i]
+      if(i > 0) {
+        text = text+ ","+eventObj.name
+      }
+      else text = eventObj.name
+    }
+    return text;
+  }else{
+
+    let text;
+    for(let i=0;i<dataList.length;i++) {
+      let eventObj = dataList[i]
+      if(i > 0) {
+        text = text+ ","+eventObj.name
+      }else{
+        text = eventObj.name
+      }
+
+    }
+
+    let _from = dataList[0].from;
+    let _to = dataList[dataList.length-1].to
+    text = text+" "+moment(_from).format("MM-DD")+"~"+moment(_to).format("MM-DD")
+    return text
+  }
+}
 
 function newSchButtonFontColor(sourceObj) {
   if (ReservStateChecker.isPreInDespi(sourceObj)) {
-    return "234,97,83";
+    return "74,130,61";
   } else if (ReservStateChecker.isCheckInDespi(sourceObj)) {
-    return "167,104,188";
+    return "196,122,204";
   } else {
     return "255,255,255";
   }
@@ -181,14 +201,14 @@ function newSchButtonBGColorOfRGB(sourceObj) {
   if (ReservStateChecker.isExitRoom(sourceObj)) {
     return "230,230,230";
   } else if (ReservStateChecker.isDrop(sourceObj)) {
-    return "253,203,110";
+    return "255,136,128";
   } else if (ReservStateChecker.isCancel(sourceObj)) {
     return "125,125,125";
   } else if (
     ReservStateChecker.isPreInDespi(sourceObj) ||
     ReservStateChecker.isPreInFull(sourceObj)
   ) {
-    return "255,137,118";
+    return "187,216,108";
   } else if (
     ReservStateChecker.isCheckInDespi(sourceObj) ||
     ReservStateChecker.isCheckinFull(sourceObj)
@@ -211,6 +231,43 @@ function newSchButtonBGColorOfRGB(sourceObj) {
   console.log("No have color state", sourceObj);
   return colorValue;
 }
+
+
+
+ function OverrideComp(props) {
+
+  // let [showState,updateState] = useState(false)
+
+  // const _onBlur = (e)=>{
+  //   console.log("focus out")
+  // }
+
+  return (
+    <div style={{ flex: props.width,textAlign:"center",cursor: "pointer",}}>
+      <Popover content={props.content} title="중첩구간" trigger="click">
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: "#c6a38b",
+            borderStyle: "solid",
+            borderRadius: "4px",
+            color: "white",
+            display:"flex",
+            alignItems:"center",
+            justifyContent:"center",
+            
+          }}
+          // onBlur={_onBlur}        
+
+        >
+          <span style={{textAlign:"center"}}>{props.title}</span>
+        </div>
+      </Popover>
+  </div>
+  )
+ }
+
 
 //중첩구간에대한 View 생성함수
 function gridChartCompRender(eventObj, mergeCount) {
@@ -246,21 +303,17 @@ function gridChartCompRender(eventObj, mergeCount) {
   });
 
   let overrideTimeline = OverrideTimline(overTimeArray);
+  let overrideTimeTitle = newOverrideRangeTitle(overTimeArray,srRange);
 
-  let fname = "";
 
-  overTimeArray.forEach((e, i) => {
-    if (i > 0) {
-      fname = fname + ",";
-    }
-    fname = fname + e.name;
-  });
+//   if(7842 === eventObj.no) {
+// //    console.log("Merge count",mergeCount,fWidth,srRange,overrideTimeTitle)
+//     console.log("Merge count",lastNode)
+//   }
 
   return (
     <div
       style={{
-        // width: "100%",
-        // height: "100%",
         display: "flex",
         flex: 1,
         flexDirection: "row",
@@ -269,30 +322,31 @@ function gridChartCompRender(eventObj, mergeCount) {
     >
       <div style={newSchButtonStyle(eventObj.source, fWidth)}>
         <SchedulerBarButton
-          buttonStyle={{ width: "100%" }}
-          mergeCount={1}
+          buttonStyle={{ width: "100%",cursor:"pointer" }}
+          mergeCount={fWidth}
           colData={eventObj}
         />
       </div>
-      <div style={{ flex: ssMerge }}>
+      <OverrideComp width={ssMerge} title={overrideTimeTitle} content={overrideTimeline}/>
+      {/* <div style={{ flex: ssMerge,textAlign:"center"}}>
         <Popover content={overrideTimeline} title="중첩구간">
           <div
             style={{
               width: "100%",
               height: "100%",
-              backgroundColor: "#fc6363",
+              backgroundColor: "#c6a38b",
               borderStyle: "solid",
               borderRadius: "4px",
-              textAlign: "center",
               color: "white",
-              //              borderWidth: "2px",
-              //              borderStyle: "none",
+              display:"flex",
+              alignItems:"center",
+              justifyContent:"center",
             }}
           >
-            <span style={{ textAlign: "center" }}>{fname}</span>
+            <span style={{textAlign:"center"}}>{overrideTimeTitle}</span>
           </div>
         </Popover>
-      </div>
+      </div> */}
       <div style={newSchButtonStyle(lastNode.source, trLen)}>
         <SchedulerBarButton mergeCount={1} colData={lastNode} />
       </div>
@@ -420,6 +474,7 @@ const MouseRightMenuFunc = (function () {
     s: ["7", "8"],
     t: ["11", "12", "10"],
   };
+//  let tMouseArray = { f: ["1", "5"], s: ["7", "8"], t: ["10"] };
   let tMouseArray = { f: ["1", "5"], s: ["7", "8"], t: ["10"] };
 
   const filterFunc = (tList) => {
@@ -622,7 +677,10 @@ function newTotalFragment(record, date) {
   let dataOfMonth = colDataArray[date];
   if (dataOfMonth !== undefined) {
     if (record["rtype"] !== undefined) {
-      dataOfMonth = record["roomSize"] - dataOfMonth;
+
+      const roomSize = record["roomSize"]
+      dataOfMonth = roomSize - dataOfMonth;
+      dataOfMonth = dataOfMonth <=0 ? 0 : dataOfMonth //중첩구간으로 마이너스가 나오는경우는 0으로 처리 
     }
 
     return (
@@ -743,13 +801,11 @@ function calcuRangeDays(currentObj) {
 }
 
 function newColumnHeader(stObj) {
-  //  console.log("SRamge",searchRange)
 
-  // const sDate = stObj.sDate.subtract(7, "days");
-  // const eDate = stObj.eDate.add(7, "days");
 
   const sDate = stObj.sDate.subtract(1, "days");
-  const eDate = stObj.eDate.add(1, "days");
+//  const eDate = stObj.eDate.add(1, "days");
+  const eDate = stObj.eDate;
 
   let dateStart = sDate.clone();
   let dateEnd = eDate.clone();
@@ -800,8 +856,7 @@ function newColumnHeader(stObj) {
               style={{
                 display: "flex",
                 flex: 1,
-                // padding: "1px",
-                // backgroundColor:"black",
+                fontSize:"15px"
               }}
             >
               <span style={{ width: "50%", textAlign: "left" }}>
@@ -815,7 +870,28 @@ function newColumnHeader(stObj) {
             </div>
           );
         }
-        // return <div style={{display:"flex",flex:1,backgroundColor:`rgb(234,234,234)`}}>{text}</div>;
+
+        if(index > 2) {
+
+          let roomSplit = text.split(",");
+          return (
+            <div
+              style={{
+                display: "flex",
+                flex: 1,
+                fontSize:"15px"
+              }}
+            >
+              <span style={{ width: "50%", textAlign: "left" }}>
+                {roomSplit[0]}
+              </span>
+              <div style={{ display: "flex", flex: 1 }}>
+                <span>{roomSplit[1]}</span>
+              </div>
+            </div>
+          );
+        }
+
         return text;
       },
     },
@@ -824,7 +900,8 @@ function newColumnHeader(stObj) {
   let ykey = "";
 
   for (const key in yearObj) {
-    let childrenCompos = [];
+
+//    let childrenCompos = [];
 
     ykey = ykey + key + "~";
 
@@ -858,32 +935,28 @@ function newColumnHeader(stObj) {
         // dataIndex:"colDataArray",
         children: newColumnRender(mvalue, startIndex, endIndex),
       };
-      childrenCompos.push(el);
+//      childrenCompos.push(el);
+
+        columns.push(el);
+
     }
 
     //    const keyTag = <div className="fn-label">:{key}</div>
-    const keyTag = (
-      <div style={{height:"100%",width:"100%"}}>
-        {key}
-      </div>
-    );
+    // const keyTag = (
+    //   <div style={{height:"100%",width:"100%"}}>
+    //     {key}
+    //   </div>
+    // );
 
-    columns.push({
-      title: (a)=>{
-        // console.log("A",a)
-        return keyTag
-      },
-      key: ykey,
-      className:'column-header',
-      // render:(text,rec,i)=>{
-      //   console.log("headerRender",i,text,rec)
-      //   return keyTag
-      // },
-      // onHeaderCell:(column)=>{
-      //   console.log("Column",column)
-      // },
-      children: childrenCompos,
-    });
+    // columns.push({
+    //   title: (a)=>{
+    //     // console.log("A",a)
+    //     return keyTag
+    //   },
+    //   key: ykey,
+    //   className:'column-header',
+    //   children: childrenCompos,
+    // });
   }
 
   return columns;
@@ -985,16 +1058,21 @@ function buildReportData(dataList, roomList, stObj, query) {
     // let to = moment(query.condition["to"]);
 
     let from = stObj.sDate;
-    let to = stObj.eDate;
+
+    //getRange에서 마지막날을 포함하지 않으므로 하루를 더 추가해서 date를 만든다 
+    let to = moment(stObj.eDate).add(1,"day").format("YYYY-MM-DD");
 
     //Logic for getting rest of the dates between two dates("FromDate" to "EndDate")
     let colDate = getRange(from, to, "days").map((e) => {
       return e.format("YYYY-MM-DD");
     });
 
-    //    console.log("Reporting range date",colDate)
+    // colDate.push(to)
+    // console.log("Reporting range date",stObj)
 
     let totalReportMap = buildReportDataList(dataList, colDate); //chartData["totalReport"];
+
+
     let babyReport = totalReportMap["baby"];
     let roomGradeReport = totalReportMap["roomGrade"];
     const roomLevelGroup = roomLevelGroupBy(roomList);
@@ -1087,7 +1165,7 @@ function ChartTableView(props) {
     eDate: chartData.stObj.eDate,
   };
 
-  //  console.log("SDate",chartData.stObj)
+  console.log("SDate",chartData.stObj)
 
   let columns = newColumnHeader(stObj);
 
@@ -1207,7 +1285,7 @@ function newInPopupView(listeners, emitHttpEvent, parentDispach) {
       <Modal
         width={showPopupState.size.width}
         heigt={showPopupState.size.heigt}
-        bodyStyle={{ margin: 0, padding: 0 }}
+        bodyStyle={{ margin: 0, padding: 0 ,overflow: "hidden"}}
         title={showPopupState.title}
         visible={showPopupState.pageIndex !== defaultObj.pageIndex}
         onOk={(e2) => {
@@ -1323,6 +1401,7 @@ export default function GroupTable(props) {
           roomList={props.roomList}
           query={props.query}
         />
+        {/* <div style={{height:"50px",backgroundColor:"`rgb(245,245,245)`"}}></div> */}
         <InPopupView roomList={props.roomList}>
           <SubViewComponent />
         </InPopupView>

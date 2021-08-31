@@ -40,8 +40,10 @@ function toEventObjChildrenList(eventObj) {
     if (currentEvent === null) {
       break;
     }
-    childrenList.push(currentEvent)
 
+    if(isPermissCustom(currentEvent.source)) {
+      childrenList.push(currentEvent)
+    }
     currentEvent = currentEvent.next
   }
 
@@ -242,6 +244,7 @@ function rebuildEventObj(eventObj) {
     }
 
     let lastEventObj = {
+      no:eventObj.no,
       from: eventObj.to,
       to: eventObj.next.to,
       name: eventObj.next.name,
@@ -269,6 +272,7 @@ function rebuildEventObj(eventObj) {
 
     //마감 막대기는 마지막 두번째 끝나는 시간붙어 마지막 데이터의 끝나는 시간으로 잡는다 
     let lastEventObj = {
+      no:eventObj.no,
       from: _slastEventObj.to,
       to: _lastEventObj.to,
       name: _lastEventObj.name,
@@ -287,76 +291,12 @@ function rebuildEventObj(eventObj) {
 }
 
 
-// function newBabyCounter() {
-
-//   let bReport = {}
-
-
-//   let babyCountintFunc = function (eventObj,ctimeFormatStr) {
-
-    
-//     let ctime = moment(ctimeFormatStr);
-
-//     let count = 0;
-//     //eventObj 에 있는 전체구간에 포함되였을때 
-//     if (inDurationVal2(eventObj.from, eventObj.lastTo, ctime)) {
-
-//       //root eventObj 에 포함되였으면 return 한다 
-//       if (isValidCountReport(eventObj, eventObj.from, eventObj.to, ctime)) {
-//         count = count+eventObj.source.baby;
-//       }
-
-//       //false 인 상태면 subList 를 돌면서 체크한다 
-//       //줃첩곤강이 있으므로 도든 sublist 를 다 처리해야한다 
-
-//       if (eventObj.subList.length > 0) {
-
-//         for (let i = 0; i < eventObj.subList.length; i++) {
-
-//           let cuo = eventObj.subList[i];
-//           if (isValidCountReport(cuo, cuo.from, cuo.to, ctime)) {
-//             count = count+cuo.source.baby;
-//           }
-//         }
-//       }
-//     }
-//     return count;
-//   }
-
-//   return function (eventObj, dateFormate) {
-
-//     let count = bReport[dateFormate];
-//     if (count === undefined) {
-//       count=0;
-//       bReport[dateFormate] = count;
-//     }
-
-//     const babyCount = babyCountintFunc(eventObj,dateFormate)
-//     bReport[dateFormate] = count+babyCount
-//     return bReport;
-
-//   }
-// }
-
 
 function toChartData(dataList) {
-
-  /*
-
-  {
-    roomGradeLevel: {
-      name:팬트하우스,골드 둘중하나로 밖힘 
-      dataList:{
-        "2021-01-02":1
-      },
-    }
-  }
-  */
 
 
 
   let roomDataMap = {}
-//  let rangeObj = {}
 
   let earliestDate = null;
   let latestDate = null;
@@ -366,7 +306,7 @@ function toChartData(dataList) {
     let fmf = moment(element.fromDate)
     let emf = moment(element.toDate);
 
-    //---------------------------- 최초 와 최후의 날짜를 찾아서 그리드에서 앞으로 6일 뒤로 6일로 해서 여백을 최소화하는데 사용
+    //---------------------------- 최초와 최후의 날짜를 찾아서 그리드에서 앞으로 6일 뒤로 6일로 해서 여백을 최소화하는데 사용
     //맨 처음시작되는 날짜를 찾는다 
     if(earliestDate == null || fmf.isBefore(earliestDate)) {
         earliestDate = fmf;
@@ -549,6 +489,7 @@ function toInRangedList(eventObj, ctimeFormatStr) {
 
 function buildReportDataList(eventObjList,dateList) {
 
+  
   let totalCount = {};
 
   const babyCouter = allOfBabyCountingVal();
@@ -648,9 +589,24 @@ const GlobalProps = {
 }
 
 
+
+function isPermissCustom(source) {
+  return (ReservStateChecker.isPreInFull(source)
+          || ReservStateChecker.isPreInDespi(source))
+
+          || (
+            ReservStateChecker.isCheckInDespi(source)
+              || ReservStateChecker.isCheckinFull(source)
+          )
+
+}
+
 export const ReservStateChecker = (() => {
 
   return {
+    isNotFullyPaied:function(sourceObj){
+      return ReservStateChecker.isPreInDespi(sourceObj) || ReservStateChecker.isCheckInDespi(sourceObj)
+    },
     isPreInDespi:function(sourceObj) { //입실예정(미남)
       return sourceObj.delState === 0 
           && sourceObj.inState === 0
