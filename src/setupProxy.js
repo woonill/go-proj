@@ -1,8 +1,11 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+const HOST_SERVER = "http://testg.tosky.co.kr:18080"
+//const HOST_SERVER = "http://192.168.101.8:8080"
+
 
 function resetProxyHeader(proxyReq) {
-  proxyReq.setHeader('cookie', 'JSESSIONID=A535DE39301A4A92F78297106A982DFD; shared_session_id=A535DE39301A4A92F78297106A982DFD');
+  proxyReq.setHeader('cookie', 'JSESSIONID=6956ABB0C584512551556B44BCE3980E; shared_session_id=6956ABB0C584512551556B44BCE3980E');
   proxyReq.setHeader('Access-Control-Allow-Origin', 'true');
 
 }
@@ -13,7 +16,7 @@ module.exports = function (app) {
   app.use(createProxyMiddleware(
     '/ajax',
     {
-      target: 'http://192.168.101.8:8080', changeOrigin: true,
+      target:HOST_SERVER , changeOrigin: true,
       onProxyReq(proxyReq, req, res) {
 //        proxyReq.setHeader('cookie', 'JSESSIONID=917BE2C28401ABCC7CF9105C32736D18; shared_session_id=917BE2C28401ABCC7CF9105C32736D18');
           resetProxyHeader(proxyReq)
@@ -27,7 +30,7 @@ module.exports = function (app) {
     app.use(createProxyMiddleware(
       '/reservation',
       {
-        target: 'http://192.168.101.8:8080', changeOrigin: true,
+        target: HOST_SERVER, changeOrigin: true,
         onProxyReq(proxyReq, req, res) {
           resetProxyHeader(proxyReq)
 //          proxyReq.setHeader('cookie', 'JSESSIONID=917BE2C28401ABCC7CF9105C32736D18; shared_session_id=917BE2C28401ABCC7CF9105C32736D18');
@@ -39,7 +42,7 @@ module.exports = function (app) {
     app.use(createProxyMiddleware(
       '/excel',
       {
-        target: 'http://192.168.101.8:8080', changeOrigin: true,
+        target: HOST_SERVER, changeOrigin: true,
         onProxyReq(proxyReq, req, res) {
           resetProxyHeader(proxyReq)
 //          proxyReq.setHeader('cookie', 'JSESSIONID=917BE2C28401ABCC7CF9105C32736D18; shared_session_id=917BE2C28401ABCC7CF9105C32736D18');
@@ -50,7 +53,7 @@ module.exports = function (app) {
     app.use(createProxyMiddleware(
       '/login',
       {
-        target: 'http://192.168.101.8:8080', changeOrigin: true,
+        target: HOST_SERVER, changeOrigin: true,
         onProxyReq(proxyReq, req, res) {
           resetProxyHeader(proxyReq)
 //          proxyReq.setHeader('cookie', 'JSESSIONID=917BE2C28401ABCC7CF9105C32736D18; shared_session_id=917BE2C28401ABCC7CF9105C32736D18');

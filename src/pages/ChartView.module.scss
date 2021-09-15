@@ -33,6 +33,24 @@
 
 }
 
+@mixin fixText{
+    overflow:hidden;
+    whiteSpace:nowrap;
+    textOverflow:ellipsis;
+}
+
+.groupTitleText {
+ @include fixText;
+ font-size: 15
+}
+
+
+// .rangeOvertimeText {
+//     @include fixText;
+//     text-align:center;
+//     color: fontColor,
+// }
+
 
 .actionButton {
     @include linkBtn;

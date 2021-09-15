@@ -113,7 +113,7 @@ function App() {
     })
       .then(res => {
 //        console.log("Request", res);
-        console.log("request status cocde",res.status,res)
+//        console.log("request status cocde",res.status,res)
         if(res.type === "basic" && res.status !== 200) {
           window.location.href= "/login/login?uri=/html/index.html"
           return

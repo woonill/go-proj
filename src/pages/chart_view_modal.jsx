@@ -35,6 +35,33 @@ const intl = createIntl({
 
 const toRangeString = (event) => event.fromDate + " ~ " + event.toDate;
 
+
+const toFormatNumber = (num) => {
+//  console.log(num)
+  if(num === undefined || isNaN(num)) {
+
+    return 0;
+  }
+  return intl.formatNumber(num);
+}
+
+const calcuRemainMoneyBuilder = (totalAmount) => {
+
+  return  (itemList) => {
+    let calAmount = itemList.reduce((total, newEl) => {
+
+      if(isNaN(newEl.amount)) {
+        return total;
+      }
+      return total + newEl.amount;
+    }, 0);
+
+//    console.log("CallAmount",calAmount)
+    return totalAmount - calAmount;
+  };
+}
+
+
 function newCostEventObserver2(itemList, itemListUpdate) {
   return (e) => {
     let isCall = true;
@@ -250,7 +277,7 @@ function CostItemComp(props) {
           maxLength={20}
           placeholder="금액"
           formatter={(value) => intl.formatNumber(value)}
-          defaultValue={props.item.amount}
+          value={props.item.amount}
           onChange={(e) => {
             //e.preventDefault();
             props.eObserver({
@@ -279,9 +306,13 @@ function CostItemComp(props) {
         <AddButtonView
           index={props.index}
           total={props.itemLen}
-          onClick={props.addOnClick}
+          onClick={(e)=>{
+            props.addOnClick(e,props.index)
+          }}
         />
-        <Button onClick={props.removeOnClick}>-</Button>
+        <Button onClick={(e)=>{
+          props.removeOnClick(e,props.index)
+        }}>-</Button>
       </div>
     </div>
   );
@@ -533,6 +564,15 @@ function YenzangForm(props) {
 
   const okHandler = function (bEvent) {
     // console.log("Memo",sParam,sParam.rangeDate[0].format("YYYY-MM-DD"))
+
+    const endDate = sParam.rangeDate[1];
+
+    const stoDate = moment(source.toDate);
+    if(stoDate.isSame(endDate) || stoDate.isAfter(endDate)) { //지금 날짜보다 같거나 전이면 메세지 
+      message.warn("연장되는 날짜는 기존날짜보다 이후의 날짜여야합니다.")
+      return 
+    }
+
     let param = {
       reservation_no: source.no,
       memo: sParam.memoStr,
@@ -828,6 +868,9 @@ const newRoomFilter = (no) => {
   };
 };
 
+
+
+
 //입실확정
 //complete 21.08.04 22:37
 //httpPost 통과
@@ -863,13 +906,7 @@ function ReservationConfirmForm(props) {
 
   let itemList = inObj.itemList;
 
-  const calLastMoney = (itemList) => {
-    const calAmount = itemList.reduce((total, newEl) => {
-      return total + newEl.amount;
-    }, 0);
-
-    return sourceObj.remainMoney - calAmount;
-  };
+  const calLastMoney = calcuRemainMoneyBuilder(sourceObj.remainMoney)
 
   const observer = newCostEventObserver2(itemList, function (dataList) {
     updateObj({
@@ -880,6 +917,17 @@ function ReservationConfirmForm(props) {
   });
 
   const okHandler = (e) => {
+
+
+    const lastRemainAmount = calLastMoney(inObj.itemList)
+
+    if(lastRemainAmount < 0) {
+      message.warn("0 money");
+      return 
+    }
+
+    // console.log("LastAmount",lastRemainAmount);
+
     const currentRoomList = getRoomListOf(roomMap, inObj.roomGradeNo);
     if (
       currentRoomList.filter((e) => {
@@ -905,7 +953,8 @@ function ReservationConfirmForm(props) {
       room_name: inObj.roomObj.name,
       pay_count: itemList.length,
       real_money: sourceObj.realMoney,
-      remain_money: sourceObj.remainMoney,
+      // remain_money: sourceObj.remainMoney,
+      remain_money:lastRemainAmount,
     };
 
     inObj.itemList.forEach((e) => {
@@ -917,8 +966,7 @@ function ReservationConfirmForm(props) {
       param["payment_" + index] = e["amount"];
     });
 
-    //    console.log("ConfirmCheckIn", param);
-
+//    console.log("ConfirmCheckIn", param);
     props.dispach({
       type: "ConfirmCheckIn",
       params: param,
@@ -945,7 +993,6 @@ function ReservationConfirmForm(props) {
                     roomGradeNo: e,
                     roomList: getRoomListOf(roomMap, e),
                   });
-                  //                  updateRoomList(getRoomListOf(roomMap, e));
                 }}
               />
             </td>
@@ -985,20 +1032,12 @@ function ReservationConfirmForm(props) {
               />
             </td>
           </tr>
-          {/* <tr className="pay_type_full" style={{display: "none;"}}>
-            <th scope="row">결제방법</th>
-            <td id="full_pay_type">완납</td>
-          </tr> */}
           <tr className="pay_type_full" style={{ display: "none;" }}>
             <th scope="row">총금액</th>
             <td className="m_pretotal">
               {intl.formatNumber(sourceObj.realMoney)}
             </td>
           </tr>
-          {/* <tr className="pay_type_deposit">
-            <th scope="row">총금액</th>
-            <td className="m_pretotal">6,300,000</td>
-          </tr> */}
           <tr className="pay_type_deposit">
             <th scope="row">잔금</th>
             <td id="m_preremain">{intl.formatNumber(sourceObj.remainMoney)}</td>
@@ -1031,6 +1070,7 @@ function ReservationConfirmForm(props) {
                         );
                         updateObj({
                           ...inObj,
+                          lastMoney:calLastMoney(newItemArray),
                           itemList: newItemArray,
                         });
                       }}
@@ -1048,7 +1088,7 @@ function ReservationConfirmForm(props) {
                   maxLength={20}
                   disabled={true}
                   // value={intl.formatNumber(inObj.lastMoney)} />
-                  value={intl.formatNumber(inObj.lastMoney)}
+                  value={toFormatNumber(inObj.lastMoney)}
                 />
               </div>
             </td>
@@ -1083,19 +1123,13 @@ function BalanceView(props) {
     return obj;
   };
 
-  const calLastMoney = (itemList) => {
-    let calAmount = itemList.reduce((total, newEl) => {
-      return total + newEl.amount;
-    }, 0);
-
-    return sourceObj.remainMoney - calAmount;
-  };
+  const calLastMoney = calcuRemainMoneyBuilder(sourceObj.remainMoney);
 
   let [sParam, updateParam] = useState(() => {
     let initParam = {
       memoStr: "",
       itemList: [newItem(0, sourceObj.remainMoney)],
-      lastMoney: sourceObj.remainMoney,
+      lastMoney: 0,
     };
 
     return initParam;
@@ -1107,17 +1141,28 @@ function BalanceView(props) {
     updateParam({
       ...sParam,
       itemList: dataList,
+//      lastMoney: calLastMoney(sParam.itemList),
       lastMoney: calLastMoney(dataList),
+
     });
   });
 
   const okHandler = function (bEvent) {
+
+    const lastRemainAmount = calLastMoney(sParam.itemList);
+    // console.log("LastAmount",lastRemainAmount)
+
+    if(lastRemainAmount < 0) {
+      message.warn("0 money error");
+      return 
+    }
+
     let param = {
       reservation_no: sourceObj.no,
       memo: sParam.memoStr,
       pay_count: itemList.length,
       real_money: sourceObj.realMoney,
-      remain_money: sourceObj.remainMoney,
+      remain_money: lastRemainAmount,
     };
 
     sParam.itemList.forEach((e) => {
@@ -1127,6 +1172,9 @@ function BalanceView(props) {
       param["pay_method_" + index] = e["payMethod"];
       param["payment_" + index] = e["amount"];
     });
+
+    // console.log("SParam",sParam)
+    // console.log("Amount",sParam.lastMoney,sourceObj.remainMoney)
 
     props.dispach({
       type: "BalancePayment",
@@ -1156,6 +1204,10 @@ function BalanceView(props) {
             <th scope="row">잔금 / 입금액</th>
             <td>
               {itemList.map((e, index) => {
+
+//                console.log(e)
+                e.i = index;
+
                 return (
                   <CostItemComp
                     item={e}
@@ -1172,15 +1224,23 @@ function BalanceView(props) {
                         itemList: newArray,
                       });
                     }}
-                    removeOnClick={(re) => {
+                    removeOnClick={(re,i) => {
                       if (itemList.length <= 1) {
                         return;
                       }
-                      const newItemArray = itemList.filter(
-                        (item) => item.i !== index
-                      );
+                      let newItemArray = [];
+
+                      itemList.forEach((se)=>{
+
+                        if(se.i !== i) {
+                          newItemArray.push(se)
+                        }
+                      })
+
+                      let lsastMoney = calLastMoney(newItemArray)
                       updateParam({
                         ...sParam,
+                        lastMoney:lsastMoney,
                         itemList: newItemArray,
                       });
                     }}
@@ -1197,7 +1257,7 @@ function BalanceView(props) {
                   id="rp_remain_money"
                   type="text"
                   className="i-text"
-                  value={sParam.lastMoney}
+                  value={toFormatNumber(sParam.lastMoney)}
                   disabled={true}
                 />
               </div>

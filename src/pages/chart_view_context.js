@@ -208,18 +208,11 @@ function countRangeRoom(eventObj, ctimeFormatStr) {
           // }
           count=count+1
         }
-
-      
       }
     }
-
-
-
   // if(ctimeFormatStr === "2021-08-28") {
   //   console.log("0828-data",list)
   // }
-
-
   return count;
 }
 
@@ -235,6 +228,11 @@ function rebuildEventObj(eventObj) {
   let subList = toEventObjChildrenList(eventObj)
   eventObj["subList"] = subList;
 
+
+  // if(eventObj.no === 8029) {
+  //   console.log("SourceObj",eventObj)
+  // }
+
   let subNodeSize = subList.length;
   if (subNodeSize === 1) {
 
@@ -244,7 +242,7 @@ function rebuildEventObj(eventObj) {
     }
 
     let lastEventObj = {
-      no:eventObj.no,
+      no:eventObj.next.no,
       from: eventObj.to,
       to: eventObj.next.to,
       name: eventObj.next.name,
@@ -272,7 +270,7 @@ function rebuildEventObj(eventObj) {
 
     //마감 막대기는 마지막 두번째 끝나는 시간붙어 마지막 데이터의 끝나는 시간으로 잡는다 
     let lastEventObj = {
-      no:eventObj.no,
+      no:_lastEventObj.no,
       from: _slastEventObj.to,
       to: _lastEventObj.to,
       name: _lastEventObj.name,
@@ -283,6 +281,10 @@ function rebuildEventObj(eventObj) {
     eventObj["lastNode"] = lastEventObj
     eventObj.lastTo = lastEventObj.to;  //merge count 를 계산하기위해 모든 eventObj 에 실질쩍으로 끝나는 시간을 잡는다 
 
+
+    // if(_lastEventObj.no === 8029) {
+    //   console.log("Event",eventObj)
+    // }
   }
   else {
     eventObj.lastTo = eventObj.to //sublist 가 없으면 자신에 to = lastTo 가된다 
@@ -354,15 +356,20 @@ function toChartData(dataList) {
 
       let eventObj = eventObjWrapper.event;
       eventObj = rebuildEventObj(eventObj)
+
+
+
+
       eventObjList.push(eventObj)
     }
 
     let roomNo = null;
     if(wrapper.el !== null) {
       roomNo = wrapper.el.room
-    }else{
-      console.log(wrapper)
     }
+    // else{
+    //   console.log(wrapper)
+    // }
 
     list.push({
       roomNo:roomNo,
@@ -530,6 +537,29 @@ function toRoomData(record) {
 }
 
 
+function filterEventObjectList(eventObjList,filter) {
+
+
+  for(let i = 0;i<eventObjList.length;i++) {
+
+    let e = eventObjList[i]
+
+    if(filter(e)) {
+      // console.log("Return Vale-1",e)
+      return e
+    }
+
+    if(e.subList !== undefined && e.subList.length > 0) {
+      let ele = filterEventObjectList(e.subList,filter)
+      if(ele !== null) {
+        // console.log("Return Vale-2",ele)
+        return ele
+      }
+    }  
+  }
+  return null;
+}
+
 
 export const GantchartContext = createContext()
 //export const ServerEventContext = createContext()
@@ -601,11 +631,17 @@ function isPermissCustom(source) {
 
 }
 
+
 export const ReservStateChecker = (() => {
 
   return {
     isNotFullyPaied:function(sourceObj){
       return ReservStateChecker.isPreInDespi(sourceObj) || ReservStateChecker.isCheckInDespi(sourceObj)
+    },
+    isConfirmReserv:isPermissCustom,
+    isConfirmCheckin:function(e) {
+      return this.isCheckInDespi(e)
+              || this.isCheckinFull(e)
     },
     isPreInDespi:function(sourceObj) { //입실예정(미남)
       return sourceObj.delState === 0 
@@ -654,5 +690,5 @@ export const ReservStateChecker = (() => {
 
 export {
   //emitHttpEvent, 
-  toChartData, GlobalProps,buildReportDataList,rangeOfDates,inDurationVal2,isValidSourceCountReport
+  toChartData,filterEventObjectList, GlobalProps,buildReportDataList,rangeOfDates,inDurationVal2,isValidSourceCountReport
 }

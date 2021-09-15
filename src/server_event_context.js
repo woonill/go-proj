@@ -181,7 +181,6 @@ function doHttpPost(uri, params, fn) {
 
         if(event !== null && event.params !== null) {
           event.params = {
-
             ...event.params,
             bno:headerInfo["branch_no"]
           }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 
-import { Button, DatePicker, Menu, Select, Input, Dropdown } from "antd";
+import { Button, DatePicker, Menu, Select, Input, Dropdown,Empty } from "antd";
 
 import style from "./ChartView.module.scss";
 
@@ -90,8 +90,9 @@ function HeaderView(props) {
 
   let dateFormat = "YYYY-MM-DD";
   let [dateRangeVals, updateDateRange] = useState(() => {
-    let startDate = moment().subtract(15, "days");
-    let endDate = moment().add(15, "days");
+    let cDate = defaultSearchDateOfRange();
+    let startDate = cDate.sDate;
+    let endDate = cDate.eDate;
     return [startDate, endDate];
   });
 
@@ -211,48 +212,6 @@ function HeaderView(props) {
   );
 }
 
-// const searchConditions= [
-//   {
-//     title:"전체보기",
-//     filterType:"filter-0",
-//   },
-//   {
-//     title:"입실예정(잔금미납)",
-//     filterType:"filter-1",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-2",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-3",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-4",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-5",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-6",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-7",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-8",
-//   },
-//   {
-//     title:"전체보기",
-//     filterType:"filter-9",
-//   },
-// ]
 
 function SearchConditionView(props) {
   let [showPopup, updateShowPopup] = useState(false);
@@ -523,12 +482,12 @@ function newEventDispach(setChartViewState, updateTableDataList) {
   };
 }
 
-const groupBy = function (xs, key) {
-  return xs.reduce(function (rv, x) {
-    (rv[x[key]] = rv[x[key]] || []).push(x);
-    return rv;
-  }, {});
-};
+// const groupBy = function (xs, key) {
+//   return xs.reduce(function (rv, x) {
+//     (rv[x[key]] = rv[x[key]] || []).push(x);
+//     return rv;
+//   }, {});
+// };
 
 function ChartDataViewWrapper(props) {
   let { serverEventEmmiter } = useContext(ServerEventContext);
@@ -565,14 +524,43 @@ function ChartDataViewWrapper(props) {
   );
 }
 
+
+
+const roomLevelGroupBy = function (roomList) {
+  //  console.log("RoomList",roomList)
+
+  let obj = {};
+  for (let i = 0; i < roomList.length; i++) {
+    const room = roomList[i];
+    const key = room["gradeNo"];
+    let roomLevel = obj[key];
+    if (roomLevel === undefined) {
+      roomLevel = {
+        name: room["gradeName"],
+        roomList: [],
+      };
+      obj[key] = roomLevel;
+    }
+    roomLevel["roomList"].push(room);
+  }
+  return obj;
+};
+
 function ListView(props) {
+
   const dataList = props.reservationObj.dataList;
 
+
+  if(props.reservationObj.query !== undefined) {
+
+  }
+
   if (dataList.length < 1) {
-    return <div>loading.......</div>;
+    return <Empty/>
   }
 
   if (props.viewState === 0) {
+
     return (
       <ChartDataViewWrapper
         roomList={props.roomList}
@@ -586,27 +574,20 @@ function ListView(props) {
 }
 
 function ReportTextInfo(props) {
-  let [robj, updater] = useState({
-    smin: 0,
-    tmin: 0,
-  });
+  let [robj, updater] = useState([]);
 
   useEffect(() => {
 //    console.log("Query",props.query)
     if (props.dataList.length > 0
         && (props.query !== undefined && props.query.type === "range")
       ) {
-      //        console.log("start update ReportText")
 
       let roomReport = {};
-
       let query = props.query;
-
       let dateList = rangeOfDates(query.condition["from"], query.condition["to"]);
 
-
       props.dataList.forEach((sourceObj) => {
-        //          console.log(sourceObj)
+
         let reDataRepo = roomReport[sourceObj.roomGradeNo];
         if (reDataRepo === undefined) {
           reDataRepo = {};
@@ -620,7 +601,7 @@ function ReportTextInfo(props) {
             reDataRepo[cDate] = countVal;
           } else {
 
-            if(isValidSourceCountReport(
+            if(ReservStateChecker.isConfirmReserv(sourceObj) && isValidSourceCountReport(
               sourceObj,
               sourceObj.fromDate,
               sourceObj.toDate,
@@ -632,10 +613,15 @@ function ReportTextInfo(props) {
         });
       });
 
-      const roomGradeGroup = groupBy(props.roomList, "gradeNo");
+//      const roomGradeGroup = groupBy(props.roomList, "gradeNo");
+      const roomGradeGroup = roomLevelGroupBy(props.roomList)
+  //    console.log(roomGradeGroup,roomGradeGroup2)
+      // console.log(roomGradeGroup)
+      // console.log("ReportData",roomReport)
 
       const reduceFn = (e, dataObj) => {
-        const totalSize = roomGradeGroup[e].length;
+        const roomInfo = roomGradeGroup[e]
+        const totalSize = roomInfo.roomList.length;
         let mVal = totalSize;
         const rObj = dataObj[e];
 
@@ -653,10 +639,22 @@ function ReportTextInfo(props) {
         return mVal <=0 ? 0 : mVal;
       };
 
-      updater({
-        smin: reduceFn(3, roomReport),
-        tmin: reduceFn(4, roomReport),
-      });
+      let roomGradeKeys = Object.keys(roomGradeGroup)
+      // console.log("Keys",roomGradeKeys)
+
+      let newInfoList = []
+      roomGradeKeys.forEach((skey) => {
+        const roomInfo = roomGradeGroup[skey]
+        const rData =  reduceFn(skey, roomReport)
+        // tmin: reduceFn(roomGradeKeys[1], roomReport),
+//        console.log(roomInfo.name,rData)
+        newInfoList.push({
+          name:roomInfo.name,
+          qty:rData
+        })
+      })
+
+      updater(newInfoList);
     }
   }, [props.dataList]);
 
@@ -664,7 +662,15 @@ function ReportTextInfo(props) {
 
     return (
       <span>
-        최소 예약 가능 객실수 펜트하우스 : {robj.smin} / 골드 : {robj.tmin}
+        최소 예약 가능 객실수 {
+          robj.map((e,i)=>{
+            let txt =  "";
+            if(i > 0) {
+              txt = "/ "+txt
+            }
+            return txt+e.name+" : "+e.qty
+          })
+        }
       </span>  
     )
   }
@@ -705,14 +711,6 @@ function DownloadExcelPopup(props) {
     resObs.subscribe(
       (next) => {
 
-//        console.log("Response", next);
-
-          // let filename = next.headers.get('content-disposition')
-          // .split(';')
-          // .find(n => n.includes('filename='))
-          // .replace('filename=', '')
-          // .trim()
-
         let filename = next.headers
           .get("Content-Disposition")
           .split("filename=")[1];
@@ -735,7 +733,15 @@ function DownloadExcelPopup(props) {
 
       },
       (error) => {
-        console.log("Error", error);
+//        console.log("Error", error);
+        Modal.error({
+          title: "메시지",
+          content: (
+            <div>
+              <p>{error}</p>
+            </div>
+          ),
+        });
       }
     );
   };
@@ -806,8 +812,49 @@ function DownloadExcelPopup(props) {
   );
 }
 
+
+function defaultSearchDateOfRange(){
+
+  // let startDate = moment().subtract(15, "days");
+  // let endDate = moment().add(15, "days");
+
+  let startDate = moment();
+  let endDate = moment().add(7, "days");
+
+  return {
+    sDate:startDate,
+    eDate:endDate
+  }
+}
+
+
+function initLoad(serverEventEmmiter,dispach) {
+
+    let cDate = defaultSearchDateOfRange()
+
+    let param = {
+      from: cDate.sDate.format("YYYY-MM-DD"),
+      to: cDate.eDate.format("YYYY-MM-DD"),
+    };
+    serverEventEmmiter({
+      type: "FetchTableDataList",
+      params: param,
+      resultHandler: (data) => {
+        const sParam = {
+          type: "range",
+          condition: param,
+        };
+        dispach({
+          type: "OnLoadCompletedResList",
+          data: data,
+          eParam: sParam,
+        });
+      },
+    });
+  }
+
 export default function ChartView(props) {
-  let { serverEventEmmiter } = useContext(ServerEventContext);
+  const { serverEventEmmiter } = useContext(ServerEventContext);
 
   let [reservationObj, updateTableDataList] = useState({
     dataList: [],
@@ -817,7 +864,7 @@ export default function ChartView(props) {
 
   let [roomList, updateRoomList] = useState([]);
 
-  let dispach = newEventDispach(
+  const dispach = newEventDispach(
     (newChartState) => {
       updateTableDataList({
         ...reservationObj,
@@ -840,34 +887,21 @@ export default function ChartView(props) {
     }
   );
 
-  useEffect(() => {
-    if (props.headerInfo !== null) {
-      //        console.log("Update roomList")
-      serverEventEmmiter({
-        type: "FetchRoomList",
-        resultHandler: function (e) {
-          updateRoomList(e.dataList);
-        },
-      });
-    }
-  }, [props.headerInfo]);
 
-  useEffect(() => {
-    if (roomList.length > 0) {
-      let startDate = moment().subtract(15, "days").format("YYYY-MM-DD");
-      let endDate = moment().add(15, "days").format("YYYY-MM-DD");
+  //table 쪽에서 popup 이 성공시 data reload 하고싶어하는 기능을 위해서 
+  //밑에 내려보내는 dispach는 한번 더 감싼다 
+  const dispachWrapper = (e) => {
 
-      let param = {
-        from: startDate,
-        to: endDate,
-      };
+    if(e.type === "reload") {
+
+      const query = e.query;
       serverEventEmmiter({
         type: "FetchTableDataList",
-        params: param,
+        params: query.condition,
         resultHandler: (data) => {
           const sParam = {
-            type: "range",
-            condition: param,
+            type: query.type,
+            condition: e.param,
           };
           dispach({
             type: "OnLoadCompletedResList",
@@ -876,6 +910,28 @@ export default function ChartView(props) {
           });
         },
       });
+    
+    }
+    else{
+      dispach(e)
+    }
+  }
+
+
+  useEffect(() => {
+    serverEventEmmiter({
+      type: "FetchRoomList",
+      resultHandler: function (e) {
+        updateRoomList(e.dataList);
+      },
+    });
+
+  }, []);
+
+
+  useEffect(() => {
+    if (roomList.length > 0) {
+      initLoad(serverEventEmmiter,dispach)
     }
   }, [roomList]); //roomList 가 변화되면 다시 콜된다
 
@@ -900,7 +956,7 @@ export default function ChartView(props) {
       />
       {/* <div style={{ padding: 5 }}> */}
         <ListView
-          dispach={dispach}
+          dispach={dispachWrapper}
           roomList={roomList}
           viewState={reservationObj.chartViewState}
           reservationObj={reservationObj}

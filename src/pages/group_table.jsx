@@ -1,9 +1,7 @@
-import React, { useState, useContext, useEffect } from "react";
-import { Table, Modal, Popover } from "antd";
+import React, { useState, useContext, useEffect,useMemo } from "react";
+import { Table, Modal, Popover,Select } from "antd";
 
-
-
-//import { styles } from "./ChartView.module.scss";
+//import styles  from './ChartView.module.scss'
 
 import Moment from "moment";
 import { extendMoment } from "moment-range";
@@ -23,6 +21,8 @@ import {
 } from "./chart_view_modal";
 
 import {
+  filterEventObjectList,
+  inDurationVal2,
   GantchartContext,
   buildReportDataList,
   ReservStateChecker,
@@ -31,18 +31,26 @@ import {
 import { ServerEventContext } from "../server_event_context.js";
 
 const moment = extendMoment(Moment);
+const { Option } = Select;
 
 function RangeTimelineText(props) {
    let fontColor = props.color === undefined ? "black" : props.color;
-  // let rtext = "(" + props.name + ")" + moment(props.from).format("mm-dd") + " ~ " + moment(props.to).format("mm-dd") + "";
-  // rtext = props.mergeCount > 6 ? rtext : rtext.substring(0, 5);
   let rtext = props.name ;
   
   if(props.mergeCount>2) {
     rtext=rtext+"("+moment(props.from).format("MM-DD") + " ~ " + moment(props.to).format("MM-DD") + ")";
-
   }
 
+
+  const eventObj = props.eventObj;
+
+  if(eventObj.subList === undefined || eventObj.subList.length < 1) {
+
+    const str = newStatustext(eventObj.source)
+    if(str.length > 0) {
+      rtext = rtext +","+ str
+    }
+  }
 
 
   return (
@@ -53,7 +61,10 @@ function RangeTimelineText(props) {
         // flex:1,
         // backgroundColor:"red",
         textAlign: "center",
+        overflow:"hidden",
         color: fontColor,
+        whiteSpace:"nowrap",
+        textOverflow:"ellipsis",
       }}
     >
       {rtext}
@@ -61,13 +72,17 @@ function RangeTimelineText(props) {
   );
 }
 
+//height fix for bug 2021.9.13
 function newSchButtonStyle(source, merge = 1) {
   let bgColor = newSchButtonBGColorOfRGB(source);
   let fontColor = newSchButtonFontColor(source);
 
   if (
-    ReservStateChecker.isPreInDespi(source) ||
-    ReservStateChecker.isCheckInDespi(source)
+    // ReservStateChecker.isPreInDespi(source) ||
+    // ReservStateChecker.isCheckInDespi(source)
+    ReservStateChecker.isPreInFull(source) ||
+    ReservStateChecker.isCheckinFull(source)
+
   ) {
     return {
       borderStyle: "solid",
@@ -76,7 +91,7 @@ function newSchButtonStyle(source, merge = 1) {
       borderRadius: "4px",
       textAlign: "center",
       // width:"100%",
-      // height:"100%",
+      height:"32px",
       display: "flex",
       flex: merge,
       alignItems: "center",
@@ -96,12 +111,7 @@ function newSchButtonStyle(source, merge = 1) {
     color: `rgb(${fontColor})`,
     display: "flex",
     flex: merge,
-    // width:"100%",
-    // height:"100%",
-    // flexGrow:1,
-    // alignSelf:"stretch",
-    // display: "flex",
-    // flex:1,
+    height:"32px",
     alignItems: "center",
     justifyContent: "center",
     // minWidth: "31px",
@@ -183,13 +193,28 @@ function newOverrideRangeTitle(dataList,ssMerge) {
 }
 
 function newSchButtonFontColor(sourceObj) {
-  if (ReservStateChecker.isPreInDespi(sourceObj)) {
+
+
+  //상태 체크가 바뀐듯한데 .. 조금더 체크하자 
+  if (ReservStateChecker.isPreInFull(sourceObj)) {
     return "74,130,61";
-  } else if (ReservStateChecker.isCheckInDespi(sourceObj)) {
-    return "196,122,204";
-  } else {
-    return "255,255,255";
+  } 
+  if(ReservStateChecker.isPreInDespi(sourceObj)) {
+    return "102,102,102";
   }
+
+  if (ReservStateChecker.isCheckinFull(sourceObj)) {
+//    return "196,122,204";
+    return "196,122,204";
+  } 
+  if (ReservStateChecker.isCheckInDespi(sourceObj)) {
+    return "255,255,255";
+
+} 
+
+
+
+  return "255,255,255";
 }
 
 function newSchButtonBGColorOfRGB(sourceObj) {
@@ -201,9 +226,10 @@ function newSchButtonBGColorOfRGB(sourceObj) {
   if (ReservStateChecker.isExitRoom(sourceObj)) {
     return "230,230,230";
   } else if (ReservStateChecker.isDrop(sourceObj)) {
-    return "255,136,128";
+    return "255,137,128";
   } else if (ReservStateChecker.isCancel(sourceObj)) {
-    return "125,125,125";
+//    return "125,125,125";
+      return "230,230,230";
   } else if (
     ReservStateChecker.isPreInDespi(sourceObj) ||
     ReservStateChecker.isPreInFull(sourceObj)
@@ -215,32 +241,38 @@ function newSchButtonBGColorOfRGB(sourceObj) {
   ) {
     return "187,131,202";
   }
-  // else if (ReservStateChecker.isCheckinFull(sourceObj)) {
-  //   return "187,131,202";
-  // }
-  // else if (ReservStateChecker.isMoveRoom(sourceObj)) {
-  //   return "96,183,156";
-  // }
-  // else if (ReservStateChecker.isRevisit(sourceObj)) {
-  //   return "255,255,255";
-  // }
-  // else if (ReservStateChecker.isRevisit(sourceObj)) {
-  //   colorValue = "189,189,189";
-  // }
+
 
   console.log("No have color state", sourceObj);
   return colorValue;
 }
 
 
+function newStatustext(sourceObj) {
+
+  if (ReservStateChecker.isPreInDespi(sourceObj)) {
+    return "입실예정-잔금미납";
+  } else if (ReservStateChecker.isPreInFull(sourceObj)) {
+    return "입실예정-잔금완납";
+  }
+  else if (ReservStateChecker.isCheckInDespi(sourceObj)) {
+    return "입실확정-잔금미납";
+  }
+  else if (ReservStateChecker.isCheckinFull(sourceObj)) {
+    return "입실확정-잔금완납";
+  }
+  else if(ReservStateChecker.isCancel(sourceObj)) {
+    return "예약취소"
+  }
+  else if(ReservStateChecker.isDrop(sourceObj)) {
+    return "계약포기"
+  }
+
+  return "퇴실";
+}
+
 
  function OverrideComp(props) {
-
-  // let [showState,updateState] = useState(false)
-
-  // const _onBlur = (e)=>{
-  //   console.log("focus out")
-  // }
 
   return (
     <div style={{ flex: props.width,textAlign:"center",cursor: "pointer",}}>
@@ -258,8 +290,6 @@ function newSchButtonBGColorOfRGB(sourceObj) {
             justifyContent:"center",
             
           }}
-          // onBlur={_onBlur}        
-
         >
           <span style={{textAlign:"center"}}>{props.title}</span>
         </div>
@@ -306,10 +336,9 @@ function gridChartCompRender(eventObj, mergeCount) {
   let overrideTimeTitle = newOverrideRangeTitle(overTimeArray,srRange);
 
 
-//   if(7842 === eventObj.no) {
-// //    console.log("Merge count",mergeCount,fWidth,srRange,overrideTimeTitle)
-//     console.log("Merge count",lastNode)
-//   }
+  // if(8029 === eventObj.no) {
+  //   console.log("EventObj",eventObj)
+  // }
 
   return (
     <div
@@ -322,7 +351,7 @@ function gridChartCompRender(eventObj, mergeCount) {
     >
       <div style={newSchButtonStyle(eventObj.source, fWidth)}>
         <SchedulerBarButton
-          buttonStyle={{ width: "100%",cursor:"pointer" }}
+          buttonStyle={{ width: "100%",height:"100%",cursor:"pointer" }}
           mergeCount={fWidth}
           colData={eventObj}
         />
@@ -538,12 +567,15 @@ function SchedulerBarButton(props) {
 
       let groupStateVal = groupState[dataSource.no]; //no 는 똑같은 값이므로 이걸로 group key 표시
 
-      const bgStateDisapcher = (e) => {
-        //        console.log("updateColor",e.bgColor,dataSource)
-        updateBgColor(e.bgColor);
-      };
+      if(groupStateVal !== undefined && groupStateVal !== null) {
 
-      groupStateVal.push(bgStateDisapcher);
+        const bgStateDisapcher = (e) => {
+          //        console.log("updateColor",e.bgColor,dataSource)
+          updateBgColor(e.bgColor);
+        };
+  
+        groupStateVal.push(bgStateDisapcher);
+      }
 
       // return function () {
       //   console.log("clear groupStateVal function");
@@ -556,9 +588,13 @@ function SchedulerBarButton(props) {
     if (isGroupping) {
       //      updateBgColor("red");
       let groupStateVal = groupState[props.colData.source.no]; //no 같은 값이므로 group key 표시
-      groupStateVal.forEach((fallback) => {
-        fallback({ bgColor: "yellow" });
-      });
+      if(groupStateVal !== undefined) {
+        groupStateVal.forEach((fallback) => {
+          fallback({ bgColor: "yellow" });
+        });
+
+        
+      }
     }
   };
 
@@ -595,6 +631,7 @@ function SchedulerBarButton(props) {
         {/* {props.children} */}
         <RangeTimelineText
           color={fontColor}
+          eventObj={eventObj}
           mergeCount={props.mergeCount}
           name={eventObj.name}
           from={eventObj.from}
@@ -685,19 +722,23 @@ function newTotalFragment(record, date) {
 
     return (
       <div style={{
-        width: "90%", 
         textAlign: "center",
-        height: "100%",
         backgroundColor: "#e9edcc",
         borderStyle: "solid",
         borderColor:"#b5b5b5",
         borderRadius: "4px",
+        borderWidth:"1px",
         color: "black",
-        marginLeft:"2px",
-        marginRight:"2px",
+        // marginLeft:"1px",
+        // marginRight:"1px",
+        // top:"-4px",
+        // left:"6px",
+        // width:"20px",
+        // height:"20px",
+
       }}>        
-        {/* <span style={{ textAlign: "center" }}></span> */}
-        {dataOfMonth}        
+        {/* <span style={{ textAlign: "center" }}>{dataOfMonth}</span> */}
+        {dataOfMonth}
       </div>
     );
   }
@@ -729,6 +770,8 @@ const weeklyMap = {
   0: "일",
 };
 
+// const isFamilyDay = (day) => day === 6 || day === 0
+
 const weeklyTextTag = (day, text) => {
   switch (day) {
     case 6:
@@ -751,20 +794,36 @@ function newColumnRender(sdate, start, end) {
     calDay.month(mo.month());
     calDay.date(i);
 
-    const titleText = (i <= 9 ? "0" + i : i) + "\n";
-    const weeklyText = weeklyMap[calDay.day()];
+    const titleText = (i <= 9 ? "0" + i : i) ;
+    const cDay = calDay.day()
+    // const titleText = ""+i ;
+    const weeklyText = weeklyMap[cDay];
+
+    let bgColor = ""
+    if(moment().isSame(calDay)){
+      bgColor = "#fff5e1"
+    }
 
     const titleTag = (
-      <div className="fn-label iw-mTrigger" id={"id-dhl" + i}>
-        {titleText}
-        {weeklyTextTag(calDay.day(), weeklyText)}
+      <div 
+        // id={"id-dhl" + i}
+        // className="fn-label iw-mTrigger" 
+        style={{
+          backgroundColor:bgColor,
+          textAlign:"center",
+        }}  
+      >
+        {weeklyTextTag(cDay, titleText)}
+        <br/>
+        {weeklyTextTag(cDay, weeklyText)}
     </div>
     );
 
+    //이부분에 넓이도 x 축 scrol에 영향을 준다 x축에 차지않게 그릴려고하며 
     let model = {
       title: titleTag,
-      width: 35,
-      height: 5,
+      width: 40,
+      height: 15,
       className:'header-style',
       dataIndex: "eventObjList",
       key: sdate + "-" + i,
@@ -800,12 +859,15 @@ function calcuRangeDays(currentObj) {
   return lTime.diff(fTime, "days") + 1;
 }
 
-function newColumnHeader(stObj) {
+function newColumnHeader(stObj,fallback) {
 
 
-  const sDate = stObj.sDate.subtract(1, "days");
-//  const eDate = stObj.eDate.add(1, "days");
-  const eDate = stObj.eDate;
+  // const sDate = moment(stObj.sDate)//.subtract(1, "days");
+  // //월 header 부분에서 10월1까지만 오면 다음라인으로 바꾸어지는 현상을 막기위해서 
+  // const eDate = moment(stObj.eDate).add(1,"day");
+
+  const sDate = stObj.sDate;
+  const eDate = stObj.eDate
 
   let dateStart = sDate.clone();
   let dateEnd = eDate.clone();
@@ -832,22 +894,33 @@ function newColumnHeader(stObj) {
 
   const sDateStr = sDate.format("YYYY-MM");
   const eDateStr = eDate.format("YYYY-MM");
-
+  const today = moment()
   let columns = [
     {
       dataIndex: "name",
       key: "name",
-      width: 200,
-      className:'sum-header',
-      // title:()=>{
-      //   return <div style={{backgroundColor:`rgb(203,203,203)`}}>abc</div>
-      // },
+      width: 200, 
+      height:15,
+      className:'sum-header', //세라인과 table x 설정이 충돌이 난다 조심해서 사용
+      title:()=>{
+
+        return (
+          <Select
+          showSearch
+          style={{ width: "160px"}}
+          placeholder="정렬"
+          onChange={(v)=>{
+            fallback(v)
+          }}
+        >
+          <Option value="1">호실명</Option>
+          <Option value="0">등급</Option>
+        </Select>
+        )
+      },
       fixed: "left",
       render: function (text, record, index) {
 
-        // if(index === 0) {
-        //   console.log("782",record)
-        // }
         if (index === 1 || index === 2) {
           let roomSplit = text.split(",");
           let countTextArray = roomSplit[1].split(":");
@@ -873,6 +946,17 @@ function newColumnHeader(stObj) {
 
         if(index > 2) {
 
+          let rData = record.eventObjList
+
+          let dR = filterEventObjectList(rData,(e)=>{
+              const state =  inDurationVal2(e.from,e.to,today) && ReservStateChecker.isConfirmCheckin(e.source)
+              if(state){
+                return true;
+
+              }
+              return false;
+          })
+          
           let roomSplit = text.split(",");
           return (
             <div
@@ -886,7 +970,18 @@ function newColumnHeader(stObj) {
                 {roomSplit[0]}
               </span>
               <div style={{ display: "flex", flex: 1 }}>
-                <span>{roomSplit[1]}</span>
+                <span> {roomSplit[1]}</span>
+                <span style={{
+                      overflow:"hidden",
+                      whiteSpace:"nowrap",
+                      textOverflow:"ellipsis",
+                      width:"60px"
+                }}>
+                  {
+                    dR !== null && 
+                    "["+dR.name+"]"
+                  }
+                </span>
               </div>
             </div>
           );
@@ -931,32 +1026,13 @@ function newColumnHeader(stObj) {
       let el = {
         title: monthTag,
         key: mvalue,
-        className:'column-header-white',
-        // dataIndex:"colDataArray",
+        with:100,
+        height:16,
+        // className:'column-header-white',
         children: newColumnRender(mvalue, startIndex, endIndex),
       };
-//      childrenCompos.push(el);
-
-        columns.push(el);
-
+      columns.push(el);
     }
-
-    //    const keyTag = <div className="fn-label">:{key}</div>
-    // const keyTag = (
-    //   <div style={{height:"100%",width:"100%"}}>
-    //     {key}
-    //   </div>
-    // );
-
-    // columns.push({
-    //   title: (a)=>{
-    //     // console.log("A",a)
-    //     return keyTag
-    //   },
-    //   key: ykey,
-    //   className:'column-header',
-    //   children: childrenCompos,
-    // });
   }
 
   return columns;
@@ -972,20 +1048,9 @@ function newViewEventObserver(listener) {
 
 //통계데이터를 room별로 바꾸는 함수
 function buildTableDataList(roomList, eventObjList) {
-  roomList.sort((a, b) => {
-    if (a.roomLevel === 1) {
-      //      return b.roomGradeNo - a.roomGradeNo;
-      return b.roomLevel - a.roomLevel;
-    }
-    if (b.roomLevel === 1) {
-      return a.roomLevel - b.roomLevel;
-    }
-    return 0;
-  });
+  
 
-  let eList = [];
-
-  const selector = (roomNo) => {
+  let selector = (roomNo) => {
     for (let i = 0; i < eventObjList.length; i++) {
       const eventObjWrapper = eventObjList[i];
       if (eventObjWrapper.roomNo === roomNo) {
@@ -995,14 +1060,20 @@ function buildTableDataList(roomList, eventObjList) {
     return null;
   };
 
+
+  let eList = [];
+
   for (let i = 0; i < roomList.length; i++) {
     let room = roomList[i];
     let eventObjWarraper = selector(room.no);
 
     const key = room.gradeName + "-" + room.name;
     const columnName = room.gradeName + "," + room.name;
-    const eventList =
-      eventObjWarraper == null ? [] : eventObjWarraper.eventObjList;
+    // const eventList =
+    //   eventObjWarraper == null ? [] : eventObjWarraper.eventObjList;
+    const eventList = 
+    eventObjWarraper == null ? [] : eventObjWarraper.eventObjList;
+
 
     eList.push({
       key: key,
@@ -1067,11 +1138,8 @@ function buildReportData(dataList, roomList, stObj, query) {
       return e.format("YYYY-MM-DD");
     });
 
-    // colDate.push(to)
-    // console.log("Reporting range date",stObj)
 
-    let totalReportMap = buildReportDataList(dataList, colDate); //chartData["totalReport"];
-
+    let totalReportMap = buildReportDataList(dataList, colDate);
 
     let babyReport = totalReportMap["baby"];
     let roomGradeReport = totalReportMap["roomGrade"];
@@ -1084,10 +1152,12 @@ function buildReportData(dataList, roomList, stObj, query) {
       resBabyCount[e] = babyCount === undefined ? 0 : babyCount;
     });
 
-    //    console.log("roomGra",roomLevelGroup)
-    //    console.log("BabyCount",babyReport)
 
     return (data) => {
+
+      const pData = [].concat(data)
+//      console.log("RoomLevelGroup",roomLevelGroup)
+
       Object.keys(roomLevelGroup)
         .reverse()
         .forEach((key, i) => {
@@ -1096,7 +1166,6 @@ function buildReportData(dataList, roomList, stObj, query) {
           const name = roomGroupInfo.name + ",총객실수:" + roomLeng;
 
           let totalReport = roomGradeReport[key];
-          //          let groupLength = roomLevelGroup[key].length;
           let reportDataList = [];
 
           if (totalReport !== undefined && totalReport !== null) {
@@ -1109,9 +1178,8 @@ function buildReportData(dataList, roomList, stObj, query) {
             colDataArray[me] = dateStrVal === undefined ? 0 : dateStrVal;
           });
 
-          //          console.log(colDataArray)
 
-          data.unshift({
+          pData.unshift({
             key: "report" + i,
             rtype: "room",
             roomSize: roomLeng,
@@ -1120,15 +1188,16 @@ function buildReportData(dataList, roomList, stObj, query) {
           });
         });
 
-      data.unshift({
-        key: "report",
-        name: "신생아",
-        colDataArray: resBabyCount,
-        render:(text,record)=>{
-          return <div>header{record}</div>
-        }
-      });
-      return data;
+        pData.unshift({
+          key: "report",
+          name: "신생아",
+          colDataArray: resBabyCount,
+          render:(text,record)=>{
+            return <div>header{record}</div>
+          }
+        });
+
+        return pData;
     };
   }
 
@@ -1139,35 +1208,75 @@ function buildReportData(dataList, roomList, stObj, query) {
 
 
 
+  // const roomLevelSortFunc = (a,b)=>{
+  //   return a.level - b.level 
+  // }
+
+  const roomNumberSortFunc = (a,b)=>{
+
+    //level이 작은것을 앞으로 
+    // if(a.level !== b.level) {
+    //   return a.level - b.level;
+    // }
+
+    //호실이름 202호 에서 202만가져와서 비교 
+    let aname = a.name;
+    let bname = b.name;
+    let aroomNum = aname.substring(0,aname.length-1)
+    let broomNum = bname.substring(0,bname.length -1)
+    return aroomNum - broomNum;
+  }
+
+
 
 function ChartTableView(props) {
   const roomList = props.roomList;
   let chartData = props.chartData;
   const query = props.query;
 
-  let data = buildTableDataList(roomList, chartData.list);
+  const [dataSource,chartUpdater] = useState([]);
 
-  // const sDate = chartData.stObj.sDate;
-  // const eDate = chartData.stObj.eDate//moment(query.condition.to);
+//  console.log("DataSource length",dataSource.length,props.query)
 
-  // const qStartDate = moment(query.condition.from);
-  // const qEndDate = moment(query.condition.to);
+  // query 조건으로 chartData를 초화할지를분한다 
+  useMemo(() => {
+    // Should not ever set state during rendering, so do this in useEffect instead.
+    let co =   buildTableDataList(roomList, chartData.list);
+    chartUpdater(co);  
 
-  // const sDate = qStartDate.isBefore(chartData.stObj.sDate)
-  //   ? qStartDate
-  //   : chartData.stObj.sDate;
-  // const eDate = qEndDate.isAfter(chartData.stObj.eDate)
-  //   ? qEndDate
-  //   : chartData.stObj.eDate;
+  }, [query]);
+
+
+  // console.log("RoomList",roomList)
+  // console.log("DataSource",dataSource)
+
+  let sDate = moment(chartData.stObj.sDate)//.subtract(1, "days");
+  //월 header 부분에서 10월1까지만 오면 다음라인으로 바꾸어지는 현상을 막기위해서 
+  let eDate = moment(chartData.stObj.eDate);
+  if(eDate.day() === 1) {
+    eDate  = eDate.add(1,"day");
+  }
+
 
   const stObj = {
-    sDate: chartData.stObj.sDate,
-    eDate: chartData.stObj.eDate,
+    sDate: sDate,
+    eDate: eDate,
   };
 
-  console.log("SDate",chartData.stObj)
+  let columns = newColumnHeader(stObj,(type)=>{
 
-  let columns = newColumnHeader(stObj);
+    if(type === "1") {
+      const newRoomList = [].concat(roomList)
+      newRoomList.sort(roomNumberSortFunc)
+      const resList =   buildTableDataList(newRoomList, chartData.list);
+      chartUpdater(resList)  
+    }
+    else {
+//      roomList.sort(roomLevelSortFunc)
+      const resList = buildTableDataList(roomList, chartData.list);
+      chartUpdater(resList)  
+    }
+  });
 
   const reportColumnFunc = buildReportData(
     chartData.list,
@@ -1176,12 +1285,12 @@ function ChartTableView(props) {
     query
   );
 
-  data = reportColumnFunc(data);
+  let data = reportColumnFunc(dataSource);
 
   return (
     <Table
       rowKey="data-table"
-      scroll={{ y: 1000 }}
+      scroll={{y:700}}
       columns={columns}
       dataSource={data}
       bordered
@@ -1190,6 +1299,10 @@ function ChartTableView(props) {
     />
   );
 }
+
+const closeSvg = <div style={{width:"100%",height:"100%"}}>
+<svg t="1630420386684" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2421" width="15" height="15"><path d="M595.549 512.5l344.35-344.347c23.211-23.212 23.211-60.84 0-84.053-23.212-23.208-60.841-23.208-84.05 0L511.5 428.45 171.802 88.753c-22.932-22.935-60.116-22.935-83.048 0-22.935 22.933-22.935 60.117 0 83.05L428.45 511.5 84.101 855.849c-23.211 23.21-23.211 60.84 0 84.049 23.212 23.211 60.841 23.211 84.05 0l344.35-344.35 338.822 338.823c22.933 22.935 60.116 22.935 83.048 0 22.935-22.933 22.935-60.117 0-83.048L595.549 512.5z" p-id="2422"></path></svg>
+</div>
 
 function newInPopupView(listeners, emitHttpEvent, parentDispach) {
 
@@ -1211,7 +1324,7 @@ function newInPopupView(listeners, emitHttpEvent, parentDispach) {
     //    const [confirmLoading, setConfirmLoading] = React.useState(false);
 
     if (showPopupState.reload === 1) {
-      parentDispach({ type: "reloeadData" });
+      parentDispach({ type: "reload" });
       return <div>Reloading.....</div>;
     }
 
@@ -1281,11 +1394,13 @@ function newInPopupView(listeners, emitHttpEvent, parentDispach) {
     //    const roomDataMap = groupBy(props.roomList,"level")
     const roomDataMap = roomLevelGroupBy(props.roomList);
 
+
+
     return (
       <Modal
         width={showPopupState.size.width}
         heigt={showPopupState.size.heigt}
-        bodyStyle={{ margin: 0, padding: 0 ,overflow: "hidden"}}
+        bodyStyle={{padding: 0 ,overflow: "hidden"}}
         title={showPopupState.title}
         visible={showPopupState.pageIndex !== defaultObj.pageIndex}
         onOk={(e2) => {
@@ -1296,9 +1411,9 @@ function newInPopupView(listeners, emitHttpEvent, parentDispach) {
         }}
         okButtonProps={{ disabled: true, visible: false }}
         cancelButtonProps={{ disabled: true, visible: false }}
-        //          confirmLoading={confirmLoading}
         footer={null}
         destroyOnClose
+        closeIcon={closeSvg}
       >
         <SubViewComponent
           pageIndex={showPopupState.pageIndex}
@@ -1371,6 +1486,9 @@ function SubViewComponent(props) {
 }
 
 export default function GroupTable(props) {
+
+  // console.log("Query",props.query)
+
   let { serverEventEmmiter } = useContext(ServerEventContext);
 
   let groupState = {};
@@ -1385,10 +1503,22 @@ export default function GroupTable(props) {
     }
   });
 
+
+  const parentDispach = (e) => {
+
+    if(e.type === "reload") {
+
+        e.query = props.query;
+        props.dispach(e)
+    }
+
+  }
+
+
   let InPopupView = newInPopupView(
     listeners,
     serverEventEmmiter,
-    props.dispach
+    parentDispach
   );
   let eventDispach = newViewEventObserver(listeners);
 
@@ -1397,7 +1527,7 @@ export default function GroupTable(props) {
       <div style={{ padding: 10 }}>
         <ChartTableView
           chartData={props.chartData}
-          //          dataList={props.dataList}
+          //dataList={props.dataList}
           roomList={props.roomList}
           query={props.query}
         />
