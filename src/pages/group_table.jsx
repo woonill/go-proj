@@ -1324,7 +1324,7 @@ function newInPopupView(listeners, emitHttpEvent, parentDispach) {
     //    const [confirmLoading, setConfirmLoading] = React.useState(false);
 
     if (showPopupState.reload === 1) {
-      parentDispach({ type: "reload" });
+      parentDispach({ type: "Reload" });
       return <div>Reloading.....</div>;
     }
 
@@ -1487,7 +1487,7 @@ function SubViewComponent(props) {
 
 export default function GroupTable(props) {
 
-  // console.log("Query",props.query)
+  console.log("Query",props.query)
 
   let { serverEventEmmiter } = useContext(ServerEventContext);
 
@@ -1506,12 +1506,13 @@ export default function GroupTable(props) {
 
   const parentDispach = (e) => {
 
-    if(e.type === "reload") {
-
-        e.query = props.query;
-        props.dispach(e)
+    if(e.type === "Reload") {
+        const newEvent = {
+          type:"LoadReservationList",
+          request:props.query
+        }
+        props.newEvent(newEvent)
     }
-
   }
 
 

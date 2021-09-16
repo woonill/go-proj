@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 
-import { Button, DatePicker, Menu, Select, Input, Dropdown,Empty } from "antd";
+import { Button, DatePicker, Menu, Select, Input, Dropdown,Empty,Spin,Alert } from "antd";
 
 import style from "./ChartView.module.scss";
 
@@ -139,21 +139,32 @@ function HeaderView(props) {
       return;
     }
 
+  //   props.emitHttpEvent({
+  //     type: "FetchTableDataList",
+  //     params: params,
+  //     resultHandler: function (data) {
+  //       const sParam = {
+  //         type: searchType,
+  //         condition: params,
+  //       };
+  //       props.eventObserver({
+  //         type: "OnLoadCompletedResList",
+  //         data: data,
+  //         eParam: sParam,
+  //       });
+  //     },
+  //   });
+
+  const reqEvent =  {
+    type:searchType,
+    param:params
+  }
+
+
     props.emitHttpEvent({
-      type: "FetchTableDataList",
-      params: params,
-      resultHandler: function (data) {
-        const sParam = {
-          type: searchType,
-          condition: params,
-        };
-        props.eventObserver({
-          type: "OnLoadCompletedResList",
-          data: data,
-          eParam: sParam,
-        });
-      },
-    });
+      type: "LoadReservationList",
+      request: reqEvent,
+    })
   }
 
   return (
@@ -548,12 +559,11 @@ const roomLevelGroupBy = function (roomList) {
 
 function ListView(props) {
 
-  const dataList = props.reservationObj.dataList;
+  const dataList = props.dataList;
 
 
-  if(props.reservationObj.query !== undefined) {
-
-  }
+  // if(props.reservationObj.query !== undefined) {
+  // }
 
   if (dataList.length < 1) {
     return <Empty/>
@@ -566,7 +576,7 @@ function ListView(props) {
         roomList={props.roomList}
         dispach={props.dispach}
         dataList={dataList}
-        query={props.reservationObj.query}
+        query={props.query}
       />
     );
   }
@@ -584,7 +594,7 @@ function ReportTextInfo(props) {
 
       let roomReport = {};
       let query = props.query;
-      let dateList = rangeOfDates(query.condition["from"], query.condition["to"]);
+      let dateList = rangeOfDates(query.param["from"], query.param["to"]);
 
       props.dataList.forEach((sourceObj) => {
 
@@ -658,7 +668,7 @@ function ReportTextInfo(props) {
     }
   }, [props.dataList]);
 
-  if(props.query !== undefined && props.query.type === "range") {
+  if(props.query !== null && props.query.type === "range") {
 
     return (
       <span>
@@ -828,89 +838,69 @@ function defaultSearchDateOfRange(){
 }
 
 
-function initLoad(serverEventEmmiter,dispach) {
+function loadReservationDataList(updateState,serverEventEmmiter,reqEvent) {
 
-    let cDate = defaultSearchDateOfRange()
-
-    let param = {
-      from: cDate.sDate.format("YYYY-MM-DD"),
-      to: cDate.eDate.format("YYYY-MM-DD"),
-    };
     serverEventEmmiter({
       type: "FetchTableDataList",
-      params: param,
+      params: reqEvent.param,
       resultHandler: (data) => {
-        const sParam = {
-          type: "range",
-          condition: param,
-        };
-        dispach({
-          type: "OnLoadCompletedResList",
-          data: data,
-          eParam: sParam,
-        });
+        // console.log("Response",data)
+        let newEvent =  {
+          type:1,
+          request:reqEvent,
+          result:data
+        }
+        updateState(newEvent)
       },
     });
-  }
+}
 
 export default function ChartView(props) {
   const { serverEventEmmiter } = useContext(ServerEventContext);
 
-  let [reservationObj, updateTableDataList] = useState({
-    dataList: [],
-    query: {},
-    chartViewState: 0,
-  });
+  let [reservationList, updateTableDataList] = useState([]);
 
-  let [roomList, updateRoomList] = useState([]);
+  // let [roomList, updateRoomList] = useState([]);
+  //0 init state 1 loading state 3  load complete
+  const [loadState,updateLoadState]  = useState({
+    state:0,//0 loading 1 loaded
+    event:{
+      type:-1, //-1 초기화 상태  0 load roomList 1 load reservation list
+      request:null,
+      result:null,
+    },
+    viewState:0,
+    roomList:[],
+  })
 
   const dispach = newEventDispach(
     (newChartState) => {
-      updateTableDataList({
-        ...reservationObj,
-        chartViewState: newChartState,
-      });
+      // updateTableDataList({        
+      //   chartViewState: newChartState,
+      // });
+      updateLoadState({
+        ...loadState,
+        viewState:newChartState
+      })
     },
     (dataList, eParam = null) => {
-      if (eParam !== null) {
-        updateTableDataList({
-          ...reservationObj,
-          dataList: dataList,
-          query: eParam,
-        });
-      } else {
-        updateTableDataList({
-          ...reservationObj,
-          dataList: dataList,
-        });
-      }
+        updateTableDataList(dataList);
     }
   );
-
 
   //table 쪽에서 popup 이 성공시 data reload 하고싶어하는 기능을 위해서 
   //밑에 내려보내는 dispach는 한번 더 감싼다 
   const dispachWrapper = (e) => {
 
-    if(e.type === "reload") {
-
-      const query = e.query;
-      serverEventEmmiter({
-        type: "FetchTableDataList",
-        params: query.condition,
-        resultHandler: (data) => {
-          const sParam = {
-            type: query.type,
-            condition: e.param,
-          };
-          dispach({
-            type: "OnLoadCompletedResList",
-            data: data,
-            eParam: sParam,
-          });
-        },
-      });
-    
+    if("LoadReservationList") {
+      updateLoadState({
+        ...loadState,
+        state:0,//start spin loading 
+        event:{
+          type:1,
+          request:e.request,
+        }
+      })
     }
     else{
       dispach(e)
@@ -918,50 +908,138 @@ export default function ChartView(props) {
   }
 
 
+  //response handle for GetReservationList and RoomList 
   useEffect(() => {
-    serverEventEmmiter({
-      type: "FetchRoomList",
-      resultHandler: function (e) {
-        updateRoomList(e.dataList);
-      },
-    });
 
-  }, []);
+//      console.log("process 1 effect",loadState)
+
+      const stateCode = loadState.state;
+      const stateEvent = loadState.event;
+      
+      //처음 초기화상태 
+      //index = 1
+      if(stateCode === 0 && stateEvent.type === -1 ) {
+
+        serverEventEmmiter({
+          type: "FetchRoomList",
+          resultHandler: function (e) {
+            //초기화 완료 roomList setting 완료 
+            //이 시점에 reservation request 를 콜하게 만든다 
+            //update request state to call reservation list 
+
+            let cDate = defaultSearchDateOfRange()
+            let param = {
+              from: cDate.sDate.format("YYYY-MM-DD"),
+              to: cDate.eDate.format("YYYY-MM-DD"),
+            };
+            const request = {
+              type:"range",
+              param:param
+            }
+
+            const dataList = e.dataList;
+
+            updateLoadState(
+              {
+                ...loadState,
+                state:0,
+                roomList:dataList,
+                event:{
+                  type:1, //
+                  request:request,
+                  result:dataList
+                }  
+              }
+            )
+          },
+        });  
+      }
+      else if(stateCode === 1 && stateEvent.type === 1) {
+        //state ==1 이고 event.type ==1 이면 
+        //처리완료된 reservation list 에 대한 httpRequest 가 있다는  상태 
+        //통일된 result처리함수에 보내며 dispatch에서 통일되게 처리한다
 
 
+        console.log("Update eventRequets",stateEvent.result)
+        dispach({
+          type: "OnLoadCompletedResList",
+          data: stateEvent.result,
+          eParam: stateEvent.request,
+        });
+      };
+    },
+    [loadState.state,loadState.event.type]
+  )
+
+
+  //작용 :  state =1 로 만들어 spin 을 clear 한다 
+  // state.event 에 result 를 부여함으로 다음 함수에서 실행 하도록한다 
+  const reservationUpdater = (newEvent) => {
+    updateLoadState({
+      ...loadState,
+      state:1,
+      event:newEvent,
+    })
+
+
+  }
+
+  //request handler for fetch reservation data 
   useEffect(() => {
-    if (roomList.length > 0) {
-      initLoad(serverEventEmmiter,dispach)
+
+//    console.log("process 2 effect",loadState)
+
+    //index = 2
+    //state = 0 은 spin 으 돌아가고있으며 event 의 request 가 들어와있는 상태이므로 
+    //loadState.event.type 값이 1 이므로 http server 에서 데이터 요청 
+    //상위 useEffect에서 response를 처리하여 화면을 refresh시킨다 
+    if(loadState.state === 0 && loadState.event.type === 1){
+
+      let requestEvent = loadState.event.request;
+      loadReservationDataList(
+        reservationUpdater,
+        serverEventEmmiter,
+        requestEvent
+      )
     }
-  }, [roomList]); //roomList 가 변화되면 다시 콜된다
+    else{
+      console.log("PassEvent in Request")
+    }
+  });
+
 
   return (
+
     <div className={style.main}>
+
       <div style={{ padding: 10 }}>
         <HeaderView
           totalReportText={
             <ReportTextInfo
-              query={reservationObj.query}
-              dataList={reservationObj.dataList}
-              roomList={roomList}
+              query={loadState.event.request}
+              dataList={reservationList}
+              roomList={loadState.roomList}
             />
           }
           eventObserver={dispach}
-          emitHttpEvent={serverEventEmmiter}
+          emitHttpEvent={dispachWrapper}
         />
       </div>
       <SearchConditionView
-        displayState={reservationObj.chartViewState}
+        displayState={loadState.viewState}
         eventObserver={dispach}
       />
-      {/* <div style={{ padding: 5 }}> */}
+      <Spin spinning={loadState.state===0} >
+
         <ListView
+          query={loadState.event.request}
           dispach={dispachWrapper}
-          roomList={roomList}
-          viewState={reservationObj.chartViewState}
-          reservationObj={reservationObj}
+          roomList={loadState.roomList}
+          viewState={loadState.viewState}
+          dataList={reservationList}
         />
-      {/* </div> */}
+      </Spin>
+
     </div>
   );
 }
