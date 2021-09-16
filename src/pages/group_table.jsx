@@ -1511,7 +1511,7 @@ export default function GroupTable(props) {
           type:"LoadReservationList",
           request:props.query
         }
-        props.newEvent(newEvent)
+        props.dispach(newEvent)
     }
   }
 

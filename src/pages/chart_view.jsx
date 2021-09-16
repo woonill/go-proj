@@ -430,10 +430,11 @@ function ActionBunttonGroupView(props) {
   );
 }
 
-let allReservationList = [];
+//let allReservationList = [];
 
-function newEventDispach(setChartViewState, updateTableDataList) {
+function newEventDispach(setChartViewState, updateTableDataList,allReservationFunc) {
   return function (e) {
+    let allReservationList = allReservationFunc()
     if (e.type === "DataViewUpdate") {
       let chartViewState = e.currentDisplayState;
       if (chartViewState === 0) {
@@ -441,10 +442,12 @@ function newEventDispach(setChartViewState, updateTableDataList) {
       } else {
         setChartViewState(0);
       }
-    } else if (e.type === "OnLoadCompletedResList") {
-      allReservationList = e.data.dataList;
-      updateTableDataList(allReservationList, e.eParam);
-    } else if (e.type === "filter-0") {
+    } 
+    // else if (e.type === "OnLoadCompletedResList") {
+    //   allReservationList = e.data.dataList;
+    //   updateTableDataList(allReservationList, e.eParam);
+    // } 
+    else if (e.type === "filter-0") {
       updateTableDataList(allReservationList);
     } else if (e.type === "filter-1") {
       let list = allReservationList.filter((e) => {
@@ -493,40 +496,32 @@ function newEventDispach(setChartViewState, updateTableDataList) {
   };
 }
 
-// const groupBy = function (xs, key) {
-//   return xs.reduce(function (rv, x) {
-//     (rv[x[key]] = rv[x[key]] || []).push(x);
-//     return rv;
-//   }, {});
-// };
-
 function ChartDataViewWrapper(props) {
-  let { serverEventEmmiter } = useContext(ServerEventContext);
+//  let { serverEventEmmiter } = useContext(ServerEventContext);
+  // const dispach = (sEvent) => {
+  //   serverEventEmmiter({
+  //     type: "FetchTableDataList",
+  //     params: props.query.condition,
+  //     resultHandler: (data) => {
+  //       const sParam = {
+  //         type: "range",
+  //         condition: props.query.condition,
+  //       };
 
-  const dispach = (sEvent) => {
-    serverEventEmmiter({
-      type: "FetchTableDataList",
-      params: props.query.condition,
-      resultHandler: (data) => {
-        const sParam = {
-          type: "range",
-          condition: props.query.condition,
-        };
-
-        props.dispach({
-          type: "OnLoadCompletedResList",
-          data: data,
-          eParam: sParam,
-        });
-      },
-    });
-  };
+  //       props.dispach({
+  //         type: "OnLoadCompletedResList",
+  //         data: data,
+  //         eParam: sParam,
+  //       });
+  //     },
+  //   });
+  // };
 
   let chartData = toChartData(props.dataList);
 
   return (
     <GroupTable
-      dispach={dispach}
+      dispach={props.dispach}
       dataList={props.dataList}
       roomList={props.roomList}
       chartData={chartData}
@@ -858,7 +853,6 @@ function loadReservationDataList(updateState,serverEventEmmiter,reqEvent) {
 export default function ChartView(props) {
   const { serverEventEmmiter } = useContext(ServerEventContext);
 
-  let [reservationList, updateTableDataList] = useState([]);
 
   // let [roomList, updateRoomList] = useState([]);
   //0 init state 1 loading state 3  load complete
@@ -873,18 +867,41 @@ export default function ChartView(props) {
     roomList:[],
   })
 
+  let [reState, updateTableDataList] = useState({
+    dataList:[],
+    request:null,
+    roomList:[],
+    viewState:0,
+    currentDataList:[],
+  });
+
+
   const dispach = newEventDispach(
     (newChartState) => {
-      // updateTableDataList({        
-      //   chartViewState: newChartState,
-      // });
-      updateLoadState({
-        ...loadState,
-        viewState:newChartState
-      })
+      updateTableDataList({        
+        ...reState,
+        viewState: newChartState,
+      });
+      // updateLoadState({
+      //   ...loadState,
+      //   viewState:newChartState
+      // })
+
     },
     (dataList, eParam = null) => {
-        updateTableDataList(dataList);
+        updateTableDataList({
+          ...reState,
+          request:eParam,          
+          currentDataList:dataList
+        });
+    },
+    
+    () => {
+      return reState.dataList
+      // updateTableDataList({
+      //   ...reState,
+      //   currentDataList:reState.dataList
+      // })
     }
   );
 
@@ -923,10 +940,10 @@ export default function ChartView(props) {
         serverEventEmmiter({
           type: "FetchRoomList",
           resultHandler: function (e) {
+
             //초기화 완료 roomList setting 완료 
             //이 시점에 reservation request 를 콜하게 만든다 
             //update request state to call reservation list 
-
             let cDate = defaultSearchDateOfRange()
             let param = {
               from: cDate.sDate.format("YYYY-MM-DD"),
@@ -936,9 +953,7 @@ export default function ChartView(props) {
               type:"range",
               param:param
             }
-
             const dataList = e.dataList;
-
             updateLoadState(
               {
                 ...loadState,
@@ -955,16 +970,24 @@ export default function ChartView(props) {
         });  
       }
       else if(stateCode === 1 && stateEvent.type === 1) {
+        //index =3 맨 마감 데이터 처리 
         //state ==1 이고 event.type ==1 이면 
         //처리완료된 reservation list 에 대한 httpRequest 가 있다는  상태 
         //통일된 result처리함수에 보내며 dispatch에서 통일되게 처리한다
 
-
-        console.log("Update eventRequets",stateEvent.result)
-        dispach({
-          type: "OnLoadCompletedResList",
-          data: stateEvent.result,
-          eParam: stateEvent.request,
+        console.log("Update eventRequets",stateEvent.result.dataList)
+        // dispach({
+        //   type: "OnLoadCompletedResList",
+        //   data: stateEvent.result,
+        //   eParam: stateEvent.request,
+        // });
+        const dataList = stateEvent.result.dataList
+        updateTableDataList({
+          ...reState,
+          roomList:loadState.roomList,
+          request:stateEvent.request,
+          dataList:dataList,
+          currentDataList:dataList
         });
       };
     },
@@ -980,8 +1003,6 @@ export default function ChartView(props) {
       state:1,
       event:newEvent,
     })
-
-
   }
 
   //request handler for fetch reservation data 
@@ -1017,7 +1038,7 @@ export default function ChartView(props) {
           totalReportText={
             <ReportTextInfo
               query={loadState.event.request}
-              dataList={reservationList}
+              dataList={reState.currentDataList}
               roomList={loadState.roomList}
             />
           }
@@ -1032,11 +1053,11 @@ export default function ChartView(props) {
       <Spin spinning={loadState.state===0} >
 
         <ListView
-          query={loadState.event.request}
+          query={reState.request}
           dispach={dispachWrapper}
-          roomList={loadState.roomList}
-          viewState={loadState.viewState}
-          dataList={reservationList}
+          roomList={reState.roomList}
+          viewState={reState.viewState}
+          dataList={reState.currentDataList}
         />
       </Spin>
 

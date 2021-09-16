@@ -1150,7 +1150,13 @@ function BalanceView(props) {
   const okHandler = function (bEvent) {
 
     const lastRemainAmount = calLastMoney(sParam.itemList);
-    // console.log("LastAmount",lastRemainAmount)
+    console.log("LastAmount",lastRemainAmount)
+
+
+    if(sourceObj.remainMoney < 1) {
+      message.warn("잔금이 없습니다");
+      return 
+    }
 
     if(lastRemainAmount < 0) {
       message.warn("0 money error");
@@ -1173,13 +1179,13 @@ function BalanceView(props) {
       param["payment_" + index] = e["amount"];
     });
 
-    // console.log("SParam",sParam)
-    // console.log("Amount",sParam.lastMoney,sourceObj.remainMoney)
+    console.log("SParam",sParam)
+    console.log("Amount",sParam.lastMoney,sourceObj.remainMoney)
 
-    props.dispach({
-      type: "BalancePayment",
-      params: param,
-    });
+    // props.dispach({
+    //   type: "BalancePayment",
+    //   params: param,
+    // });
   };
 
   return (
