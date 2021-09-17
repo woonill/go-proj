@@ -572,92 +572,46 @@ function ListView(props) {
 }
 
 function ReportTextInfo(props) {
+
+
   let [robj, updater] = useState([]);
 
   useEffect(() => {
-//    console.log("Query",props.query)
     if (
       (props.dataList.length > 0)
         && (props.query !== undefined && props.query.type === "range")
       ) {
 
-      let roomReport = {};
-      let query = props.query;
-      let dateList = rangeOfDates(query.param["from"], query.param["to"]);
+      console.log("UpdateReporTextInfo now")
 
+      let roomReportList = [];
       props.dataList.forEach((sourceObj) => {
 
-        let reDataRepo = roomReport[sourceObj.roomGradeNo];
-        if (reDataRepo === undefined) {
-          reDataRepo = {};
-          roomReport[sourceObj.roomGradeNo] = reDataRepo;
-        }
-
-        dateList.forEach((cDate) => {
-          let countVal = reDataRepo[cDate];
-          if (countVal === undefined) {
-            countVal = 0; //1 로 초기화 밑에서 체크기준에 따라 추가
-            reDataRepo[cDate] = countVal;
-          } else {
-
-            if(ReservStateChecker.isConfirmReserv(sourceObj) && isValidSourceCountReport(
-              sourceObj,
-              sourceObj.fromDate,
-              sourceObj.toDate,
-              cDate)){
-
-              reDataRepo[cDate] = countVal + 1;
-            }
+        let reDataRepo = {
+            roomSize:sourceObj.roomSize,
+            name:sourceObj.roomName,
+        };
+        const colObj = sourceObj.colDataArray
+        const array = Object.keys(colObj)
+        let minVal = sourceObj.roomSize;
+        array.forEach((ckey) => {
+          const colVal = colObj[ckey]
+          if(colVal < minVal) {
+            minVal = colVal;
           }
-        });
+        })
+        // minVal =  sourceObj.roomSize-minVal //방개수에서 최대 예야고디여있는 방을 덜어낸다 
+//        console.log("ReDateRpo",reDataRepo)
+        reDataRepo["qty"] = minVal < 0 ? 0 : minVal; //최소 0 으로 표현 
+        roomReportList.push(reDataRepo)
       });
 
-//      const roomGradeGroup = groupBy(props.roomList, "gradeNo");
-      const roomGradeGroup = roomLevelGroupBy(props.roomList)
-  //    console.log(roomGradeGroup,roomGradeGroup2)
-      // console.log(roomGradeGroup)
-      // console.log("ReportData",roomReport)
-
-      const reduceFn = (e, dataObj) => {
-        const roomInfo = roomGradeGroup[e]
-        const totalSize = roomInfo.roomList.length;
-        let mVal = totalSize;
-        const rObj = dataObj[e];
-
-        if (rObj === undefined) {
-          return totalSize;
-        }
-
-        Object.keys(rObj).forEach((k) => {
-          let dv = totalSize - rObj[k];
-          if (dv < mVal) {
-            mVal = dv;
-          }
-        });
-
-        return mVal <=0 ? 0 : mVal;
-      };
-
-      let roomGradeKeys = Object.keys(roomGradeGroup)
-      // console.log("Keys",roomGradeKeys)
-
-      let newInfoList = []
-      roomGradeKeys.forEach((skey) => {
-        const roomInfo = roomGradeGroup[skey]
-        const rData =  reduceFn(skey, roomReport)
-        // tmin: reduceFn(roomGradeKeys[1], roomReport),
-//        console.log(roomInfo.name,rData)
-        newInfoList.push({
-          name:roomInfo.name,
-          qty:rData
-        })
-      })
-
-      updater(newInfoList);
+      updater(roomReportList);
     }
   }, [props.dataList]);
 
-  if(props.query !== null && props.query.type === "range") {
+  if(props.query !== undefined && props.query !== null && props.query.type === "range") {
+    console.log("update now",robj)
 
     return (
       <span>
@@ -864,6 +818,7 @@ export default function ChartView(props) {
 
   // let [roomList, updateRoomList] = useState([]);
   //0 init state 1 loading state 3  load complete
+  const [totalReportData,updateTotalReport] = useState([])
   const [loadState,updateLoadState]  = useState({
     state:0,//0 loading 1 loaded
     event:{
@@ -913,7 +868,7 @@ export default function ChartView(props) {
   //밑에 내려보내는 dispach는 한번 더 감싼다 
   const dispachWrapper = (e) => {
 
-    if("LoadReservationList") {
+    if(e.type === "LoadReservationList") {
       updateLoadState({
         ...loadState,
         state:0,//start spin loading 
@@ -922,6 +877,10 @@ export default function ChartView(props) {
           request:e.request,
         }
       })
+    }
+    else if(e.type ==="TotalDataList") {
+      console.log("TotalDataUpdated",e)
+      updateTotalReport(e.dataList)
     }
     else{
       dispach(e)
@@ -1037,7 +996,8 @@ export default function ChartView(props) {
           totalReportText={
             <ReportTextInfo
               query={loadState.event.request}
-              dataList={reState.currentDataList}
+              dataList={totalReportData}
+//              dataList={reState.currentDataList}
               roomList={loadState.roomList}
             />
           }

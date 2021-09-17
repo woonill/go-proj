@@ -1108,30 +1108,27 @@ function buildReportData(dataList, roomList, stObj, query) {
     // let from = moment(query.condition["from"]);
     // let to = moment(query.condition["to"]);
 
-    let from = stObj.sDate;
-
-    //getRange에서 마지막날을 포함하지 않으므로 하루를 더 추가해서 date를 만든다
-    let to = moment(stObj.eDate).add(1, "day").format("YYYY-MM-DD");
-
     //Logic for getting rest of the dates between two dates("FromDate" to "EndDate")
-    let colDate = getRange(from, to, "days").map((e) => {
-      return e.format("YYYY-MM-DD");
-    });
-
-    let totalReportMap = buildReportDataList(dataList, colDate);
-
-    let babyReport = totalReportMap["baby"];
-    let roomGradeReport = totalReportMap["roomGrade"];
-    const roomLevelGroup = roomLevelGroupBy(roomList);
-
-    const resBabyCount = {};
-
-    colDate.forEach((e) => {
-      const babyCount = babyReport[e];
-      resBabyCount[e] = babyCount === undefined ? 0 : babyCount;
-    });
+    
 
     return (data) => {
+
+
+      let colDate = newReportDateRange(stObj)
+
+      let totalReportMap = buildReportDataList(dataList, colDate);
+      let babyReport = totalReportMap["baby"];
+      let roomGradeReport = totalReportMap["roomGrade"];
+      const roomLevelGroup = roomLevelGroupBy(roomList);
+  
+      const resBabyCount = {};
+  
+      colDate.forEach((e) => {
+        const babyCount = babyReport[e];
+        resBabyCount[e] = babyCount === undefined ? 0 : babyCount;
+      });
+
+
       const pData = [].concat(data);
       //      console.log("RoomLevelGroup",roomLevelGroup)
 
@@ -1152,12 +1149,15 @@ function buildReportData(dataList, roomList, stObj, query) {
           let colDataArray = {};
           colDate.forEach((me) => {
             const dateStrVal = reportDataList[me];
-            colDataArray[me] = dateStrVal === undefined ? 0 : dateStrVal;
+            //그날에 데이터를 못찾으면 전체 룸 개수로한다 
+            colDataArray[me] = dateStrVal === undefined ? roomLeng : dateStrVal;
           });
 
           pData.unshift({
             key: "report" + i,
             rtype: "room",
+            roomNo:key,
+            roomName:roomGroupInfo.name,
             roomSize: roomLeng,
             name: name,
             colDataArray: colDataArray,
@@ -1182,9 +1182,42 @@ function buildReportData(dataList, roomList, stObj, query) {
   };
 }
 
-// const roomLevelSortFunc = (a,b)=>{
-//   return a.level - b.level
-// }
+
+
+//Table Header 날짜를 만드는  from - to 구간을 만드는 함수 
+function newSearchDateRange(stObj,query) {
+
+  let eDate = moment(stObj.eDate);
+
+  let qeDate = moment(query.param.to);
+  if(qeDate.isAfter(eDate)) {
+    eDate = qeDate;
+  }
+
+  let sDate = moment(stObj.sDate);
+  //월 header 부분에서 10월1까지만 오면 다음라인으로 바꾸어지는 현상을 막기위해서
+  let qsDate = moment(query.param.from)
+  if(qsDate.isBefore(sDate)){
+    sDate = qsDate;
+  }
+  if (eDate.day() === 1) {
+    eDate = eDate.add(1, "day");
+  }
+  return  {
+    sDate: sDate,
+    eDate: eDate,
+  };
+}
+
+function newReportDateRange(stObj) {
+  let from = stObj.sDate;
+  //getRange에서 마지막날을 포함하지 않으므로 하루를 더 추가해서 date를 만든다
+  let to = moment(stObj.eDate).add(1, "day").format("YYYY-MM-DD");
+  //Logic for getting rest of the dates between two dates("FromDate" to "EndDate")
+  return getRange(from, to, "days").map((e) => {
+    return e.format("YYYY-MM-DD");
+  });
+}
 
 const roomNumberSortFunc = (a, b) => {
   //level이 작은것을 앞으로
@@ -1205,43 +1238,25 @@ function ChartTableView(props) {
   let chartData = toChartData(props.dataList);
   const query = props.query;
 
+//  console.log("query",query)
+
   const [dataSource, chartUpdater] = useState([]);
 
+  const stObj = newSearchDateRange(chartData.stObj,query)
 
+  const reportColumnFunc = buildReportData(
+    chartData.list,
+    roomList,
+    stObj,
+    query
+  );
 //  console.log("Update",dataSource)
 
   useEffect(()=>{
     let co = buildTableDataList(roomList, chartData.list);
     chartUpdater(co)
-
   },[props.dataList])
 
-  let sDate = moment(chartData.stObj.sDate); //.subtract(1, "days");
-  //월 header 부분에서 10월1까지만 오면 다음라인으로 바꾸어지는 현상을 막기위해서
-
-  console.log("query",query)
-
-  let eDate = moment(chartData.stObj.eDate);
-
-  let qeDate = moment(query.param.to);
-  if(qeDate.isAfter(eDate)) {
-    eDate = qeDate;
-  }
-
-
-  let qsDate = moment(query.param.from)
-  if(qsDate.isBefore(sDate)){
-    sDate = qsDate;
-  }
-
-  if (eDate.day() === 1) {
-    eDate = eDate.add(1, "day");
-  }
-
-  const stObj = {
-    sDate: sDate,
-    eDate: eDate,
-  };
 
   let columns = newColumnHeader(stObj, (type) => {
     if (type === "1") {
@@ -1255,16 +1270,26 @@ function ChartTableView(props) {
     }
   });
 
-  const reportColumnFunc = buildReportData(
-    chartData.list,
-    roomList,
-    stObj,
-    query
-  );
-
   let data = reportColumnFunc(dataSource);
 
-  console.log(data)
+  useEffect(()=> {
+
+    if (query !== undefined 
+          && query !== null 
+          && query.type === "range"
+          ) { 
+      return () => {
+        const rList = data.filter((re)=>{
+          return re.rtype !== undefined && re.rtype === "room"
+        })
+        props.dispach({
+          type:"TotalDataList",
+          dataList:rList
+        })
+      }
+    }
+  },[dataSource])
+
 
 
   return (
