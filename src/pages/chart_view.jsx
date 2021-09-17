@@ -553,30 +553,17 @@ function ListView(props) {
 
   const dataList = props.dataList;
 
-  // if(props.reservationObj.query !== undefined) {
-  // }
-
   if (dataList.length < 1) {
     return <Empty/>
   }
 
   if (props.viewState === 0) {
 
-    // return (
-    //   <ChartDataViewWrapper
-    //     roomList={props.roomList}
-    //     dispach={props.dispach}
-    //     dataList={dataList}
-    //     query={props.query}
-    //   />
-    //   let chartData = toChartData(props.dataList);
-    //   console.log("ChartData",chartData)    
       return (
         <GroupTable
           dispach={props.dispach}
           dataList={dataList}
           roomList={props.roomList}
-          // chartData={chartData}
           query={props.query}
         />
       );
@@ -589,7 +576,8 @@ function ReportTextInfo(props) {
 
   useEffect(() => {
 //    console.log("Query",props.query)
-    if (props.dataList.length > 0
+    if (
+      (props.dataList.length > 0)
         && (props.query !== undefined && props.query.type === "range")
       ) {
 

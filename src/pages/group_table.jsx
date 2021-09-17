@@ -550,32 +550,25 @@ const MouseRightMenuFunc = (function () {
 function SchedulerBarButton(props) {
   const { eventDispach } = useContext(GantchartContext);
 
-  const { groupState } = useContext(GantchartContext);
-  const [bcState, updateBgColor] = useState("green");
+ // const { groupState } = useContext(GantchartContext);
+//  const [bcState, updateBgColor] = useState("green");
   const eventObj = props.colData;
-
   let dataSource = props.colData.source;
-  let isGroupping = dataSource.isMove === 1; //이동했는 여부
+//  let isGroupping = dataSource.isMove === 1; //이동했는 여부
 
+  //잠시 안 사용함
+  /*
   useEffect(() => {
     if (isGroupping) {
       //이동흔적이 있으면
       //예약이동시 처리 부분
-
       let groupStateVal = groupState[dataSource.no]; //no 는 똑같은 값이므로 이걸로 group key 표시
-
       if (groupStateVal !== undefined && groupStateVal !== null) {
         const bgStateDisapcher = (e) => {
-          //        console.log("updateColor",e.bgColor,dataSource)
           updateBgColor(e.bgColor);
         };
-
         groupStateVal.push(bgStateDisapcher);
       }
-
-      // return function () {
-      //   console.log("clear groupStateVal function");
-      // };
     }
   }, [groupState, dataSource, isGroupping]);
 
@@ -600,6 +593,7 @@ function SchedulerBarButton(props) {
       });
     }
   };
+  */
 
   //    const buttonStyle = newSchButtonStyle(props.colData.source,props.fWidth);
   // let bgColor = newSchButtonBGColorOfRGB(props.colData.source);
@@ -623,8 +617,8 @@ function SchedulerBarButton(props) {
     >
       <div
         style={props.buttonStyle}
-        onMouseOver={mouseOverEventHandler}
-        onMouseOut={mouseOutEventHandler}
+        // onMouseOver={mouseOverEventHandler}
+        // onMouseOut={mouseOutEventHandler}
       >
         {/* {props.children} */}
         <RangeTimelineText
@@ -1209,7 +1203,6 @@ const roomNumberSortFunc = (a, b) => {
 function ChartTableView(props) {
   const roomList = props.roomList;
   let chartData = toChartData(props.dataList);
-  //  let chartData = props.chartData;
   const query = props.query;
 
   const [dataSource, chartUpdater] = useState([]);
@@ -1270,6 +1263,9 @@ function ChartTableView(props) {
   );
 
   let data = reportColumnFunc(dataSource);
+
+  console.log(data)
+
 
   return (
     <Table
@@ -1510,7 +1506,10 @@ export default function GroupTable(props) {
         request: props.query,
       };
       props.dispach(newEvent);
+      return       
     }
+
+    props.dispach(e)
   };
 
   let InPopupView = newInPopupView(
@@ -1524,6 +1523,7 @@ export default function GroupTable(props) {
     <GantchartContext.Provider value={{ eventDispach, groupState, listeners }}>
       <div style={{ padding: 10 }}>
         <ChartTableView
+          dispach={parentDispach}
           dataList={props.dataList}
           roomList={props.roomList}
           query={props.query}
