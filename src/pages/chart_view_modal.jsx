@@ -1112,6 +1112,7 @@ function ReservationConfirmForm(props) {
 //로직처리
 function BalanceView(props) {
   let sourceObj = props.eventObj.source;
+  console.log("PopupSourceObj",sourceObj)
 
   const newItem = (index = 0, amount = 0) => {
     let obj = {
@@ -1179,13 +1180,13 @@ function BalanceView(props) {
       param["payment_" + index] = e["amount"];
     });
 
-    console.log("SParam",sParam)
-    console.log("Amount",sParam.lastMoney,sourceObj.remainMoney)
+    // console.log("SParam",sParam)
+    // console.log("Amount",sParam.lastMoney,sourceObj.remainMoney)
 
-    // props.dispach({
-    //   type: "BalancePayment",
-    //   params: param,
-    // });
+    props.dispach({
+      type: "BalancePayment",
+      params: param,
+    });
   };
 
   return (

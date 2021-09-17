@@ -6,7 +6,6 @@ import style from "./ChartView.module.scss";
 
 import {
   ReservStateChecker,
-  toChartData,
   rangeOfDates,
   isValidSourceCountReport,
 } from "./chart_view_context";
@@ -435,6 +434,7 @@ function ActionBunttonGroupView(props) {
 function newEventDispach(setChartViewState, updateTableDataList,allReservationFunc) {
   return function (e) {
     let allReservationList = allReservationFunc()
+    console.log("Filter all",allReservationList)
     if (e.type === "DataViewUpdate") {
       let chartViewState = e.currentDisplayState;
       if (chartViewState === 0) {
@@ -453,6 +453,7 @@ function newEventDispach(setChartViewState, updateTableDataList,allReservationFu
       let list = allReservationList.filter((e) => {
         return ReservStateChecker.isPreInDespi(e);
       });
+      console.log("Filter-1",list)
       updateTableDataList(list);
     } else if (e.type === "filter-2") {
       let list = allReservationList.filter((e) => {
@@ -496,39 +497,21 @@ function newEventDispach(setChartViewState, updateTableDataList,allReservationFu
   };
 }
 
-function ChartDataViewWrapper(props) {
-//  let { serverEventEmmiter } = useContext(ServerEventContext);
-  // const dispach = (sEvent) => {
-  //   serverEventEmmiter({
-  //     type: "FetchTableDataList",
-  //     params: props.query.condition,
-  //     resultHandler: (data) => {
-  //       const sParam = {
-  //         type: "range",
-  //         condition: props.query.condition,
-  //       };
+// function ChartDataViewWrapper(props) {
 
-  //       props.dispach({
-  //         type: "OnLoadCompletedResList",
-  //         data: data,
-  //         eParam: sParam,
-  //       });
-  //     },
-  //   });
-  // };
+//   let chartData = toChartData(props.dataList);
+//   console.log("ChartData",chartData)
 
-  let chartData = toChartData(props.dataList);
-
-  return (
-    <GroupTable
-      dispach={props.dispach}
-      dataList={props.dataList}
-      roomList={props.roomList}
-      chartData={chartData}
-      query={props.query}
-    />
-  );
-}
+//   return (
+//     <GroupTable
+//       dispach={props.dispach}
+//       dataList={props.dataList}
+//       roomList={props.roomList}
+//       chartData={chartData}
+//       query={props.query}
+//     />
+//   );
+// }
 
 
 
@@ -566,14 +549,24 @@ function ListView(props) {
 
   if (props.viewState === 0) {
 
-    return (
-      <ChartDataViewWrapper
-        roomList={props.roomList}
-        dispach={props.dispach}
-        dataList={dataList}
-        query={props.query}
-      />
-    );
+    // return (
+    //   <ChartDataViewWrapper
+    //     roomList={props.roomList}
+    //     dispach={props.dispach}
+    //     dataList={dataList}
+    //     query={props.query}
+    //   />
+    //   let chartData = toChartData(props.dataList);
+    //   console.log("ChartData",chartData)    
+      return (
+        <GroupTable
+          dispach={props.dispach}
+          dataList={dataList}
+          roomList={props.roomList}
+          // chartData={chartData}
+          query={props.query}
+        />
+      );
   }
   return <ChartDataView dataList={dataList} />;
 }
@@ -891,7 +884,7 @@ export default function ChartView(props) {
     (dataList, eParam = null) => {
         updateTableDataList({
           ...reState,
-          request:eParam,          
+//          request:eParam,          
           currentDataList:dataList
         });
     },
