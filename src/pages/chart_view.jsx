@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-
 import { Button, DatePicker, Menu, Select, Input, Dropdown,Empty,Spin,Alert } from "antd";
-
 import style from "./ChartView.module.scss";
 
 import {
@@ -18,6 +16,7 @@ import { ChartDataView } from "./table_data";
 import { GroupTable } from "./group_table";
 import { SearchOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
+//import { LoadingOutlined } from '@ant-design/icons';
 
 //import { of } from "rxjs";
 const { Option } = Select;
@@ -196,14 +195,14 @@ function HeaderView(props) {
           {props.totalReportText}
         </div>
         <Select
-          defaultValue="기간"
+          defaultValue="0"
           onChange={handleSelectChange}
           style={{ width: 120 }}
         >
-          <Option value="0">기간</Option>
-          <Option value="1">산모이름</Option>
-          <Option value="2">산모주소</Option>
-          <Option value="3">보호자</Option>
+          <Option value="0">기간 검색</Option>
+          <Option value="1">산모 이름</Option>
+          <Option value="2">산모 연락처</Option>
+          <Option value="3">보호자 이름</Option>
           <Option value="4">예정일</Option>
         </Select>
         <div style={{ width: 1 }} />
@@ -264,6 +263,25 @@ function ActionBunttonGroupView(props) {
           전체보기
         </span>
       </Menu.Item>
+      <Menu.Item>
+        <span
+          onClick={(e) => {
+            eventObserver({ type: "filter-1-0" });
+          }}
+        >
+          입실예정
+        </span>
+      </Menu.Item>
+      <Menu.Item>
+        <span
+          onClick={(e) => {
+            eventObserver({ type: "filter-3-1" });
+          }}
+        >
+          입실완료
+        </span>
+      </Menu.Item>
+
       <Menu.Item>
         <span
           onClick={(e) => {
@@ -434,7 +452,6 @@ function ActionBunttonGroupView(props) {
 function newEventDispach(setChartViewState, updateTableDataList,allReservationFunc) {
   return function (e) {
     let allReservationList = allReservationFunc()
-    console.log("Filter all",allReservationList)
     if (e.type === "DataViewUpdate") {
       let chartViewState = e.currentDisplayState;
       if (chartViewState === 0) {
@@ -449,11 +466,25 @@ function newEventDispach(setChartViewState, updateTableDataList,allReservationFu
     // } 
     else if (e.type === "filter-0") {
       updateTableDataList(allReservationList);
-    } else if (e.type === "filter-1") {
+    }
+    else if (e.type === "filter-1-0") {
+      let list = allReservationList.filter((e) => {
+        return ReservStateChecker.isPreInDespi(e) || 
+        ReservStateChecker.isPreInFull(e)
+      });
+      updateTableDataList(list);
+    }
+    else if(e.type === "filter-3-1") {
+      let list = allReservationList.filter((e) => {
+        return ReservStateChecker.isCheckInDespi(e) || 
+        ReservStateChecker.isCheckinFull(e)
+      });
+      updateTableDataList(list);
+    }
+    else if (e.type === "filter-1") {
       let list = allReservationList.filter((e) => {
         return ReservStateChecker.isPreInDespi(e);
       });
-      console.log("Filter-1",list)
       updateTableDataList(list);
     } else if (e.type === "filter-2") {
       let list = allReservationList.filter((e) => {
@@ -497,23 +528,6 @@ function newEventDispach(setChartViewState, updateTableDataList,allReservationFu
   };
 }
 
-// function ChartDataViewWrapper(props) {
-
-//   let chartData = toChartData(props.dataList);
-//   console.log("ChartData",chartData)
-
-//   return (
-//     <GroupTable
-//       dispach={props.dispach}
-//       dataList={props.dataList}
-//       roomList={props.roomList}
-//       chartData={chartData}
-//       query={props.query}
-//     />
-//   );
-// }
-
-
 
 const roomLevelGroupBy = function (roomList) {
   //  console.log("RoomList",roomList)
@@ -538,7 +552,6 @@ const roomLevelGroupBy = function (roomList) {
 function ListView(props) {
 
   const dataList = props.dataList;
-
 
   // if(props.reservationObj.query !== undefined) {
   // }
@@ -843,6 +856,20 @@ function loadReservationDataList(updateState,serverEventEmmiter,reqEvent) {
     });
 }
 
+
+
+//const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
+// Return value should be component
+const antIcon = <div className="mskgb"
+style={{ background: '#eee', margin: 24 }}
+>
+  <img  src="http://testg.tosky.co.kr:18080/resources/images/loading.gif"
+  // className="mkbg"
+  // width="238px"
+  // height="86px"
+  alt="loading"/>
+</div>
+
 export default function ChartView(props) {
   const { serverEventEmmiter } = useContext(ServerEventContext);
 
@@ -875,10 +902,6 @@ export default function ChartView(props) {
         ...reState,
         viewState: newChartState,
       });
-      // updateLoadState({
-      //   ...loadState,
-      //   viewState:newChartState
-      // })
 
     },
     (dataList, eParam = null) => {
@@ -967,13 +990,7 @@ export default function ChartView(props) {
         //state ==1 이고 event.type ==1 이면 
         //처리완료된 reservation list 에 대한 httpRequest 가 있다는  상태 
         //통일된 result처리함수에 보내며 dispatch에서 통일되게 처리한다
-
-        console.log("Update eventRequets",stateEvent.result.dataList)
-        // dispach({
-        //   type: "OnLoadCompletedResList",
-        //   data: stateEvent.result,
-        //   eParam: stateEvent.request,
-        // });
+//        console.log("Update eventRequets",stateEvent.result.dataList)
         const dataList = stateEvent.result.dataList
         updateTableDataList({
           ...reState,
@@ -1016,10 +1033,11 @@ export default function ChartView(props) {
         requestEvent
       )
     }
-    else{
-      console.log("PassEvent in Request")
-    }
+    // else{
+    //   console.log("PassEvent in Request")
+    // }
   });
+
 
 
   return (
@@ -1040,11 +1058,13 @@ export default function ChartView(props) {
         />
       </div>
       <SearchConditionView
-        displayState={loadState.viewState}
+        displayState={reState.viewState}
         eventObserver={dispach}
       />
-      <Spin spinning={loadState.state===0} >
-
+    <Spin spinning={loadState.state===0}  
+      indicator={antIcon} 
+      style={{ height: '100%' }}
+    >
         <ListView
           query={reState.request}
           dispach={dispachWrapper}
@@ -1052,8 +1072,10 @@ export default function ChartView(props) {
           viewState={reState.viewState}
           dataList={reState.currentDataList}
         />
-      </Spin>
+
+    </Spin>
 
     </div>
+
   );
 }

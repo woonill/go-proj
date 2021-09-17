@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from "react";
+import React, { useState, useContext, useEffect, } from "react";
 import { Table, Modal, Popover, Select } from "antd";
 
 //import styles  from './ChartView.module.scss'
@@ -530,16 +530,20 @@ const MouseRightMenuFunc = (function () {
   );
 
   return function (source) {
-    if (source.last && source.isMove === 1) {
-      return tComp;
+
+    if(ReservStateChecker.isCheckinFull(source)
+      || ReservStateChecker.isCheckInDespi(source)) {
+
+        return fComp;
     }
 
-    if (source.inState === 0) {
+    if (ReservStateChecker.isPreInDespi(source)
+        || ReservStateChecker.isPreInFull(source)) {
       return sComp;
     }
 
     //    console.log("source",source)
-    return fComp;
+    return tComp;
   };
 })();
 
@@ -602,9 +606,9 @@ function SchedulerBarButton(props) {
   let fontColor = newSchButtonFontColor(props.colData.source);
   const MouseRightMenuComp = MouseRightMenuFunc(dataSource);
 
-  if (props.colData.no === 7927) {
-    console.log("ColData", props.colData);
-  }
+  // if (props.colData.no === 7927) {
+  //   console.log("ColData", props.colData);
+  // }
 
   return (
     <MouseRightMenuComp
@@ -726,9 +730,9 @@ function newTotalFragment(record, date) {
           // marginLeft:"1px",
           // marginRight:"1px",
           // top:"-4px",
-          // left:"6px",
-          // width:"20px",
-          // height:"20px",
+          // left:"4px",
+          // width:"30px",
+          // height:"30px",
         }}
       >
         {/* <span style={{ textAlign: "center" }}>{dataOfMonth}</span> */}
@@ -895,7 +899,7 @@ function newColumnHeader(stObj, fallback) {
         return (
           <Select
             showSearch
-            style={{ width: "160px" }}
+            style={{ width: "100%" }}
             placeholder="정렬"
             onChange={(v) => {
               fallback(v);
@@ -1208,27 +1212,35 @@ function ChartTableView(props) {
   //  let chartData = props.chartData;
   const query = props.query;
 
-  let co = buildTableDataList(roomList, chartData.list);
-
-  const [dataSource, chartUpdater] = useState(co);
-
-  //  console.log("DataSource length",dataSource.length,props.query)
-
-  // query 조건으로 chartData를 초화할지를분한다
-  // useMemo(() => {
-  //   // Should not ever set state during rendering, so do this in useEffect instead.
-  //   let co =   buildTableDataList(roomList, chartData.list);
-  //   chartUpdater(co);
-
-  // }, [query]);
-  // let co = buildTableDataList(roomList, chartData.list);
-  // chartUpdater(co);
+  const [dataSource, chartUpdater] = useState([]);
 
 
+//  console.log("Update",dataSource)
+
+  useEffect(()=>{
+    let co = buildTableDataList(roomList, chartData.list);
+    chartUpdater(co)
+
+  },[props.dataList])
 
   let sDate = moment(chartData.stObj.sDate); //.subtract(1, "days");
   //월 header 부분에서 10월1까지만 오면 다음라인으로 바꾸어지는 현상을 막기위해서
+
+  console.log("query",query)
+
   let eDate = moment(chartData.stObj.eDate);
+
+  let qeDate = moment(query.param.to);
+  if(qeDate.isAfter(eDate)) {
+    eDate = qeDate;
+  }
+
+
+  let qsDate = moment(query.param.from)
+  if(qsDate.isBefore(sDate)){
+    sDate = qsDate;
+  }
+
   if (eDate.day() === 1) {
     eDate = eDate.add(1, "day");
   }
@@ -1245,7 +1257,6 @@ function ChartTableView(props) {
       const resList = buildTableDataList(newRoomList, chartData.list);
       chartUpdater(resList);
     } else {
-      //      roomList.sort(roomLevelSortFunc)
       const resList = buildTableDataList(roomList, chartData.list);
       chartUpdater(resList);
     }
@@ -1324,7 +1335,8 @@ function newInPopupView(listeners, emitHttpEvent, parentDispach) {
           window.location.href = scheduleDetailURL(e.eventObj.no);
           return;
         } else {
-          console.log("Event", e);
+
+//          console.log("Event", e);
           setShowPopup({
             pageIndex: e.data.popupView,
             title: e.data.title,
