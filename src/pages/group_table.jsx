@@ -1302,7 +1302,7 @@ function ChartTableView(props) {
         })
       }
     }
-  },[props.dataList.length])
+  },[props.dataList])
 
 
   console.log("Start render table",dataSource.length)

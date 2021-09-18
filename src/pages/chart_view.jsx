@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Button, DatePicker, Menu, Select, Input, Dropdown,Empty,Spin,Alert } from "antd";
+import React, { useState, useEffect, useContext,useReducer } from "react";
+import { Button, DatePicker, Menu, Select, Input, Dropdown,Empty,Spin } from "antd";
 import style from "./ChartView.module.scss";
 
 import {
@@ -16,9 +16,8 @@ import { ChartDataView } from "./table_data";
 import { GroupTable } from "./group_table";
 import { SearchOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
-//import { LoadingOutlined } from '@ant-design/icons';
+import { v4 as uuidv4 } from "uuid";
 
-//import { of } from "rxjs";
 const { Option } = Select;
 
 const { RangePicker } = DatePicker;
@@ -770,6 +769,81 @@ function loadReservationDataList(updateState,serverEventEmmiter,reqEvent) {
 }
 
 
+function reducer(state, action) {
+  
+  switch (action.type) {
+    case 'LoadReservationList':
+
+      return {
+        ...state,
+        loadState: {
+          ...state.loadState,
+          state:0,//start spin loading 
+          event:action.event
+        }
+      };
+    case 'InitRoomList' : 
+      return {
+        ...state,
+        loadState: {
+          ...state.loadState,
+          state:action.state,
+          roomList:action.roomList,
+          event:action.event 
+        }
+      }
+    case 'OnCompleteLoadState' : 
+      return {
+        ...state,
+        loadState: {
+          ...state.loadState,
+          state:action.state,//start spin loading 
+          event:action.event
+        }
+      };
+
+    case 'TotalDataList' :
+      console.log("TotalDataUpdated",action)
+//      updateTotalReport(e.dataList)
+      return {
+        ...state,
+        totalReportData: action.value
+        
+      };
+    case 'UpdateReservationList' : 
+      return  {
+        ...state,
+        reState:{
+          ...state.reState,
+          roomList:action.roomList,
+          request:action.request,
+          dataList:action.dataList,
+          currentDataList:action.dataList
+        }
+      }
+    case 'updateViewState' : 
+      return {
+        ...state,
+        reState:{
+          ...state.reState,
+          viewState: action.value,
+        }
+      }
+
+    case 'updateReservationList' : 
+      return {
+        ...state,
+        reState:{
+          ...state.reState,
+          currentDataList: action.value,
+        }
+      }
+
+    default:
+      return state;
+  }
+}
+
 
 //const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 // Return value should be component
@@ -783,14 +857,8 @@ style={{ background: '#eee', margin: 24 }}
   alt="loading"/>
 </div>
 
-export default function ChartView(props) {
-  const { serverEventEmmiter } = useContext(ServerEventContext);
-
-
-  // let [roomList, updateRoomList] = useState([]);
-  //0 init state 1 loading state 3  load complete
-  const [totalReportData,updateTotalReport] = useState([])
-  const [loadState,updateLoadState]  = useState({
+const initialState  = {
+  loadState: {
     state:0,//0 loading 1 loaded
     event:{
       type:-1, //-1 초기화 상태  0 load roomList 1 load reservation list
@@ -799,39 +867,47 @@ export default function ChartView(props) {
     },
     viewState:0,
     roomList:[],
-  })
-
-  let [reState, updateTableDataList] = useState({
+  },
+  reState: {
     dataList:[],
     request:null,
     roomList:[],
     viewState:0,
     currentDataList:[],
-  });
+  },
+  totalReportData:[]
+}
 
+export default function ChartView(props) {
+  const { serverEventEmmiter } = useContext(ServerEventContext);
+
+
+  // let [roomList, updateRoomList] = useState([]);
+  //0 init state 1 loading state 3  load complete
+//  const [totalReportData,updateTotalReport] = useState([])
+
+  const [state, sDispatch] = useReducer(reducer, initialState);
+  const loadState = state.loadState;
+  const reState = state.reState;
+  const totalReportData = state.totalReportData
 
   const dispach = newEventDispach(
     (newChartState) => {
-      updateTableDataList({        
-        ...reState,
-        viewState: newChartState,
-      });
+
+      sDispatch({
+        type:"updateViewState",
+        value:newChartState
+      })
 
     },
     (dataList, eParam = null) => {
-        updateTableDataList({
-          ...reState,
-//          request:eParam,          
-          currentDataList:dataList
-        });
-    },
-    
+        sDispatch({
+          type:"updateReservationList",
+          value:dataList
+        })
+    },    
     () => {
       return reState.dataList
-      // updateTableDataList({
-      //   ...reState,
-      //   currentDataList:reState.dataList
-      // })
     }
   );
 
@@ -840,9 +916,8 @@ export default function ChartView(props) {
   const dispachWrapper = (e) => {
 
     if(e.type === "LoadReservationList") {
-      updateLoadState({
-        ...loadState,
-        state:0,//start spin loading 
+      sDispatch({
+        type:"LoadReservationList",
         event:{
           type:1,
           request:e.request,
@@ -850,8 +925,12 @@ export default function ChartView(props) {
       })
     }
     else if(e.type ==="TotalDataList") {
-      console.log("TotalDataUpdated",e)
-      updateTotalReport(e.dataList)
+      // console.log("TotalDataUpdated",e)
+      // updateTotalReport(e.dataList)
+      sDispatch({
+        type:"TotalDataList",
+        value:e.dataList
+      })
     }
     else{
       dispach(e)
@@ -888,18 +967,16 @@ export default function ChartView(props) {
               param:param
             }
             const dataList = e.dataList;
-            updateLoadState(
-              {
-                ...loadState,
-                state:0,
-                roomList:dataList,
-                event:{
-                  type:1, //
-                  request:request,
-                  result:dataList
-                }  
-              }
-            )
+            sDispatch({
+              type:"InitRoomList",
+              state:0,
+              roomList:dataList,
+              event:{
+                type:1, //
+                request:request,
+                result:dataList
+              }  
+            })           
           },
         });  
       }
@@ -910,13 +987,14 @@ export default function ChartView(props) {
         //통일된 result처리함수에 보내며 dispatch에서 통일되게 처리한다
 //        console.log("Update eventRequets",stateEvent.result.dataList)
         const dataList = stateEvent.result.dataList
-        updateTableDataList({
-          ...reState,
+
+        sDispatch({
+          type:"UpdateReservationList",
           roomList:loadState.roomList,
           request:stateEvent.request,
           dataList:dataList,
           currentDataList:dataList
-        });
+        })
       };
     },
     [loadState.state,loadState.event.type]
@@ -926,10 +1004,10 @@ export default function ChartView(props) {
   //작용 :  state =1 로 만들어 spin 을 clear 한다 
   // state.event 에 result 를 부여함으로 다음 함수에서 실행 하도록한다 
   const reservationUpdater = (newEvent) => {
-    updateLoadState({
-      ...loadState,
+    sDispatch({
+      type:"OnCompleteLoadState",
       state:1,
-      event:newEvent,
+      event:newEvent
     })
   }
 
@@ -937,7 +1015,6 @@ export default function ChartView(props) {
   useEffect(() => {
 
 //    console.log("process 2 effect",loadState)
-
     //index = 2
     //state = 0 은 spin 으 돌아가고있으며 event 의 request 가 들어와있는 상태이므로 
     //loadState.event.type 값이 1 이므로 http server 에서 데이터 요청 
@@ -955,8 +1032,6 @@ export default function ChartView(props) {
     //   console.log("PassEvent in Request")
     // }
   });
-
-
 
   return (
 
@@ -982,8 +1057,7 @@ export default function ChartView(props) {
       />
     <Spin spinning={loadState.state===0}  
       indicator={antIcon} 
-      style={{ height: '100%' }}
-    >
+      style={{ height: '100%' }}>
         <ListView
           query={reState.request}
           dispach={dispachWrapper}
@@ -991,7 +1065,6 @@ export default function ChartView(props) {
           viewState={reState.viewState}
           dataList={reState.currentDataList}
         />
-
     </Spin>
 
     </div>
