@@ -757,11 +757,14 @@ function loadReservationDataList(updateState,serverEventEmmiter,reqEvent) {
       type: "FetchTableDataList",
       params: reqEvent.param,
       resultHandler: (data) => {
-        // console.log("Response",data)
+        console.log("Response",data)
+
+        let resDataList = (data === null || data === undefined ) ?  {dataList:[]} : data;
+        console.log("resDataList",resDataList)
         let newEvent =  {
           type:1,
           request:reqEvent,
-          result:data
+          result:resDataList
         }
         updateState(newEvent)
       },
@@ -803,8 +806,6 @@ function reducer(state, action) {
       };
 
     case 'TotalDataList' :
-      console.log("TotalDataUpdated",action)
-//      updateTotalReport(e.dataList)
       return {
         ...state,
         totalReportData: action.value
@@ -869,10 +870,10 @@ const initialState  = {
     roomList:[],
   },
   reState: {
-    dataList:[],
     request:null,
     roomList:[],
     viewState:0,
+    dataList:[],
     currentDataList:[],
   },
   totalReportData:[]

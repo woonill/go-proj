@@ -1279,7 +1279,9 @@ function ChartTableView(props) {
   useEffect(()=> {
 
 
-    console.log("update",dataSource.length)
+    // console.log("update",dataSource.length)
+
+
     let co = buildTableDataList(roomList, chartData.list);
     let data = reportColumnFunc(co);
     chartUpdater(data)
@@ -1289,7 +1291,7 @@ function ChartTableView(props) {
           && query.type === "range"
           ) { 
           
-            console.log("update table 2")
+    // console.log("update table 2")
 
 
       return () => {
