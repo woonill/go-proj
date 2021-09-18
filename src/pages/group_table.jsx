@@ -1243,7 +1243,7 @@ function ChartTableView(props) {
   const [dataSource, chartUpdater] = useState([]);
 
   const stObj = newSearchDateRange(chartData.stObj,query)
-
+  
   const reportColumnFunc = buildReportData(
     chartData.list,
     roomList,
@@ -1252,10 +1252,11 @@ function ChartTableView(props) {
   );
 //  console.log("Update",dataSource)
 
-  useEffect(()=>{
-    let co = buildTableDataList(roomList, chartData.list);
-    chartUpdater(co)
-  },[props.dataList])
+  // useEffect(()=>{
+  //   console.log("update",dataSource.length)
+  //   let co = buildTableDataList(roomList, chartData.list);
+  //   chartUpdater(co)
+  // },[props.dataList.length])
 
 
   let columns = newColumnHeader(stObj, (type) => {
@@ -1263,21 +1264,34 @@ function ChartTableView(props) {
       const newRoomList = [].concat(roomList);
       newRoomList.sort(roomNumberSortFunc);
       const resList = buildTableDataList(newRoomList, chartData.list);
-      chartUpdater(resList);
+      let data = reportColumnFunc(resList);
+      chartUpdater(data)
+//      chartUpdater(resList);
     } else {
       const resList = buildTableDataList(roomList, chartData.list);
-      chartUpdater(resList);
+      let data = reportColumnFunc(resList);
+      chartUpdater(data)
+//      chartUpdater(resList);
     }
   });
 
-  let data = reportColumnFunc(dataSource);
 
   useEffect(()=> {
+
+
+    console.log("update",dataSource.length)
+    let co = buildTableDataList(roomList, chartData.list);
+    let data = reportColumnFunc(co);
+    chartUpdater(data)
 
     if (query !== undefined 
           && query !== null 
           && query.type === "range"
           ) { 
+          
+            console.log("update table 2")
+
+
       return () => {
         const rList = data.filter((re)=>{
           return re.rtype !== undefined && re.rtype === "room"
@@ -1288,16 +1302,17 @@ function ChartTableView(props) {
         })
       }
     }
-  },[dataSource])
+  },[props.dataList.length])
 
 
+  console.log("Start render table",dataSource.length)
 
   return (
     <Table
       rowKey="data-table"
       scroll={{ y: 700 }}
       columns={columns}
-      dataSource={data}
+      dataSource={dataSource}
       bordered
       pagination={false}
       size="small"
@@ -1507,7 +1522,7 @@ function SubViewComponent(props) {
 }
 
 export default function GroupTable(props) {
-  // console.log("Query",props.query)
+//  console.log("Query",props.query)
   // console.log("DataList",props.dataList)
 
   let { serverEventEmmiter } = useContext(ServerEventContext);

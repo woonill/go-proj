@@ -4,8 +4,8 @@ import style from "./ChartView.module.scss";
 
 import {
   ReservStateChecker,
-  rangeOfDates,
-  isValidSourceCountReport,
+  // rangeOfDates,
+  // isValidSourceCountReport,
 } from "./chart_view_context";
 import { ServerEventContext } from "../server_event_context.js";
 
@@ -136,22 +136,6 @@ function HeaderView(props) {
       });
       return;
     }
-
-  //   props.emitHttpEvent({
-  //     type: "FetchTableDataList",
-  //     params: params,
-  //     resultHandler: function (data) {
-  //       const sParam = {
-  //         type: searchType,
-  //         condition: params,
-  //       };
-  //       props.eventObserver({
-  //         type: "OnLoadCompletedResList",
-  //         data: data,
-  //         eParam: sParam,
-  //       });
-  //     },
-  //   });
 
   const reqEvent =  {
     type:searchType,
@@ -395,19 +379,6 @@ function ActionBunttonGroupView(props) {
           </div>
         </li>
 
-        {/* <li>
-          <div className={style.actionButton3}>
-            <span
-              className={style.text}
-              onClick={(e) => {
-                window.location.href = "/reservation/calendar";
-              }}
-            >
-              입퇴실 달력
-            </span>
-          </div>
-        </li> */}
-
         <button
           className={style.showGridButton}
           onClick={(e) => {
@@ -529,25 +500,25 @@ function newEventDispach(setChartViewState, updateTableDataList,allReservationFu
 }
 
 
-const roomLevelGroupBy = function (roomList) {
-  //  console.log("RoomList",roomList)
+// const roomLevelGroupBy = function (roomList) {
+//   //  console.log("RoomList",roomList)
 
-  let obj = {};
-  for (let i = 0; i < roomList.length; i++) {
-    const room = roomList[i];
-    const key = room["gradeNo"];
-    let roomLevel = obj[key];
-    if (roomLevel === undefined) {
-      roomLevel = {
-        name: room["gradeName"],
-        roomList: [],
-      };
-      obj[key] = roomLevel;
-    }
-    roomLevel["roomList"].push(room);
-  }
-  return obj;
-};
+//   let obj = {};
+//   for (let i = 0; i < roomList.length; i++) {
+//     const room = roomList[i];
+//     const key = room["gradeNo"];
+//     let roomLevel = obj[key];
+//     if (roomLevel === undefined) {
+//       roomLevel = {
+//         name: room["gradeName"],
+//         roomList: [],
+//       };
+//       obj[key] = roomLevel;
+//     }
+//     roomLevel["roomList"].push(room);
+//   }
+//   return obj;
+// };
 
 function ListView(props) {
 
@@ -998,7 +969,7 @@ export default function ChartView(props) {
               query={loadState.event.request}
               dataList={totalReportData}
 //              dataList={reState.currentDataList}
-              roomList={loadState.roomList}
+//              roomList={loadState.roomList}
             />
           }
           eventObserver={dispach}
