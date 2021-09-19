@@ -1307,7 +1307,7 @@ function ChartTableView(props) {
   },[props.dataList])
 
 
-  console.log("Start render table",dataSource.length)
+//  console.log("Start render table",dataSource.length)
 
   return (
     <Table

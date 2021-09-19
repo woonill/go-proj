@@ -345,7 +345,7 @@ function ReportTextInfo(props) {
         && (props.query !== undefined && props.query.type === "range")
       ) {
 
-      console.log("UpdateReporTextInfo now")
+//      console.log("UpdateReporTextInfo now")
 
       let roomReportList = [];
       props.dataList.forEach((sourceObj) => {
@@ -374,7 +374,7 @@ function ReportTextInfo(props) {
   }, [props.dataList]);
 
   if(props.query !== undefined && props.query !== null && props.query.type === "range") {
-    console.log("update now",robj)
+//    console.log("update now",robj)
 
     return (
       <span>
@@ -550,10 +550,9 @@ function loadReservationDataList(updateState,serverEventEmmiter,reqEvent) {
       type: "FetchTableDataList",
       params: reqEvent.param,
       resultHandler: (data) => {
-        console.log("Response",data)
 
         let resDataList = (data === null || data === undefined ) ?  {dataList:[]} : data;
-        console.log("resDataList",resDataList)
+        
         let newEvent =  {
           type:1,
           request:reqEvent,
