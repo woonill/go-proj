@@ -16,104 +16,194 @@ import { ChartDataView } from "./table_data";
 import { GroupTable } from "./group_table";
 import { SearchOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
-import { v4 as uuidv4 } from "uuid";
+//import { v4 as uuidv4 } from "uuid";
 
 const { Option } = Select;
 
 const { RangePicker } = DatePicker;
 
-function SearchConditionChoosherView(props) {
-  let rangeView = (
-    <RangePicker
-      defaultValue={props.dateRange}
-      format={props.dateFormat}
-      //   value={hackValue || value}
-      //   disabledDate={disabledDate}
-      onCalendarChange={(val) => {
-        //console.log("range date",val)
-        props.setValue(val);
-      }}
-      //onChange={val => console.log("change date",val)}
-      //onOpenChange={onOpenChange}
-    />
-  );
 
-  switch (props.selectedValue) {
-    case "0":
-      return rangeView;
-    case "1":
-      return (
-        <Input
-          placeholder="산모이름"
-          style={{ marginLeft: 1, width: 255 }}
-          onChange={props.setValue}
-        />
-      );
-    case "2":
-      return (
-        <Input
-          placeholder="산모주소"
-          style={{ marginLeft: 1, width: 255 }}
-          onChange={props.setValue}
-        />
-      );
+// const TextInputField = (props) => {
 
-    case "3":
-      return (
-        <Input
-          placeholder="보호자이름"
-          style={{ marginLeft: 1, width: 255 }}
-          onChange={props.setValue}
-        />
-      );
+//   const [inputText,setInputText] = useState("")
 
-    case "4":
-      return (
-        <Input
-          placeholder="YYYY-MM-DD"
-          style={{ marginLeft: 1, width: 255 }}
-          onChange={props.setValue}
-        />
-      );
+//   const onChangeText =  (c) => {
+//       c.preventDefault();
+//       setInputText(c.target.value)
+//   }
 
-    default:
-      return rangeView;
+//   useEffect(()=>{
+//     props.setValue(inputText)
+
+//   },[inputText])
+
+//   return  (
+//       <Input
+//       // placeholder="산모이름"
+//       value={inputText}
+//       style={{ marginLeft: 1, width: 255 }}
+//       onChange={(e)=>onChangeText(e)}
+//     />
+//   )
+// }
+
+
+
+class TextInputFieldComp extends React.Component {
+  constructor(props) {
+      super(props)
+      this.onChangeText = this.onChangeText.bind(this)
+      this.state =  {
+        selectedValue:props.selectedValue,
+        inputText:"",
+      }  
   }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.selectedValue !== prevProps.selectedValue) {
+      this.setState({
+        ...this.state,
+        inputText:""
+      })
+    }
+  }
+
+  // componentWillUnmount(params) {    
+  //   console.log("Unmount TextInputFieldComponent")
+  // }
+
+  onChangeText(c){
+    c.preventDefault();
+    const textVal = c.target.value;
+    this.props.setValue(textVal)
+    this.setState({
+      ...this.state,
+      inputText:textVal
+    })
+}
+  render() {
+
+    return  (
+      <Input
+      // placeholder="산모이름"
+      value={this.state.inputText}
+      style={{ marginLeft: 1, width: 255 }}
+      onChange={this.onChangeText}
+    />
+    )
+
+  }
+}
+
+
+const DateInputField = (props) => {
+
+  const [currentDate,updateState] = useState(moment())
+
+  const onChangeCurrent =  (c) => {
+      props.setValue(c)
+      updateState(c)
+  }
+
+  useEffect(()=>{
+    // if(props.selectedValue !== currentDateState.index) {
+    // }
+    // console.log("Clear due date component")
+    updateState({
+      index:props.selectedValue,
+      currentDate:moment,
+    })
+
+  },[props.selectedValue])
+
+  return  (
+    <DatePicker
+    format={props.dateFormat}
+      // placeholder="YYYY-MM-DD"
+      defaultValue={currentDate}
+      style={{ marginLeft: 1, width: 255 }}
+      onChange={onChangeCurrent}
+      />
+  )
+}
+
+const DateRangeInputField = (props) => {
+
+  let [dateRangeVals, updateDateRange] = useState(props.dateRange);
+
+  const onChangeCurrent =  (c) => {
+    props.setValue(dateRangeVals)
+    updateDateRange(c)
+  }
+
+  useEffect(()=>{
+    updateDateRange({
+      dateRangeVals:props.dateRange,
+    })
+  },[props.selectedValue])
+
+  return  (
+    <RangePicker
+      defaultValue={dateRangeVals}
+      format={props.dateFormat}
+      onCalendarChange={onChangeCurrent}
+    />
+  )
+}
+
+
+function SearchConditionChoosherView(props) {
+
+  const selectIndex = props.selectedValue;
+  if("1" === selectIndex || "2" === selectIndex || "3" === selectIndex) {
+    return <TextInputFieldComp {...props}/>
+  }
+  else if("4"=== selectIndex) {
+    return <DateInputField {...props}/>
+  }
+  return <DateRangeInputField {...props}/>
 }
 
 //상위 검색조건 선택뷰
 function HeaderView(props) {
-  let [selectedValue, setSelectValue] = useState("0");
 
+  let [selectedValue, setSelectValue] = useState("0");
   let dateFormat = "YYYY-MM-DD";
-  let [dateRangeVals, updateDateRange] = useState(() => {
-    let cDate = defaultSearchDateOfRange();
-    let startDate = cDate.sDate;
-    let endDate = cDate.eDate;
-    return [startDate, endDate];
-  });
 
   let handleSelectChange = (item) => {
     setSelectValue(item);
   };
 
-  let textVal;
+
+  let textVal;//text 로 입력된 부분 
+  let currentDate=moment();//출산예정일 
+
+  let dRangeVals = defaultSearchDateOfRange()
+  //
+  let dateRangeVals = [dRangeVals.sDate,dRangeVals.eDate];
 
   function updateVal(c) {
     if (selectedValue === "0") {
-      //date range 로 처리  [moment,moment]  array 로 온다
-      updateDateRange(c);
-    } else {
-      c.preventDefault();
-      textVal = c.target.value;
+      console.log("Update DateRange",c)
+      dateRangeVals = c
+    } 
+    else if (selectedValue === "4") {
+      currentDate = c;
+    }
+    else {
+      textVal = c;
     }
   }
 
   function searchReservations(event) {
+
+    console.log("EventVal",event)
+
     let params = {};
     let searchType;
 
     if (selectedValue === "0") {
+
       let startDate = dateRangeVals[0].format("YYYY-MM-DD");
       let endDate = dateRangeVals[1].format("YYYY-MM-DD");
 
@@ -121,13 +211,17 @@ function HeaderView(props) {
       params["from"] = startDate;
       params["to"] = endDate;
     } else if (selectedValue === "1") {
+      searchType = "customer-name";
       params["uname"] = textVal;
     } else if (selectedValue === "2") {
+      searchType = "customer-addr";
       params["uaddr"] = textVal;
     } else if (selectedValue === "3") {
+      searchType = "acustomer-name";
       params["pname"] = textVal;
     } else if (selectedValue === "4") {
-      params["due-data"] = textVal;
+      searchType = "acustomer-dudate";
+      params["due-data"] = currentDate.format("YYYY-MM-DD");
     } else {
       props.eventObserver({
         type: "ShowErrorMessage",
@@ -136,11 +230,12 @@ function HeaderView(props) {
       return;
     }
 
-  const reqEvent =  {
-    type:searchType,
-    param:params
-  }
+    const reqEvent =  {
+      type:searchType,
+      param:params
+    }
 
+    console.log("Condition Request",reqEvent)
 
     props.emitHttpEvent({
       type: "LoadReservationList",
@@ -196,7 +291,14 @@ function HeaderView(props) {
           dateFormat={dateFormat}
         />
         <div style={{ width: 1 }} />
-        <Button icon={<SearchOutlined />} onClick={searchReservations}>
+        <Button icon={<SearchOutlined />} onClick={(e)=>{
+          searchReservations({
+            sIndex:selectedValue,
+            textVal:textVal,
+            dateRangeVals:dateRangeVals,
+            currentDate:currentDate,
+          })
+        }}>
           검색
         </Button>
       </div>
