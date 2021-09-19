@@ -1004,7 +1004,10 @@ function newColumnHeader(stObj, fallback) {
 
       // const monthTag = <div style={{height:"100%",textAlign:"center",display:"flex",flex:1}}>{key + "-" + mkey}</div>
       const monthTag = (
-        <div style={{ textAlign: "center" }}>{key + "-" + mkey}</div>
+        <div style={{ textAlign: "center",               
+         overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis", }}>{key + "-" + mkey}</div>
       );
 
       let el = {
