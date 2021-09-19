@@ -160,7 +160,7 @@ function SearchConditionChoosherView(props) {
 }
 
 //상위 검색조건 선택뷰
-export default function HeaderView(props) {
+function HeaderView(props) {
 
   let [selectedValue, setSelectValue] = useState("0");
   let dateFormat = "YYYY-MM-DD";
@@ -191,8 +191,6 @@ export default function HeaderView(props) {
   }
 
   function searchReservations(event) {
-
-    console.log("EventVal",event)
 
     let params = {};
     let searchType;
@@ -297,4 +295,9 @@ export default function HeaderView(props) {
       </div>
     </div>
   );
+}
+
+
+export {
+  HeaderView
 }
