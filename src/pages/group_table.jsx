@@ -882,13 +882,23 @@ function newColumnHeader(stObj, fallback) {
   const sDateStr = sDate.format("YYYY-MM");
   const eDateStr = eDate.format("YYYY-MM");
   const today = moment();
+
+  //css 로 공제하기 힘들어 두날짜로 간격이 20일 이상이면 
+  //pixel을 따로 처리한다 
+  let widthLeng = "200px";
+  if(eDate.diff(sDate, "days") < 20 ) {
+    widthLeng = "150px";
+  }
+
   let columns = [
     {
       dataIndex: "name",
       key: "name",
-      width: 200,
-      height: 15,
+      width: widthLeng,
+      // height: "15px",
+//      align: "center",
       className: "sum-header", //세라인과 table x 설정이 충돌이 난다 조심해서 사용
+      fixed: "left",
       title: () => {
         return (
           <Select
@@ -904,7 +914,6 @@ function newColumnHeader(stObj, fallback) {
           </Select>
         );
       },
-      fixed: "left",
       render: function (text, record, index) {
         if (index === 1 || index === 2) {
           let roomSplit = text.split(",");
@@ -912,19 +921,20 @@ function newColumnHeader(stObj, fallback) {
           return (
             <div
               style={{
-                display: "flex",
-                flex: 1,
+                // display: "flex",
+                // flex: 1,
+                width:"180px",
                 fontSize: "15px",
+                display: "inline-block"
+                // backgroundColor:"black",
               }}
             >
-              <span style={{ width: "50%", textAlign: "left" }}>
-                {roomSplit[0]}
-              </span>
-              <div style={{ display: "flex", flex: 1 }}>
-                <span>{countTextArray[0]}</span>
-                <span>:</span>
-                <span>{countTextArray[1]}</span>
-              </div>
+                <div style={{width:"90px",display: "inline-block"}}>{roomSplit[0]}</div>
+                <span style={{width:"80px"}}>
+                  {countTextArray[0]}:{countTextArray[1]}
+                </span>
+
+              {/* <div style={{ display: "flex", flex: 1 }}> */}
             </div>
           );
         }
@@ -946,15 +956,15 @@ function newColumnHeader(stObj, fallback) {
           return (
             <div
               style={{
-                display: "flex",
-                flex: 1,
+                // display: "flex",
+                // flex: 1,
+                width:"180px",
+                display: "inline-block",
                 fontSize: "15px",
               }}
             >
-              <span style={{ width: "50%", textAlign: "left" }}>
-                {roomSplit[0]}
-              </span>
-              <div style={{ display: "flex", flex: 1 }}>
+              <div style={{width:"90px",display: "inline-block"}}>{roomSplit[0]}</div>
+              <div style={{ width:"90px",display: "inline-block" }}>
                 <span> {roomSplit[1]}</span>
                 <span
                   style={{
@@ -1061,6 +1071,8 @@ function buildTableDataList(roomList, eventObjList) {
     eList.push({
       key: key,
       name: columnName,
+      // fixed:true,
+      // width:"180px",
       roomLevel: room.level,
       eventObjList: eventList,
     });
@@ -1108,11 +1120,10 @@ function buildReportData(dataList, roomList, stObj, query) {
   //  console.log("QueryObjc", query);
 
   if (query !== undefined && query !== null && query.type === "range") {
+
     // let from = moment(query.condition["from"]);
     // let to = moment(query.condition["to"]);
-
     //Logic for getting rest of the dates between two dates("FromDate" to "EndDate")
-    
 
     return (data) => {
 
@@ -1314,6 +1325,7 @@ function ChartTableView(props) {
 
   return (
     <Table
+      className="your-table"
       rowKey="data-table"
       scroll={{ y: 700 }}
       columns={columns}
@@ -1321,6 +1333,7 @@ function ChartTableView(props) {
       bordered
       pagination={false}
       size="small"
+      tableLayout="fixed"
     />
   );
 }
@@ -1566,7 +1579,7 @@ export default function GroupTable(props) {
 
   return (
     <GantchartContext.Provider value={{ eventDispach, groupState, listeners }}>
-      <div style={{ padding: 10 }}>
+      <div style={{ padding: 10}}>
         <ChartTableView
           dispach={parentDispach}
           dataList={props.dataList}
