@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, } from "react";
+import React, { useState, useContext, useEffect, useRef} from "react";
 import { Table, Modal, Popover, Select } from "antd";
 
 //import styles  from './ChartView.module.scss'
@@ -38,7 +38,7 @@ function RangeTimelineText(props) {
   let fontColor = props.color === undefined ? "black" : props.color;
   let rtext = props.name;
 
-  if (props.mergeCount > 2) {
+//  if (props.mergeCount > 2) {
     rtext =
       rtext +
       "(" +
@@ -46,7 +46,7 @@ function RangeTimelineText(props) {
       " ~ " +
       moment(props.to).format("MM-DD") +
       ")";
-  }
+  //}
 
   const eventObj = props.eventObj;
 
@@ -60,10 +60,12 @@ function RangeTimelineText(props) {
   return (
     <span
       style={{
-        // width:"100%",height:"100%",
+        width:"100%",height:"100%",
         // display:"flex",
         // flex:1,
-        // backgroundColor:"red",
+        // alignItems:"center",
+        // justifyContent:"center",
+//        backgroundColor:"red",
         textAlign: "center",
         overflow: "hidden",
         color: fontColor,
@@ -77,7 +79,7 @@ function RangeTimelineText(props) {
 }
 
 //height fix for bug 2021.9.13
-function newSchButtonStyle(source, merge = 1) {
+function newSchButtonStyle(source, merge = 1,weidth) {
   let bgColor = newSchButtonBGColorOfRGB(source);
   let fontColor = newSchButtonFontColor(source);
 
@@ -94,13 +96,20 @@ function newSchButtonStyle(source, merge = 1) {
       borderRadius: "4px",
       textAlign: "center",
       // width:"100%",
+      width:weidth,
       height: "32px",
-      display: "flex",
-      flex: merge,
-      alignItems: "center",
-      justifyContent: "center",
+      lineHeight:"32px",
+      display:"inline-block",
+      verticalAlign:"middle",
       cursor: "pointer",
       color: `rgb(${fontColor})`,
+//      marginBottom:"-5px",
+
+//      float:"center",
+//      display: "flex",
+//      flex: merge,
+      // alignItems: "center",
+      // justifyContent: "center",
     };
   }
 
@@ -112,11 +121,19 @@ function newSchButtonStyle(source, merge = 1) {
     backgroundColor: `rgb(${bgColor})`,
     textAlign: "center",
     color: `rgb(${fontColor})`,
-    display: "flex",
-    flex: merge,
-    height: "32px",
-    alignItems: "center",
-    justifyContent: "center",
+    width:weidth,
+//    height: "32px",
+    lineHeight:"32px",
+
+    display:"inline-block",
+    verticalAlign:"middle",
+  //  marginBottom:"-5px",
+
+
+        // flex: merge,
+    //    display: "flex",
+    // alignItems: "center",
+    // justifyContent: "center",
     // minWidth: "31px",
     // width: "100%",
     // height: "100%",
@@ -267,57 +284,77 @@ function newStatustext(sourceObj) {
 
 function OverrideComp(props) {
   return (
-    <div style={{ flex: props.width, textAlign: "center", cursor: "pointer" }}>
+    <div 
+      style={{
+//        lineHeight:props.height, 
+        width: props.width,
+        height: props.height,
+        display:"inline-block",
+        verticalAlign:"middle", 
+        textAlign: "center", 
+        cursor: "pointer" ,
+
+        backgroundColor: "#c6a38b",
+        borderStyle: "solid",
+        borderRadius: "4px",
+        color: "white",
+        
+      }}
+      >
       <Popover content={props.content} title="중첩구간" trigger="click">
-        <div
+        {/* <div
           style={{
             width: "100%",
-            height: "100%",
+            height: props.height,
             backgroundColor: "#c6a38b",
+//            backgroundColor:"red",
             borderStyle: "solid",
             borderRadius: "4px",
             color: "white",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            display:"inline-block",
+            verticalAlign:"middle", 
+            textAlign:"center",
+
+            // display: "flex",
+            // alignItems: "center",
+            // justifyContent: "center",
           }}
-        >
-          <span style={{ textAlign: "center" }}>{props.title}</span>
-        </div>
+        > */}
+          {props.title}
+        {/* </div> */}
       </Popover>
     </div>
   );
 }
 
 //중첩구간에대한 View 생성함수
-function gridChartCompRender(eventObj, mergeCount) {
+function ComplexChartBar({eventObj, mergeCount}) {
   //처음 바차트
   let midNode = eventObj["midNode"];
   let lastNode = eventObj["lastNode"];
 
-  let sfirstTime = eventObj["from"];
-  let endLastTime = midNode["from"];
+  // let sfirstTime = eventObj["from"];
+  // let seFirstTime = midNode["from"];
 
-  let fRange = moment(endLastTime).diff(sfirstTime, "days") + 1;
 
-  //중첩구간 중첩구간
-  // (처음시간에 toDate - 두번째시간에 fromDate)
-  let seFirstTime = midNode["from"];
-  let seLastTime = midNode["to"];
-
+  let fRange = moment(midNode["from"]).diff(eventObj["from"], "days")+1;
   //처음시작점과 끝나는 점에서의 최종 날짜 간격
-  let srRange = moment(seLastTime).diff(seFirstTime, "days");
+  // let srRange = moment(eventObj.source.toDate).diff(seFirstTime, "days");
+  // let trRange = moment(lastNode.to).diff(eventObj.to,"days")
 
-  let fWidth = mergeCount * (fRange / mergeCount);
-  let ssMerge = mergeCount * (srRange / mergeCount);
+  let srRange = moment(midNode["to"]).diff(midNode["from"], "days");
+  let trRange = moment(lastNode.to).diff(lastNode["from"],"days")
 
-  //앞에두개에서 나믄 부분이 세번째 바에길이
-  let trLen = mergeCount - (fWidth + ssMerge);
+  // console.log("Merge count",fRange,srRange,trRange)
+
+
+  let fWidth = (globalWeith*fRange)+"px"
+  let ssMerge = (globalWeith*srRange)+"px"
+  let trLen = (globalWeith*trRange)+"px"
 
   let overTimeArray = [];
 
   overTimeArray.push(eventObj);
-
   eventObj.subList.forEach((e) => {
     overTimeArray.push(e);
   });
@@ -325,56 +362,160 @@ function gridChartCompRender(eventObj, mergeCount) {
   let overrideTimeline = OverrideTimline(overTimeArray);
   let overrideTimeTitle = newOverrideRangeTitle(overTimeArray, srRange);
 
-  // if(8029 === eventObj.no) {
-  //   console.log("EventObj",eventObj)
-  // }
+//  console.log("Merge pixel",fWidth,ssMerge,trLen)
+
+  let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
+  if(eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
+    marginLeft = "0px"
+
+  }
 
   return (
     <div
       style={{
-        display: "flex",
-        flex: 1,
-        flexDirection: "row",
-        // justifyContent:"center"
+        marginLeft:marginLeft,
+        display:"inline-block",
+        verticalAlign: "middle",
+        width:"100%",
+        lineHeight:"32px",
+        //backgroundColor:"black",
+        // position: "relative",
+        // top: "50%",
+        // transform: "translateY(-50%)",
+        // background: "skyblue",
       }}
     >
-      <div style={newSchButtonStyle(eventObj.source, fWidth)}>
+      <div style={newSchButtonStyle(eventObj.source,1, fWidth)}>
         <SchedulerBarButton
-          buttonStyle={{ width: "100%", height: "100%", cursor: "pointer" }}
+          buttonStyle={{ 
+            width: "100%", 
+            height: "32px", 
+            cursor: "pointer",            
+            textAlign:"center",
+            display:"inline-block",
+            verticalAlign: "middle",
+            lineHeight:"32px",
+
+          }}
           mergeCount={fWidth}
           colData={eventObj}
         />
       </div>
+      <div style={{width:"1px",display:"inline-block",}}/>
       <OverrideComp
+        height={"32px"}
         width={ssMerge}
         title={overrideTimeTitle}
         content={overrideTimeline}
       />
-      {/* <div style={{ flex: ssMerge,textAlign:"center"}}>
-        <Popover content={overrideTimeline} title="중첩구간">
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "#c6a38b",
-              borderStyle: "solid",
-              borderRadius: "4px",
-              color: "white",
-              display:"flex",
-              alignItems:"center",
-              justifyContent:"center",
-            }}
-          >
-            <span style={{textAlign:"center"}}>{overrideTimeTitle}</span>
-          </div>
-        </Popover>
-      </div> */}
-      <div style={newSchButtonStyle(lastNode.source, trLen)}>
-        <SchedulerBarButton mergeCount={1} colData={lastNode} />
+      <div style={{width:"1px",display:"inline-block",}}/>
+      <div style={newSchButtonStyle(lastNode.source,1,trLen)}>
+        <SchedulerBarButton 
+          colData={lastNode} 
+          buttonStyle={{ 
+            width: "100%", 
+            height: "32px", 
+            cursor: "pointer",
+            textAlign:"center",
+            display:"inline-block",
+            verticalAlign: "middle",
+//            backgroundColor:"black"
+    
+          }}
+          mergeCount={trLen}
+        />
       </div>
     </div>
   );
 }
+
+
+
+// //중첩구간에대한 View 생성함수
+// function gridChartCompRender(eventObj, mergeCount) {
+//   //처음 바차트
+//   let midNode = eventObj["midNode"];
+//   let lastNode = eventObj["lastNode"];
+
+//   let sfirstTime = eventObj["from"];
+//   let endLastTime = midNode["from"];
+
+//   let fRange = moment(endLastTime).diff(sfirstTime, "days") + 1;
+
+//   //중첩구간 중첩구간
+//   // (처음시간에 toDate - 두번째시간에 fromDate)
+//   let seFirstTime = midNode["from"];
+//   let seLastTime = midNode["to"];
+
+//   //처음시작점과 끝나는 점에서의 최종 날짜 간격
+//   let srRange = moment(seLastTime).diff(seFirstTime, "days");
+
+//   let fWidth = mergeCount * (fRange / mergeCount);
+//   let ssMerge = mergeCount * (srRange / mergeCount);
+
+//   //앞에두개에서 나믄 부분이 세번째 바에길이
+//   let trLen = mergeCount - (fWidth + ssMerge);
+
+//   let overTimeArray = [];
+
+//   overTimeArray.push(eventObj);
+
+//   eventObj.subList.forEach((e) => {
+//     overTimeArray.push(e);
+//   });
+
+//   let overrideTimeline = OverrideTimline(overTimeArray);
+//   let overrideTimeTitle = newOverrideRangeTitle(overTimeArray, srRange);
+
+//   // if(8029 === eventObj.no) {
+//   //   console.log("EventObj",eventObj)
+//   // }
+
+//   return (
+//     <div
+//       style={{
+//         display: "flex",
+//         flex: 1,
+//         flexDirection: "row",
+//       }}
+//     >
+//       <div style={newSchButtonStyle(eventObj.source, fWidth)}>
+//         <SchedulerBarButton
+//           buttonStyle={{ width: "100%", height: "100%", cursor: "pointer" }}
+//           mergeCount={fWidth}
+//           colData={eventObj}
+//         />
+//       </div>
+//       <OverrideComp
+//         width={ssMerge}
+//         title={overrideTimeTitle}
+//         content={overrideTimeline}
+//       />
+//       {/* <div style={{ flex: ssMerge,textAlign:"center"}}>
+//         <Popover content={overrideTimeline} title="중첩구간">
+//           <div
+//             style={{
+//               width: "100%",
+//               height: "100%",
+//               backgroundColor: "#c6a38b",
+//               borderStyle: "solid",
+//               borderRadius: "4px",
+//               color: "white",
+//               display:"flex",
+//               alignItems:"center",
+//               justifyContent:"center",
+//             }}
+//           >
+//             <span style={{textAlign:"center"}}>{overrideTimeTitle}</span>
+//           </div>
+//         </Popover>
+//       </div> */}
+//       <div style={newSchButtonStyle(lastNode.source, trLen)}>
+//         <SchedulerBarButton mergeCount={1} colData={lastNode} />
+//       </div>
+//     </div>
+//   );
+// }
 
 const MouseRightMenuFunc = (function () {
   const _Right_Popup_fArray = [
@@ -604,6 +745,8 @@ function SchedulerBarButton(props) {
   //   console.log("ColData", props.colData);
   // }
 
+//  const containerRef   = useRef(null);
+
   return (
     <MouseRightMenuComp
       handleClick={(e, d) => {
@@ -617,6 +760,7 @@ function SchedulerBarButton(props) {
     >
       <div
         style={props.buttonStyle}
+//        ref={containerRef}
         // onMouseOver={mouseOverEventHandler}
         // onMouseOut={mouseOutEventHandler}
       >
@@ -634,6 +778,29 @@ function SchedulerBarButton(props) {
       {/* </div> */}
     </MouseRightMenuComp>
   );
+}
+
+const tdwidth ="40px";
+const tdheight ="20px";
+const globalWeith="39"
+
+
+function DefaultBox(props) {
+
+  const ref = useRef(null);
+  useEffect(()=>{
+
+    if(ref.current !== null) {
+      console.log("Ref",ref.current.offsetWidth)
+    }
+  },[ref])
+
+  return(
+    <div 
+   // style={{backgroundColor:"red",height:"100%",width:"100%"}}
+     ref={ref}></div>
+
+  ) 
 }
 
 function tableColumnRender(record, currentDayFormate) {
@@ -662,8 +829,15 @@ function tableColumnRender(record, currentDayFormate) {
 
       if (currentEventObj.subList.length >= 1) {
         return {
-          children: gridChartCompRender(currentEventObj, mergeCount), //newGridChart(eventObj, mergeCount),
+          children: (
+            <ComplexChartBar 
+              eventObj={currentEventObj}  
+              mergeCount={mergeCount}
+              />
+          ), 
           props: {
+            width:tdwidth,
+            height:tdheight,
             colSpan: mergeCount,
             rowSpan: 1,
           },
@@ -677,6 +851,8 @@ function tableColumnRender(record, currentDayFormate) {
           />
         ),
         props: {
+          width:tdwidth,
+          height:tdheight,
           colSpan: mergeCount,
           rowSpan: 1,
         },
@@ -685,6 +861,8 @@ function tableColumnRender(record, currentDayFormate) {
       return {
         children: "",
         props: {
+          width:tdwidth,
+          height:tdheight,
           colSpan: 0,
           rowSpan: 1,
         },
@@ -693,8 +871,10 @@ function tableColumnRender(record, currentDayFormate) {
   }
 
   return {
-    children: "",
+    children: <DefaultBox/>,
     props: {
+      width:tdwidth,
+      height:tdheight,
       colSpan: 1,
       rowSpan: 1,
     },
@@ -738,17 +918,43 @@ function newTotalFragment(record, date) {
 
 function DefaultSchedulerLine(props) {
   let eventObj = props.eventObj;
-  const bStyle = newSchButtonStyle(eventObj.source);
+
+  // if(eventObj.no === 7802) {
+  //   console.log("GG",eventObj)
+  // }
+
+  let srRange = moment(eventObj["to"]).diff(eventObj["from"], "days")+1;
+
+  let widthLeng = globalWeith*srRange
+  if(eventObj.isSameDayOfNext) { 
+    //다음 들어오는 eventObj 의 from 과 동일한 날이면  globaclWeith 의 절반과 
+    widthLeng = widthLeng-((globalWeith/2)+3)
+  }
+
+  widthLeng = widthLeng+"px"
+
+  const bStyle = newSchButtonStyle(eventObj.source,1,widthLeng);
+
+  let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
+  if(eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
+    marginLeft = "6px"
+
+  }
 
   return (
-    // <div style={bStyle}>
-    //   <SchedulerBarButton colData={props.eventObj} mergeCount={props.mergeCount}/>
-    // </div>
-    <SchedulerBarButton
-      buttonStyle={bStyle}
-      colData={props.eventObj}
-      mergeCount={props.mergeCount}
-    />
+    <div style={{
+      marginLeft:marginLeft,
+      display:"inline-block",
+      verticalAlign: "middle",
+      // width:widthLeng,
+      // lineHeight:"32px",
+    }}>
+      <SchedulerBarButton
+        buttonStyle={bStyle}
+        colData={props.eventObj}
+        mergeCount={props.mergeCount}
+      />
+    </div>
   );
 }
 
@@ -1327,7 +1533,7 @@ function ChartTableView(props) {
     <Table
       className="your-table"
       rowKey="data-table"
-      scroll={{ y: 700 }}
+      scroll={{ y: 1000 }}
       columns={columns}
       dataSource={dataSource}
       bordered

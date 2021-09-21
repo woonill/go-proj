@@ -73,6 +73,8 @@ function buildEvent(allEvents, i) {
     source: colData,
     next: null,
     isTouch: false,
+    isSameDayOfNext:false,
+    isSameDayOfPre:false,
     isMove: isMove(colData)
   };
 
@@ -217,6 +219,22 @@ function countRangeRoom(eventObj, ctimeFormatStr) {
 }
 
 
+
+function buildMidNode(eventObj) {
+
+  let lastTo = eventObj.next.to;
+  let midTo = eventObj.to ;
+  if(moment(lastTo).isBefore(eventObj.to)) {
+    lastTo = eventObj.to;
+    midTo = eventObj.next.to
+  }
+
+  return  {
+    from: eventObj.next.from,
+    to: midTo,
+  }
+}
+
 /**
  * 
  * 기초 eventObj 를  중복구간과 마감구간을 재조합해서 리턴한다 
@@ -229,22 +247,26 @@ function rebuildEventObj(eventObj) {
   eventObj["subList"] = subList;
 
 
-  // if(eventObj.no === 8029) {
-  //   console.log("SourceObj",eventObj)
-  // }
-
   let subNodeSize = subList.length;
   if (subNodeSize === 1) {
 
+    let lastTo = eventObj.next.to;
+    let midTo = eventObj.to ;
+    if(moment(lastTo).isBefore(eventObj.to)) {
+      lastTo = eventObj.to;
+      midTo = eventObj.next.to
+    }
+
     let midEventObj = {
       from: eventObj.next.from,
-      to: eventObj.next.to,
+      to: midTo,
     }
+
 
     let lastEventObj = {
       no:eventObj.next.no,
-      from: eventObj.to,
-      to: eventObj.next.to,
+      from: midTo,
+      to: lastTo,
       name: eventObj.next.name,
       source: eventObj.next.source
     }
@@ -253,14 +275,30 @@ function rebuildEventObj(eventObj) {
     eventObj["lastNode"] = lastEventObj
 
 
-    eventObj.lastTo = eventObj.next.to
+    eventObj.lastTo = lastTo
 
   } else if (subNodeSize > 1) {
 
     //sub list 가 두개 이상일경우 중간가구간과 마지막 구간을 계산한다 
 
-    let _lastEventObj = subList[subNodeSize - 1] //마지막 eventobj
-    let _slastEventObj = subList[subNodeSize - 2] //마지막 두번째 eventObj
+    // let _lastEventObj = subList[subNodeSize - 1] //마지막 eventobj
+    // let _slastEventObj = subList[subNodeSize - 2] //마지막 두번째 eventObj
+
+    const colDataArraySort = (a, b) => {
+      const value1 = a["to"];
+      const value2 = b["to"];
+      return Date.parse(value2) - Date.parse(value1)
+    }
+
+    let copyStore = [].concat(subList)
+    copyStore.sort(colDataArraySort)
+
+    // console.log("CopyStore",copyStore)
+    let _lastEventObj = copyStore[0] //마지막 eventobj
+    let _slastEventObj = copyStore[1] //마지막 두번째 eventObj
+
+//    console.log("TheLast objectEvent",_lastEventObj)
+
 
     //중간구간 시작은 eventObj 의 다음시작붙어  끝나는 시간은 마지막 두번째껏에 끝나는 시간으로 잡는다 
     let midEventObj = {
@@ -280,7 +318,6 @@ function rebuildEventObj(eventObj) {
     eventObj["midNode"] = midEventObj
     eventObj["lastNode"] = lastEventObj
     eventObj.lastTo = lastEventObj.to;  //merge count 를 계산하기위해 모든 eventObj 에 실질쩍으로 끝나는 시간을 잡는다 
-
 
     // if(_lastEventObj.no === 8029) {
     //   console.log("Event",eventObj)
@@ -348,8 +385,11 @@ function toChartData(dataList) {
     colDataArray.sort(colDataArraySort)
 
     let eventObjList = []
+    
+    let prevEvent=null;
 
-    for (let i = 0; i < colDataArray.length; i++) {
+    const loopLen = colDataArray.length;
+    for (let i = 0; i < loopLen; i++) {
       //root eventObj tree  구조형성 , 여기에서 만들어지는건 상호중복되지 않는것이다 
       let eventObjWrapper = buildEvent(colDataArray, i);
       i = eventObjWrapper.index; //중복된구간을 읽은것많금 뛰어넘는다 
@@ -357,10 +397,24 @@ function toChartData(dataList) {
       let eventObj = eventObjWrapper.event;
       eventObj = rebuildEventObj(eventObj)
 
+      if(prevEvent !== null && prevEvent.no === 7802) {
+          console.log("State",prevEvent.to,eventObj,prevEvent.to === eventObj.from)
+      }
 
+      if(prevEvent != null)  {
+
+        if(prevEvent.to === eventObj.from) {
+          prevEvent.isSameDayOfNext= true
+          eventObj.isSameDayOfPre = true;
+        }
+      }
 
 
       eventObjList.push(eventObj)
+
+      //전 이벤트에 부여한다 다음 event 에서 둘이 붙어 있는지를 검증할때 사용 
+      prevEvent = eventObj;
+
     }
 
     let roomNo = null;
