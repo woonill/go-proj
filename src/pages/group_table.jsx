@@ -256,9 +256,6 @@ function newSchButtonFontColor(sourceObj) {
 }
 
 function newSchButtonBGColorOfRGB(sourceObj) {
-  // if(sourceObj.name === "조수진") {
-  //   console.log("ZhaoShuZhen",sourceObj)
-  // }
 
   let colorValue = "40,40,40";
   if (ReservStateChecker.isExitRoom(sourceObj)) {
@@ -266,7 +263,6 @@ function newSchButtonBGColorOfRGB(sourceObj) {
   } else if (ReservStateChecker.isDrop(sourceObj)) {
     return "255,137,128";
   } else if (ReservStateChecker.isCancel(sourceObj)) {
-    //    return "125,125,125";
     return "230,230,230";
   } else if (
     ReservStateChecker.isPreInDespi(sourceObj) ||
@@ -344,14 +340,6 @@ function OverrideComp(props) {
       }}
       >
       <Popover content={props.content} title="중첩구간" trigger="click">
-        {/* <span
-          style={{        overflow: "hidden",
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis",}}
-        >
-                    {props.title}
-
-          </span> */}
           {props.title}
       </Popover>
     </div>
@@ -365,19 +353,10 @@ function ComplexChartBar({eventObj, mergeCount}) {
   let midNode = eventObj["midNode"];
   let lastNode = eventObj["lastNode"];
 
-  // let sfirstTime = eventObj["from"];
-  // let seFirstTime = midNode["from"];
-
 
   let fRange = moment(midNode["from"]).diff(eventObj["from"], "days")+1;
-  //처음시작점과 끝나는 점에서의 최종 날짜 간격
-  // let srRange = moment(eventObj.source.toDate).diff(seFirstTime, "days");
-  // let trRange = moment(lastNode.to).diff(eventObj.to,"days")
-
   let srRange = moment(midNode["to"]).diff(midNode["from"], "days");
   let trRange = moment(lastNode.to).diff(lastNode["from"],"days")
-
-  // console.log("Merge count",fRange,srRange,trRange)
 
 
   let fWidth = ((globalWeith*fRange))+"px"
@@ -394,7 +373,6 @@ function ComplexChartBar({eventObj, mergeCount}) {
   let overrideTimeline = OverrideTimline(overTimeArray);
   let overrideTimeTitle = newOverrideRangeTitle(overTimeArray, srRange);
 
-//  console.log("Merge pixel",fWidth,ssMerge,trLen)
 
   let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
   if(eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
@@ -411,14 +389,12 @@ function ComplexChartBar({eventObj, mergeCount}) {
         verticalAlign: "middle",
         width:fullWidth,
         height:{DEFAUL_BAR_HEIGHT},
-        // background: "skyblue",
       }}
     >
       <div style={{
           display:"inline-block",
           verticalAlign: "middle",
           height:{DEFAUL_BAR_HEIGHT},
-          // backgroundColor:"black"
       }}>
         <SchedulerBarButton
           buttonStyle={newSchButtonStyle(eventObj.source,fWidth)}
@@ -437,7 +413,6 @@ function ComplexChartBar({eventObj, mergeCount}) {
           display:"inline-block",
           verticalAlign: "middle",
           height:{DEFAUL_BAR_HEIGHT},
-      //     backgroundColor:"black"
       }}>
         <SchedulerBarButton 
           colData={lastNode} 
@@ -445,100 +420,10 @@ function ComplexChartBar({eventObj, mergeCount}) {
           mergeCount={trLen}
         />
       </div>
-
-      {/* <div style={newSchButtonStyle(lastNode.source,1,trLen)}>
-      </div> */}
     </div>
   );
 }
 
-
-
-// //중첩구간에대한 View 생성함수
-// function gridChartCompRender(eventObj, mergeCount) {
-//   //처음 바차트
-//   let midNode = eventObj["midNode"];
-//   let lastNode = eventObj["lastNode"];
-
-//   let sfirstTime = eventObj["from"];
-//   let endLastTime = midNode["from"];
-
-//   let fRange = moment(endLastTime).diff(sfirstTime, "days") + 1;
-
-//   //중첩구간 중첩구간
-//   // (처음시간에 toDate - 두번째시간에 fromDate)
-//   let seFirstTime = midNode["from"];
-//   let seLastTime = midNode["to"];
-
-//   //처음시작점과 끝나는 점에서의 최종 날짜 간격
-//   let srRange = moment(seLastTime).diff(seFirstTime, "days");
-
-//   let fWidth = mergeCount * (fRange / mergeCount);
-//   let ssMerge = mergeCount * (srRange / mergeCount);
-
-//   //앞에두개에서 나믄 부분이 세번째 바에길이
-//   let trLen = mergeCount - (fWidth + ssMerge);
-
-//   let overTimeArray = [];
-
-//   overTimeArray.push(eventObj);
-
-//   eventObj.subList.forEach((e) => {
-//     overTimeArray.push(e);
-//   });
-
-//   let overrideTimeline = OverrideTimline(overTimeArray);
-//   let overrideTimeTitle = newOverrideRangeTitle(overTimeArray, srRange);
-
-//   // if(8029 === eventObj.no) {
-//   //   console.log("EventObj",eventObj)
-//   // }
-
-//   return (
-//     <div
-//       style={{
-//         display: "flex",
-//         flex: 1,
-//         flexDirection: "row",
-//       }}
-//     >
-//       <div style={newSchButtonStyle(eventObj.source, fWidth)}>
-//         <SchedulerBarButton
-//           buttonStyle={{ width: "100%", height: "100%", cursor: "pointer" }}
-//           mergeCount={fWidth}
-//           colData={eventObj}
-//         />
-//       </div>
-//       <OverrideComp
-//         width={ssMerge}
-//         title={overrideTimeTitle}
-//         content={overrideTimeline}
-//       />
-//       {/* <div style={{ flex: ssMerge,textAlign:"center"}}>
-//         <Popover content={overrideTimeline} title="중첩구간">
-//           <div
-//             style={{
-//               width: "100%",
-//               height: "100%",
-//               backgroundColor: "#c6a38b",
-//               borderStyle: "solid",
-//               borderRadius: "4px",
-//               color: "white",
-//               display:"flex",
-//               alignItems:"center",
-//               justifyContent:"center",
-//             }}
-//           >
-//             <span style={{textAlign:"center"}}>{overrideTimeTitle}</span>
-//           </div>
-//         </Popover>
-//       </div> */}
-//       <div style={newSchButtonStyle(lastNode.source, trLen)}>
-//         <SchedulerBarButton mergeCount={1} colData={lastNode} />
-//       </div>
-//     </div>
-//   );
-// }
 
 const MouseRightMenuFunc = (function () {
   const _Right_Popup_fArray = [
@@ -660,7 +545,7 @@ const MouseRightMenuFunc = (function () {
     s: ["7", "8"],
     t: ["11", "12", "10"],
   };
-  //  let tMouseArray = { f: ["1", "5"], s: ["7", "8"], t: ["10"] };
+
   let tMouseArray = { f: ["1", "5"], s: ["7", "8"], t: ["10"] };
 
   const filterFunc = (tList) => {
@@ -706,7 +591,6 @@ const MouseRightMenuFunc = (function () {
       return sComp;
     }
 
-    //    console.log("source",source)
     return tComp;
   };
 })();
@@ -808,23 +692,22 @@ const tdheight ="20px";
 const globalWeith="39"
 
 
-function DefaultBox(props) {
+// function DefaultBox(props) {
 
-  const ref = useRef(null);
-  useEffect(()=>{
+//   const ref = useRef(null);
+//   useEffect(()=>{
+//     if(ref.current !== null) {
+//       console.log("Ref",ref.current.offsetWidth)
+//     }
+//   },[ref])
 
-    if(ref.current !== null) {
-      console.log("Ref",ref.current.offsetWidth)
-    }
-  },[ref])
+//   return(
+//     <div 
+//    // style={{backgroundColor:"red",height:"100%",width:"100%"}}
+//      ref={ref}></div>
 
-  return(
-    <div 
-   // style={{backgroundColor:"red",height:"100%",width:"100%"}}
-     ref={ref}></div>
-
-  ) 
-}
+//   ) 
+// }
 
 function tableColumnRender(record, currentDayFormate) {
   let eventObjectList = record["eventObjList"];
@@ -894,7 +777,7 @@ function tableColumnRender(record, currentDayFormate) {
   }
 
   return {
-    children: <DefaultBox/>,
+    children: "",
     props: {
       width:tdwidth,
       height:tdheight,
@@ -924,15 +807,8 @@ function newTotalFragment(record, date) {
           borderRadius: "4px",
           borderWidth: "1px",
           color: "black",
-          // marginLeft:"1px",
-          // marginRight:"1px",
-          // top:"-4px",
-          // left:"4px",
-          // width:"30px",
-          // height:"30px",
         }}
       >
-        {/* <span style={{ textAlign: "center" }}>{dataOfMonth}</span> */}
         {dataOfMonth}
       </div>
     );
@@ -942,10 +818,7 @@ function newTotalFragment(record, date) {
 function DefaultSchedulerLine(props) {
   let eventObj = props.eventObj;
 
-  // if(eventObj.no === 7802) {
-  //   console.log("GG",eventObj)
-  // }
-
+ 
   let srRange = moment(eventObj["to"]).diff(eventObj["from"], "days")+1;
 
   let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
@@ -984,8 +857,6 @@ function DefaultSchedulerLine(props) {
       verticalAlign: "middle",
       width:"100%",
       height:"32px",
-      // lineHeight:"32px",
-    //  backgroundColor:"red",
     }}>
       <SchedulerBarButton
         buttonStyle={bStyle}
@@ -1177,8 +1048,6 @@ function newColumnHeader(stObj, fallback) {
                 <span style={{width:"80px"}}>
                   {countTextArray[0]}:{countTextArray[1]}
                 </span>
-
-              {/* <div style={{ display: "flex", flex: 1 }}> */}
             </div>
           );
         }
@@ -1200,8 +1069,6 @@ function newColumnHeader(stObj, fallback) {
           return (
             <div
               style={{
-                // display: "flex",
-                // flex: 1,
                 width:"180px",
                 display: "inline-block",
                 fontSize: "15px",
@@ -1256,7 +1123,6 @@ function newColumnHeader(stObj, fallback) {
         endIndex = eDate.date();
       }
 
-      // const monthTag = <div style={{height:"100%",textAlign:"center",display:"flex",flex:1}}>{key + "-" + mkey}</div>
       const monthTag = (
         <div style={{ textAlign: "center",               
          overflow: "hidden",
@@ -1269,7 +1135,6 @@ function newColumnHeader(stObj, fallback) {
         key: mvalue,
         with: 100,
         height: 16,
-        // className:'column-header-white',
         children: newColumnRender(mvalue, startIndex, endIndex),
       };
       columns.push(el);
@@ -1307,16 +1172,12 @@ function buildTableDataList(roomList, eventObjList) {
 
     const key = room.gradeName + "-" + room.name;
     const columnName = room.gradeName + "," + room.name;
-    // const eventList =
-    //   eventObjWarraper == null ? [] : eventObjWarraper.eventObjList;
     const eventList =
       eventObjWarraper == null ? [] : eventObjWarraper.eventObjList;
 
     eList.push({
       key: key,
       name: columnName,
-      // fixed:true,
-      // width:"180px",
       roomLevel: room.level,
       eventObjList: eventList,
     });
@@ -1325,7 +1186,6 @@ function buildTableDataList(roomList, eventObjList) {
 }
 
 const roomLevelGroupBy = function (roomList) {
-  //  console.log("RoomList",roomList)
 
   let obj = {};
   for (let i = 0; i < roomList.length; i++) {
@@ -1364,10 +1224,6 @@ function buildReportData(dataList, roomList, stObj, query) {
   //  console.log("QueryObjc", query);
 
   if (query !== undefined && query !== null && query.type === "range") {
-
-    // let from = moment(query.condition["from"]);
-    // let to = moment(query.condition["to"]);
-    //Logic for getting rest of the dates between two dates("FromDate" to "EndDate")
 
     return (data) => {
 

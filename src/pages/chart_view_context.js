@@ -397,9 +397,9 @@ function toChartData(dataList) {
       let eventObj = eventObjWrapper.event;
       eventObj = rebuildEventObj(eventObj)
 
-      if(prevEvent !== null && prevEvent.no === 7802) {
-          console.log("State",prevEvent.to,eventObj,prevEvent.to === eventObj.from)
-      }
+      // if(prevEvent !== null && prevEvent.no === 7802) {
+      //     console.log("State",prevEvent.to,eventObj,prevEvent.to === eventObj.from)
+      // }
 
       if(prevEvent != null)  {
 
