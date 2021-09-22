@@ -89,7 +89,7 @@ function RangeTimelineText(props) {
 }
 
 //height fix for bug 2021.9.13
-function newSchButtonStyle(source, merge = 1,weidth,height="32px") {
+function newSchButtonStyle(source,weidth) {
   let bgColor = newSchButtonBGColorOfRGB(source);
   let fontColor = newSchButtonFontColor(source);
 
@@ -99,6 +99,9 @@ function newSchButtonStyle(source, merge = 1,weidth,height="32px") {
     ReservStateChecker.isPreInFull(source) ||
     ReservStateChecker.isCheckinFull(source)
   ) {
+
+    const heightProps = newCharBarHeight(true)
+
     return {
 
       borderStyle: "solid",
@@ -110,8 +113,8 @@ function newSchButtonStyle(source, merge = 1,weidth,height="32px") {
       color: `rgb(${fontColor})`,
       textAlign: "center",
       width:weidth,
-      height:"32px",
-      lineHeight:height,
+      height:heightProps.height,
+      lineHeight:heightProps.lingHeight,
   
       // backgroundColor:"red",
       // width:"100%",
@@ -127,6 +130,8 @@ function newSchButtonStyle(source, merge = 1,weidth,height="32px") {
 
     };
   }
+  const heightProps = newCharBarHeight()
+
 
   return {
     cursor: "pointer",
@@ -137,8 +142,8 @@ function newSchButtonStyle(source, merge = 1,weidth,height="32px") {
     textAlign: "center",
     color: `rgb(${fontColor})`,
     width:weidth,
-    height:"32px",
-    lineHeight:"32px",
+    height:heightProps.height,
+    lineHeight:heightProps.lineHeight,
 
     // display:"inline-block",
     // verticalAlign:"middle",
@@ -297,54 +302,62 @@ function newStatustext(sourceObj) {
   return "퇴실";
 }
 
+
+const DEFAUL_BAR_HEIGHT = "32px";
+
+const newCharBarHeight = (withBorder=false) => {
+
+  const DEFAUL_BAR_LINE_HEIGHT ="27px"
+
+  if(withBorder) {
+
+    return {
+      height:"32px",
+      lineHeight:DEFAUL_BAR_LINE_HEIGHT
+    }  
+  }
+
+  return {
+    height:DEFAUL_BAR_HEIGHT,
+    lineHeight:DEFAUL_BAR_HEIGHT,
+  }
+}
+
 function OverrideComp(props) {
   return (
     <div 
       style={{
-        height: "100%",
-        lineHeight:props.height, 
         width: props.width,
-        display:"inline-block",
-        verticalAlign:"middle", 
         textAlign: "center", 
         cursor: "pointer" ,
 
-        backgroundColor: "#c6a38b",
-//        backgroundColor: "#c6a38b",
+        height: props.height,
+        lineHeight:props.lineHeight, 
+        display:"inline-block",
+        verticalAlign:"middle", 
 
+
+        backgroundColor: "#c6a38b",
         borderStyle: "solid",
         borderRadius: "4px",
-        color: "white",
-        
+        color: "white",        
       }}
       >
       <Popover content={props.content} title="중첩구간" trigger="click">
-        {/* <div
-          style={{
-            width: "100%",
-            height: props.height,
-            backgroundColor: "#c6a38b",
-//            backgroundColor:"red",
-            borderStyle: "solid",
-            borderRadius: "4px",
-            color: "white",
-            display:"inline-block",
-            verticalAlign:"middle", 
-            textAlign:"center",
+        {/* <span
+          style={{        overflow: "hidden",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",}}
+        >
+                    {props.title}
 
-            // display: "flex",
-            // alignItems: "center",
-            // justifyContent: "center",
-          }}
-        > */}
+          </span> */}
           {props.title}
-        {/* </div> */}
       </Popover>
     </div>
   );
 }
 
-const DEFAUL_BAR_HEIGHT = "27px";
 
 //중첩구간에대한 View 생성함수
 function ComplexChartBar({eventObj, mergeCount}) {
@@ -367,9 +380,9 @@ function ComplexChartBar({eventObj, mergeCount}) {
   // console.log("Merge count",fRange,srRange,trRange)
 
 
-  let fWidth = ((globalWeith*fRange)-2)+"px"
-  let ssMerge = ((globalWeith*srRange)-2)+"px"
-  let trLen = ((globalWeith*trRange))+"px"
+  let fWidth = ((globalWeith*fRange))+"px"
+  let ssMerge = ((globalWeith*srRange))+"px"
+  let trLen = ((globalWeith*trRange)+6)+"px"
 
   let overTimeArray = [];
 
@@ -383,10 +396,12 @@ function ComplexChartBar({eventObj, mergeCount}) {
 
 //  console.log("Merge pixel",fWidth,ssMerge,trLen)
 
-  let marginLeft = "0px" //정상상태 왼쪽으로 이동 
-  // if(!eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
-  //   marginLeft = "-5px"
-  // }
+  let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
+  if(eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
+    marginLeft = "0px"
+  }
+
+  const fullWidth = ((globalWeith*mergeCount)+11)+"px"
 
   return (
     <div
@@ -394,9 +409,9 @@ function ComplexChartBar({eventObj, mergeCount}) {
         marginLeft:marginLeft,
         display:"inline-block",
         verticalAlign: "middle",
-        width:"100%",
+        width:fullWidth,
         height:{DEFAUL_BAR_HEIGHT},
-//        background: "skyblue",
+        // background: "skyblue",
       }}
     >
       <div style={{
@@ -406,13 +421,14 @@ function ComplexChartBar({eventObj, mergeCount}) {
           // backgroundColor:"black"
       }}>
         <SchedulerBarButton
-          buttonStyle={newSchButtonStyle(eventObj.source,1, fWidth,DEFAUL_BAR_HEIGHT)}
+          buttonStyle={newSchButtonStyle(eventObj.source,fWidth)}
           mergeCount={fWidth}
           colData={eventObj}
         />
       </div>
        <OverrideComp
         height={DEFAUL_BAR_HEIGHT}
+        lineHeight={DEFAUL_BAR_HEIGHT}
         width={ssMerge}
         title={overrideTimeTitle}
         content={overrideTimeline}
@@ -421,11 +437,11 @@ function ComplexChartBar({eventObj, mergeCount}) {
           display:"inline-block",
           verticalAlign: "middle",
           height:{DEFAUL_BAR_HEIGHT},
-//          backgroundColor:"black"
+      //     backgroundColor:"black"
       }}>
         <SchedulerBarButton 
           colData={lastNode} 
-          buttonStyle={newSchButtonStyle(lastNode.source,1,trLen,DEFAUL_BAR_HEIGHT)}
+          buttonStyle={newSchButtonStyle(lastNode.source,trLen)}
           mergeCount={trLen}
         />
       </div>
@@ -932,30 +948,44 @@ function DefaultSchedulerLine(props) {
 
   let srRange = moment(eventObj["to"]).diff(eventObj["from"], "days")+1;
 
+  let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
   let widthLeng = globalWeith*srRange
+
+  let haveNextOne = false;
   if(eventObj.isSameDayOfNext) { 
     //다음 들어오는 eventObj 의 from 과 동일한 날이면  globaclWeith 의 절반과 
-    widthLeng = widthLeng-((globalWeith/2)+3)
+    widthLeng = widthLeng-((globalWeith/2))
+    haveNextOne = true;
   }
+
+
+  if(eventObj.isSameDayOfPre) {
+    marginLeft = "12px" //정상상태 왼쪽으로 이동 
+    widthLeng = widthLeng-14
+    if(haveNextOne) {
+      widthLeng = widthLeng-1
+    }
+  }
+  
+  
 
   widthLeng = widthLeng+"px"
 
-  const bStyle = newSchButtonStyle(eventObj.source,1,widthLeng,DEFAUL_BAR_HEIGHT);
 
-  let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
-  if(eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
-    marginLeft = "6px"
 
-  }
+  const bStyle = newSchButtonStyle(eventObj.source,widthLeng,DEFAUL_BAR_HEIGHT);
+
+  
 
   return (
     <div style={{
       marginLeft:marginLeft,
       display:"inline-block",
       verticalAlign: "middle",
-//      height:"32px",
-      lineHeight:"32px",
-//      backgroundColor:"red",
+      width:"100%",
+      height:"32px",
+      // lineHeight:"32px",
+    //  backgroundColor:"red",
     }}>
       <SchedulerBarButton
         buttonStyle={bStyle}
