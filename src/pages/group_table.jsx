@@ -807,6 +807,17 @@ function newTotalFragment(record, date) {
           borderRadius: "4px",
           borderWidth: "1px",
           color: "black",
+
+          // backgroundColor: "black",
+          fontSize:"16px",
+          marginLeft:"-5px",
+          display:"inline-block",
+          verticalAlign:"middle",
+          width:"34px",
+          height:"34px",
+          lineHeight:"28px",
+          position:"absolute",
+          top:"2px",
         }}
       >
         {dataOfMonth}
