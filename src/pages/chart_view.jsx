@@ -386,7 +386,7 @@ function ReportTextInfo(props) {
 //    console.log("update now",robj)
 
     return (
-      <span>
+      <span style={{padding:"10px",height:"100%"}}>
         최소 예약 가능 객실수 {
           robj.map((e,i)=>{
             let txt =  "";
@@ -727,7 +727,7 @@ export default function ChartView(props) {
       })
     }
     else if(e.type ==="TotalDataList") {
-      console.log("TotalDataUpdated",e)
+//      console.log("TotalDataUpdated",e)
       // updateTotalReport(e.dataList)
       sDispatch({
         type:"TotalDataList",

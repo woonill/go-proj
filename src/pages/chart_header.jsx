@@ -1,18 +1,9 @@
-import React, { useState, useEffect, useContext,useReducer } from "react";
+import React, { useState, useEffect, } from "react";
 import { Button, DatePicker,Select, Input,} from "antd";
 
-// import {
-//   ReservStateChecker,
-//   // rangeOfDates,
-//   // isValidSourceCountReport,
-// } from "./chart_view_context";
-// import { ServerEventContext } from "../server_event_context.js";
-// import { ActionButtonGroupView } from "./chart_view_modal";
 
 import moment from "moment";
 import { SearchOutlined } from "@ant-design/icons";
-//import { Modal } from "antd";
-//import { v4 as uuidv4 } from "uuid";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -179,7 +170,7 @@ function HeaderView(props) {
 
   function updateVal(c) {
     if (selectedValue === "0") {
-      console.log("Update DateRange",c)
+      // console.log("Update DateRange",c)
       dateRangeVals = c
     } 
     else if (selectedValue === "4") {
@@ -258,6 +249,7 @@ function HeaderView(props) {
           style={{
             marginRight: 10,
             justifyContent: "center",
+            padding:"3px",
             height: "100%",
           }}
         >
