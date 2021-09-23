@@ -1049,7 +1049,7 @@ function newColumnHeader(stObj, fallback) {
               style={{
                 // display: "flex",
                 // flex: 1,
-                width:"180px",
+                width:"200px",
                 fontSize: "15px",
                 display: "inline-block"
                 // backgroundColor:"black",
@@ -1363,7 +1363,7 @@ function ChartTableView(props) {
   let chartData = toChartData(props.dataList);
   const query = props.query;
 
-//  console.log("query",query)
+// console.log("query",query)
 
   const [dataSource, chartUpdater] = useState([]);
 
@@ -1391,12 +1391,10 @@ function ChartTableView(props) {
       const resList = buildTableDataList(newRoomList, chartData.list);
       let data = reportColumnFunc(resList);
       chartUpdater(data)
-//      chartUpdater(resList);
     } else {
       const resList = buildTableDataList(roomList, chartData.list);
       let data = reportColumnFunc(resList);
       chartUpdater(data)
-//      chartUpdater(resList);
     }
   });
 
@@ -1411,24 +1409,31 @@ function ChartTableView(props) {
     let data = reportColumnFunc(co);
     chartUpdater(data)
 
+
     if (query !== undefined 
-          && query !== null 
-          && query.type === "range"
-          ) { 
-          
-    // console.log("update table 2")
+      && query !== null 
+      && query.type === "range"
+      ) { 
+      
+//      console.log("update table 2",query)
 
+      const rList = data.filter((re)=>{
+        return re.rtype !== undefined && re.rtype === "room"
+      })
 
-      return () => {
-        const rList = data.filter((re)=>{
-          return re.rtype !== undefined && re.rtype === "room"
-        })
-        props.dispach({
-          type:"TotalDataList",
-          dataList:rList
-        })
-      }
+      console.log("update table 2-1")
+
+      props.dispach({
+        type:"TotalDataList",
+        dataList:rList
+      })
     }
+
+
+
+    //   return () => {
+
+    // }
   },[props.dataList])
 
 
