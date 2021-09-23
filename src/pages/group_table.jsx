@@ -1,4 +1,6 @@
-import React, { useState, useContext, useEffect, useRef} from "react";
+import React, { useState, useContext, useEffect, 
+//  useRef
+} from "react";
 import { Table, Modal, Popover, Select } from "antd";
 
 //import styles  from './ChartView.module.scss'
@@ -692,23 +694,6 @@ const tdheight ="20px";
 const globalWeith="39"
 
 
-// function DefaultBox(props) {
-
-//   const ref = useRef(null);
-//   useEffect(()=>{
-//     if(ref.current !== null) {
-//       console.log("Ref",ref.current.offsetWidth)
-//     }
-//   },[ref])
-
-//   return(
-//     <div 
-//    // style={{backgroundColor:"red",height:"100%",width:"100%"}}
-//      ref={ref}></div>
-
-//   ) 
-// }
-
 function tableColumnRender(record, currentDayFormate) {
   let eventObjectList = record["eventObjList"];
 
@@ -982,6 +967,7 @@ function newColumnHeader(stObj, fallback) {
   const sDate = stObj.sDate;
   const eDate = stObj.eDate;
 
+
   let dateStart = sDate.clone();
   let dateEnd = eDate.clone();
 
@@ -1012,9 +998,11 @@ function newColumnHeader(stObj, fallback) {
   //css 로 공제하기 힘들어 두날짜로 간격이 20일 이상이면 
   //pixel을 따로 처리한다 
   let widthLeng = "200px";
-  if(eDate.diff(sDate, "days") < 20 ) {
-    widthLeng = "150px";
-  }
+  //취소 필터링시 데이터가적으면 싸이즈 적어지면서 왼쪽으로 밀린다 
+  // if(eDate.diff(sDate, "days") < 20 ) {
+  //   widthLeng = "150px";
+  // }
+
 
   let columns = [
     {
@@ -1121,18 +1109,20 @@ function newColumnHeader(stObj, fallback) {
       const mkey = monthObj.mKey;
       const mvalue = monthObj.mObj;
 
+
+
       let startIndex = 1;
       let endIndex = moment(mvalue).daysInMonth();
 
-      if (mvalue === sDateStr) {
+      if (mvalue === sDateStr) { 
         startIndex = sDate.date();
         endIndex = sDate.daysInMonth();
       }
 
       if (mvalue === eDateStr) {
-        startIndex = 1;
         endIndex = eDate.date();
       }
+
 
       const monthTag = (
         <div style={{ textAlign: "center",               
@@ -1321,10 +1311,10 @@ function newSearchDateRange(stObj,query) {
 
   let sDate = moment(stObj.sDate);
   //월 header 부분에서 10월1까지만 오면 다음라인으로 바꾸어지는 현상을 막기위해서
-  let qsDate = moment(query.param.from)
-  if(qsDate.isBefore(sDate)){
-    sDate = qsDate;
-  }
+  // let qsDate = moment(query.param.from)
+  // if(qsDate.isBefore(sDate)){
+  //   sDate = qsDate;
+  // }
   if (eDate.day() === 1) {
     eDate = eDate.add(1, "day");
   }
@@ -1421,7 +1411,7 @@ function ChartTableView(props) {
         return re.rtype !== undefined && re.rtype === "room"
       })
 
-      console.log("update table 2-1")
+      // console.log("update table 2-1")
 
       props.dispach({
         type:"TotalDataList",
