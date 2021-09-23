@@ -312,6 +312,12 @@ function newEventDispach(setChartViewState, updateTableDataList,allReservationFu
 }
 
 
+function isSame(obj,field,value) {
+
+  return obj !== undefined 
+      && obj[field] === value 
+}
+
 function ListView(props) {
 
   const dataList = props.dataList;
@@ -342,8 +348,10 @@ function ReportTextInfo(props) {
   useEffect(() => {
     if (
       (props.dataList.length > 0)
-        && (props.query !== undefined && props.query.type === "range")
-      ) {
+        && isSame(props.query,"type","range"))
+      //   && (props.query !== undefined && props.query.type === "range")
+      // )
+       {
 
 //      console.log("UpdateReporTextInfo now")
 
@@ -358,7 +366,8 @@ function ReportTextInfo(props) {
         const array = Object.keys(colObj)
         let minVal = sourceObj.roomSize;
         array.forEach((ckey) => {
-          const colVal = colObj[ckey]
+          let colVal = colObj[ckey]
+          colVal = sourceObj.roomSize - colVal
           if(colVal < minVal) {
             minVal = colVal;
           }
@@ -718,7 +727,7 @@ export default function ChartView(props) {
       })
     }
     else if(e.type ==="TotalDataList") {
-      // console.log("TotalDataUpdated",e)
+      console.log("TotalDataUpdated",e)
       // updateTotalReport(e.dataList)
       sDispatch({
         type:"TotalDataList",

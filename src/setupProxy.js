@@ -5,7 +5,7 @@ const HOST_SERVER = "http://testg.tosky.co.kr:18080"
 
 
 function resetProxyHeader(proxyReq) {
-  proxyReq.setHeader('cookie', 'JSESSIONID=6B7F87B297293F53F82C1FBD4D4D2B28; shared_session_id=6B7F87B297293F53F82C1FBD4D4D2B28');
+  proxyReq.setHeader('cookie', 'JSESSIONID=50BF95F1904E0AB1CFBC99EC7B7C4A7D; shared_session_id=50BF95F1904E0AB1CFBC99EC7B7C4A7D');
   proxyReq.setHeader('Access-Control-Allow-Origin', 'true');
 
 }
