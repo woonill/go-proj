@@ -363,7 +363,7 @@ function ComplexChartBar({eventObj, mergeCount}) {
 
   let fWidth = ((globalWeith*fRange))+"px"
   let ssMerge = ((globalWeith*srRange))+"px"
-  let trLen = ((globalWeith*trRange)+6)+"px"
+  let trLen = ((globalWeith*trRange)+8)+"px"
 
   let overTimeArray = [];
 
@@ -959,10 +959,53 @@ function calcuRangeDays(currentObj) {
   return lTime.diff(fTime, "days") + 1;
 }
 
-function newColumnHeader(stObj, fallback) {
-  // const sDate = moment(stObj.sDate)//.subtract(1, "days");
-  // //월 header 부분에서 10월1까지만 오면 다음라인으로 바꾸어지는 현상을 막기위해서
-  // const eDate = moment(stObj.eDate).add(1,"day");
+
+function isRangeSearch(query) {
+  return query !== undefined && query !== null && query.type === "range"
+}
+
+
+const reportDataRender = (text) => {
+
+  //    console.log(text)
+      //대로는 신생아 text 가 들어옴 
+      if(text.indexOf(",") < 1) {
+        return text;
+      }
+  
+      let roomSplit = text.split(",");
+      let countTextArray = roomSplit[1].split(":");
+  
+      let lastText = countTextArray[1];
+      if(lastText === undefined) {
+        lastText = ""
+      }else{
+        lastText = ":"+lastText;
+      }
+  
+      return (
+        <div
+          style={{
+            width:"200px",
+            fontSize: "15px",
+            display: "inline-block"
+            // backgroundColor:"black",
+          }}
+        >
+            <div style={{width:"90px",display: "inline-block"}}>{roomSplit[0]}</div>
+            <span style={{width:"80px"}}>
+              {countTextArray[0]}{lastText}
+            </span>
+        </div>
+      );
+  
+  }
+
+function newColumnHeader(stObj,query, fallback) {
+
+  const searchState = isRangeSearch(query);
+
+//  console.log("Query",query,searchState)
 
   const sDate = stObj.sDate;
   const eDate = stObj.eDate;
@@ -1003,7 +1046,6 @@ function newColumnHeader(stObj, fallback) {
   //   widthLeng = "150px";
   // }
 
-
   let columns = [
     {
       dataIndex: "name",
@@ -1029,26 +1071,14 @@ function newColumnHeader(stObj, fallback) {
         );
       },
       render: function (text, record, index) {
+
+        if( (!searchState) && index === 0) {
+//          console.log(!searchState);
+          return reportDataRender(text)
+        }
+
         if (index === 1 || index === 2) {
-          let roomSplit = text.split(",");
-          let countTextArray = roomSplit[1].split(":");
-          return (
-            <div
-              style={{
-                // display: "flex",
-                // flex: 1,
-                width:"200px",
-                fontSize: "15px",
-                display: "inline-block"
-                // backgroundColor:"black",
-              }}
-            >
-                <div style={{width:"90px",display: "inline-block"}}>{roomSplit[0]}</div>
-                <span style={{width:"80px"}}>
-                  {countTextArray[0]}:{countTextArray[1]}
-                </span>
-            </div>
-          );
+          return reportDataRender(text)
         }
 
         if (index > 2) {
@@ -1068,9 +1098,12 @@ function newColumnHeader(stObj, fallback) {
           return (
             <div
               style={{
-                width:"180px",
+                width:"200px",
                 display: "inline-block",
                 fontSize: "15px",
+                // height:"20px",
+                // lineHeight:"40px",
+                // position:"absolute"
               }}
             >
               <div style={{width:"90px",display: "inline-block"}}>{roomSplit[0]}</div>
@@ -1090,7 +1123,6 @@ function newColumnHeader(stObj, fallback) {
             </div>
           );
         }
-
         return text;
       },
     },
@@ -1374,7 +1406,7 @@ function ChartTableView(props) {
   // },[props.dataList.length])
 
 
-  let columns = newColumnHeader(stObj, (type) => {
+  let columns = newColumnHeader(stObj,query, (type) => {
     if (type === "1") {
       const newRoomList = [].concat(roomList);
       newRoomList.sort(roomNumberSortFunc);
