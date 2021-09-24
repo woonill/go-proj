@@ -91,7 +91,7 @@ function RangeTimelineText(props) {
 }
 
 //height fix for bug 2021.9.13
-function newSchButtonStyle(source,weidth) {
+function newSchButtonStyle(source,weidth,marginLeft=0) {
   let bgColor = newSchButtonBGColorOfRGB(source);
   let fontColor = newSchButtonFontColor(source);
 
@@ -105,7 +105,7 @@ function newSchButtonStyle(source,weidth) {
     const heightProps = newCharBarHeight(true)
 
     return {
-
+      marginLeft:marginLeft,
       borderStyle: "solid",
       borderWidth: "3px",
       borderRadius: "4px",
@@ -136,6 +136,7 @@ function newSchButtonStyle(source,weidth) {
 
 
   return {
+    marginLeft:marginLeft,
     cursor: "pointer",
     bodyStyle: "solid",
     borderRadius: "4px",
@@ -361,9 +362,16 @@ function ComplexChartBar({eventObj, mergeCount}) {
   let trRange = moment(lastNode.to).diff(lastNode["from"],"days")
 
 
-  let fWidth = ((globalWeith*fRange))+"px"
-  let ssMerge = ((globalWeith*srRange))+"px"
-  let trLen = ((globalWeith*trRange)+8)+"px"
+  // const totalDays = fRange+srRange+trRange;
+  let barLengOption = calculBarLenOption()
+
+  let prio = barLengOption.rightSpaceWidth/3;
+
+  let fWidth = ((globalWeith*fRange)-prio)+"px"
+  let ssMerge = ((globalWeith*srRange)-prio)+"px"
+  let trLen = ((globalWeith*trRange)-prio)+"px"
+
+
 
   let overTimeArray = [];
 
@@ -376,12 +384,12 @@ function ComplexChartBar({eventObj, mergeCount}) {
   let overrideTimeTitle = newOverrideRangeTitle(overTimeArray, srRange);
 
 
-  let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
-  if(eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
-    marginLeft = "0px"
-  }
-
-  const fullWidth = ((globalWeith*mergeCount)+11)+"px"
+  let marginLeft = barLengOption.leftMargin+"px" //정상상태 왼쪽으로 이동 
+//  let widthLeng = (globalWeith*mergeCount)-barLengOption.rightSpaceWidth
+  // if(eventObj.isSameDayOfPre) { //앞에 겹치는 부분이 있으면 정상값을 그대로 
+  //   marginLeft = "0px"
+  // }
+  //const fullWidth = widthLeng+"px"
 
   return (
     <div
@@ -389,7 +397,8 @@ function ComplexChartBar({eventObj, mergeCount}) {
         marginLeft:marginLeft,
         display:"inline-block",
         verticalAlign: "middle",
-        width:fullWidth,
+        width:"100%",
+        // backgroundColor:"black",
         height:{DEFAUL_BAR_HEIGHT},
       }}
     >
@@ -691,7 +700,7 @@ function SchedulerBarButton(props) {
 
 const tdwidth ="40px";
 const tdheight ="20px";
-const globalWeith="39"
+const globalWeith="40"
 
 
 function tableColumnRender(record, currentDayFormate) {
@@ -811,55 +820,66 @@ function newTotalFragment(record, date) {
   }
 }
 
+
+function calculBarLenOption() {
+  //antd table 이 기보넞ㄱ으로 padding을 8 로가지고가는 상태에서 +8 한거라고 바야함 
+  return  {
+    leftMargin:14,
+    rightSpaceWidth:38
+  }
+}
+
 function DefaultSchedulerLine(props) {
   let eventObj = props.eventObj;
 
  
   let srRange = moment(eventObj["to"]).diff(eventObj["from"], "days")+1;
 
-  let marginLeft = "-5px" //정상상태 왼쪽으로 이동 
-  let widthLeng = globalWeith*srRange
+  let barLengOption = calculBarLenOption()
+  let marginLeft = barLengOption.leftMargin+"px" //정상상태 왼쪽으로 이동 
+  let widthLeng = (globalWeith*srRange)
 
-  let haveNextOne = false;
-  if(eventObj.isSameDayOfNext) { 
+  //let haveNextOne = false;
+  // if(eventObj.isSameDayOfNext) { 
     //다음 들어오는 eventObj 의 from 과 동일한 날이면  globaclWeith 의 절반과 
-    widthLeng = widthLeng-((globalWeith/2))
-    haveNextOne = true;
-  }
+    // widthLeng = widthLeng+2
+//    haveNextOne = true;
+//  }
 
 
-  if(eventObj.isSameDayOfPre) {
-    marginLeft = "12px" //정상상태 왼쪽으로 이동 
-    widthLeng = widthLeng-14
-    if(haveNextOne) {
-      widthLeng = widthLeng-1
-    }
-  }
+  widthLeng = widthLeng - barLengOption.rightSpaceWidth
+
+  // if(eventObj.isSameDayOfPre) {
+  //   marginLeft = "12px" //정상상태 왼쪽으로 이동 
+  //   widthLeng = widthLeng-14
+  //   if(haveNextOne) {
+  //     widthLeng = widthLeng-1
+  //   }
+  // }
   
   
 
   widthLeng = widthLeng+"px"
 
-
-
-  const bStyle = newSchButtonStyle(eventObj.source,widthLeng,DEFAUL_BAR_HEIGHT);
-
-  
+//  const bStyle = newSchButtonStyle(eventObj.source,widthLeng,DEFAUL_BAR_HEIGHT,marginLeft);  
+  const bStyle = newSchButtonStyle(eventObj.source,widthLeng,marginLeft);
 
   return (
     <div style={{
-      marginLeft:marginLeft,
+      marginLeft:"-5px",
+//      marginLeft:marginLeft,
       display:"inline-block",
       verticalAlign: "middle",
       width:"100%",
       height:"32px",
+//      backgroundColor:"black",
     }}>
       <SchedulerBarButton
         buttonStyle={bStyle}
         colData={props.eventObj}
         mergeCount={props.mergeCount}
       />
-    </div>
+     </div>
   );
 }
 
