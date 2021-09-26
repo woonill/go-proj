@@ -12,8 +12,8 @@
 }
 
 
-$DEFAUL_BAR_HEIGHT : 26px;
-$DEFAUL_BAR_LINE_HEIGHT:26px;
+$DEFAUL_BAR_HEIGHT : 24x;
+$DEFAUL_BAR_LINE_HEIGHT:24px;
 $tdwidth:34;
 $tdheight:26;
 $globalWeith:34;
@@ -45,18 +45,18 @@ $globalWeith:34;
 
 @mixin fixText{
     overflow:hidden;
-    whiteSpace:nowrap;
-    textOverflow:ellipsis;
+    white-space:nowrap;
+    text-overflow:ellipsis;
 }
 
 
 .OverflowText {
-    width: "100%";
+    // width: "100%";
+    // height:"100%";
     text-align:center;
     overflow: hidden;
     white-space: nowrap;
-    text-overflow: ellipsis ;
-    height:"100%";
+    text-overflow: ellipsis;
     word-wrap:break-word
 
     // display:"inline-block",
@@ -118,7 +118,8 @@ $globalWeith:34;
     display:inline-block;
     vertical-align: middle;
     width:100%;
-    height:$DEFAUL_BAR_HEIGHT,
+    height:$DEFAUL_BAR_HEIGHT;
+    line-height: $DEFAUL_BAR_LINE_HEIGHT;
     // backgroundColor:"black",
 
 
