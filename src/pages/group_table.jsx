@@ -3,7 +3,7 @@ import React, { useState, useContext, useEffect,
 } from "react";
 import { Table, Modal, Popover, Select } from "antd";
 
-//import styles  from './ChartView.module.scss'
+import styles  from './ChartView.module.scss'
 
 import Moment from "moment";
 import { extendMoment } from "moment-range";
@@ -36,6 +36,17 @@ import { ServerEventContext } from "../server_event_context.js";
 const moment = extendMoment(Moment);
 const { Option } = Select;
 
+
+
+const DEFAUL_BAR_HEIGHT = styles.DefaultBarHeigt;
+const DEFAUL_BAR_LINE_HEIGHT = styles.DefaultBarLineHeight;
+const tdwidth = styles.tdwidth;
+const tdheight = styles.tdheight;
+const globalWeith=styles.globalWeith
+
+
+console.log("DefaultVals",tdwidth,tdheight,globalWeith,DEFAUL_BAR_HEIGHT,DEFAUL_BAR_LINE_HEIGHT)
+
 function RangeTimelineText(props) {
   let fontColor = props.color === undefined ? "black" : props.color;
   let rtext = props.name;
@@ -61,28 +72,9 @@ function RangeTimelineText(props) {
 
   return (
     <span
+      className={styles.OverflowText}
       style={{
-        // width:"100%",
-        //height:"32px",
-        textAlign: "center",
-        overflow: "hidden",
         color: fontColor,
-        whiteSpace: "nowrap",
-        textOverflow: "ellipsis",
-        height:"100%",
-
-       
-        // display:"inline-block",
-        // verticalAlign: "middle",
-        // lineHeight:"100%",
-        // backgroundColor :"red",
-  
-        
-        // display:"flex",
-        // flex:1,
-        // alignItems:"center",
-        // justifyContent:"center",
-
       }}
     >
       {rtext}
@@ -302,44 +294,36 @@ function newStatustext(sourceObj) {
 }
 
 
-const DEFAUL_BAR_HEIGHT = "32px";
 
 const newCharBarHeight = (withBorder=false) => {
 
-  const DEFAUL_BAR_LINE_HEIGHT ="27px"
 
   if(withBorder) {
 
     return {
-      height:"32px",
+      height:DEFAUL_BAR_HEIGHT,
       lineHeight:DEFAUL_BAR_LINE_HEIGHT
     }  
   }
 
   return {
-    height:DEFAUL_BAR_HEIGHT,
-    lineHeight:DEFAUL_BAR_HEIGHT,
+    height:"27px",
+    lineHeight:"27px",
   }
 }
 
 function OverrideComp(props) {
+
+  const chartbarProps = newCharBarHeight();
+
+
   return (
     <div 
+      className={styles.SOverCompBase}
       style={{
         width: props.width,
-        textAlign: "center", 
-        cursor: "pointer" ,
-
-        height: props.height,
-        lineHeight:props.lineHeight, 
-        display:"inline-block",
-        verticalAlign:"middle", 
-
-
-        backgroundColor: "#c6a38b",
-        borderStyle: "solid",
-        borderRadius: "4px",
-        color: "white",        
+        height: chartbarProps.height,
+        lineHeight:chartbarProps.lineHeight, 
       }}
       >
       <Popover content={props.content} title="중첩구간" trigger="click">
@@ -372,7 +356,6 @@ function ComplexChartBar({eventObj, mergeCount}) {
   let trLen = ((globalWeith*trRange)-prio)+"px"
 
 
-
   let overTimeArray = [];
 
   overTimeArray.push(eventObj);
@@ -393,20 +376,12 @@ function ComplexChartBar({eventObj, mergeCount}) {
 
   return (
     <div
+      className={styles.ChartContainer}
       style={{
         marginLeft:marginLeft,
-        display:"inline-block",
-        verticalAlign: "middle",
-        width:"100%",
-        // backgroundColor:"black",
-        height:{DEFAUL_BAR_HEIGHT},
       }}
     >
-      <div style={{
-          display:"inline-block",
-          verticalAlign: "middle",
-          height:{DEFAUL_BAR_HEIGHT},
-      }}>
+      <div className={styles.SchdulerButtonWrraper}>
         <SchedulerBarButton
           buttonStyle={newSchButtonStyle(eventObj.source,fWidth)}
           mergeCount={fWidth}
@@ -414,17 +389,11 @@ function ComplexChartBar({eventObj, mergeCount}) {
         />
       </div>
        <OverrideComp
-        height={DEFAUL_BAR_HEIGHT}
-        lineHeight={DEFAUL_BAR_HEIGHT}
         width={ssMerge}
-        title={overrideTimeTitle}
+          title={overrideTimeTitle}
         content={overrideTimeline}
       />
-      <div style={{
-          display:"inline-block",
-          verticalAlign: "middle",
-          height:{DEFAUL_BAR_HEIGHT},
-      }}>
+      <div className={styles.SchdulerButtonWrraper}>
         <SchedulerBarButton 
           colData={lastNode} 
           buttonStyle={newSchButtonStyle(lastNode.source,trLen)}
@@ -698,9 +667,6 @@ function SchedulerBarButton(props) {
   );
 }
 
-const tdwidth ="40px";
-const tdheight ="20px";
-const globalWeith="40"
 
 
 function tableColumnRender(record, currentDayFormate) {
@@ -782,6 +748,7 @@ function tableColumnRender(record, currentDayFormate) {
 }
 
 function newTotalFragment(record, date) {
+
   let colDataArray = record["colDataArray"];
   let dataOfMonth = colDataArray[date];
   if (dataOfMonth !== undefined) {
@@ -792,28 +759,7 @@ function newTotalFragment(record, date) {
     }
 
     return (
-      <div
-        style={{
-          textAlign: "center",
-          backgroundColor: "#e9edcc",
-          borderStyle: "solid",
-          borderColor: "#b5b5b5",
-          borderRadius: "4px",
-          borderWidth: "1px",
-          color: "black",
-
-          // backgroundColor: "black",
-          fontSize:"16px",
-          marginLeft:"-5px",
-          display:"inline-block",
-          verticalAlign:"middle",
-          width:"34px",
-          height:"34px",
-          lineHeight:"28px",
-          position:"absolute",
-          top:"2px",
-        }}
-      >
+      <div  className={styles.total_header_column}>
         {dataOfMonth}
       </div>
     );
@@ -825,7 +771,7 @@ function calculBarLenOption() {
   //antd table 이 기보넞ㄱ으로 padding을 8 로가지고가는 상태에서 +8 한거라고 바야함 
   return  {
     leftMargin:14,
-    rightSpaceWidth:38
+    rightSpaceWidth:36,
   }
 }
 
@@ -858,22 +804,14 @@ function DefaultSchedulerLine(props) {
   // }
   
   
-
+  const textWidth = (widthLeng-4)+"px";
   widthLeng = widthLeng+"px"
 
 //  const bStyle = newSchButtonStyle(eventObj.source,widthLeng,DEFAUL_BAR_HEIGHT,marginLeft);  
   const bStyle = newSchButtonStyle(eventObj.source,widthLeng,marginLeft);
 
   return (
-    <div style={{
-      marginLeft:"-5px",
-//      marginLeft:marginLeft,
-      display:"inline-block",
-      verticalAlign: "middle",
-      width:"100%",
-      height:"32px",
-//      backgroundColor:"black",
-    }}>
+    <div className={styles.ChartContainer}>
       <SchedulerBarButton
         buttonStyle={bStyle}
         colData={props.eventObj}
@@ -945,9 +883,9 @@ function newColumnRender(sdate, start, end) {
     //이부분에 넓이도 x 축 scrol에 영향을 준다 x축에 차지않게 그릴려고하며
     let model = {
       title: titleTag,
-      width: 40,
+      width: 34,
       height: 15,
-      className: "header-style",
+//      className: "header-style",
       dataIndex: "eventObjList",
       key: sdate + "-" + i,
       render: function (text, record, index) {
@@ -1060,7 +998,7 @@ function newColumnHeader(stObj,query, fallback) {
 
   //css 로 공제하기 힘들어 두날짜로 간격이 20일 이상이면 
   //pixel을 따로 처리한다 
-  let widthLeng = "200px";
+  let widthLeng = 200;
   //취소 필터링시 데이터가적으면 싸이즈 적어지면서 왼쪽으로 밀린다 
   // if(eDate.diff(sDate, "days") < 20 ) {
   //   widthLeng = "150px";
@@ -1077,6 +1015,9 @@ function newColumnHeader(stObj,query, fallback) {
       fixed: "left",
       title: () => {
         return (
+          <div
+          style={{ width: "100%",height:"100%",display:"inline-block"}}
+          >
           <Select
             showSearch
             style={{ width: "100%" }}
@@ -1088,12 +1029,17 @@ function newColumnHeader(stObj,query, fallback) {
             <Option value="1">호실명</Option>
             <Option value="0">등급</Option>
           </Select>
+
+          </div>
         );
       },
       render: function (text, record, index) {
 
+        if(index ===0) {
+          console.log("first line",text,record)
+        }
+
         if( (!searchState) && index === 0) {
-//          console.log(!searchState);
           return reportDataRender(text)
         }
 
@@ -1120,17 +1066,19 @@ function newColumnHeader(stObj,query, fallback) {
               style={{
                 width:"200px",
                 display: "inline-block",
-                fontSize: "15px",
+                // wordWrap:"break-word"
                 // height:"20px",
                 // lineHeight:"40px",
-                // position:"absolute"
               }}
             >
-              <div style={{width:"90px",display: "inline-block"}}>{roomSplit[0]}</div>
+              <div style={{width:"90px",fontSize:"16px",display: "inline-block"}}>{roomSplit[0]}</div>
               <div style={{ width:"90px",display: "inline-block" }}>
-                <span> {roomSplit[1]}</span>
+                <span style={{
+                  fontSize:"14px",
+                }}> {roomSplit[1]}</span>
                 <span
                   style={{
+                    fontSize:"14px",
                     overflow: "hidden",
                     whiteSpace: "nowrap",
                     textOverflow: "ellipsis",
@@ -1177,16 +1125,13 @@ function newColumnHeader(stObj,query, fallback) {
 
 
       const monthTag = (
-        <div style={{ textAlign: "center",               
-         overflow: "hidden",
-        whiteSpace: "nowrap",
-        textOverflow: "ellipsis", }}>{key + "-" + mkey}</div>
+        <div className={styles.monthTag}>{key + "-" + mkey}</div>
       );
 
       let el = {
         title: monthTag,
         key: mvalue,
-        with: 100,
+        // with: 100,
         height: 16,
         children: newColumnRender(mvalue, startIndex, endIndex),
       };
@@ -1457,13 +1402,9 @@ function ChartTableView(props) {
       && query.type === "range"
       ) { 
       
-//      console.log("update table 2",query)
-
       const rList = data.filter((re)=>{
         return re.rtype !== undefined && re.rtype === "room"
       })
-
-      // console.log("update table 2-1")
 
       props.dispach({
         type:"TotalDataList",
@@ -1471,11 +1412,9 @@ function ChartTableView(props) {
       })
     }
 
-
-
     //   return () => {
-
     // }
+
   },[props.dataList])
 
 

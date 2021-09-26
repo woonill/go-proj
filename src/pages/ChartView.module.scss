@@ -2,6 +2,8 @@
 
 //@import url(#{$REMOTE_CSS_ADDR}resources/assets/font/notosanskr/style.css);
 
+
+
 .main {
     width: 1280;
     flex: 1;
@@ -9,11 +11,19 @@
     flex-direction: "column";
 }
 
-// .override-ant-btn {
-//     :global(.ant-btn) {
-//       border-radius: 20px;
-//     }
-//   }
+
+$DEFAUL_BAR_HEIGHT : 26px;
+$DEFAUL_BAR_LINE_HEIGHT:26px;
+$tdwidth:34;
+$tdheight:26;
+$globalWeith:34;
+
+:export { 
+    DefaultBarHeigt:$DEFAUL_BAR_HEIGHT;
+    DefaultBarLineHeight:$DEFAUL_BAR_LINE_HEIGHT;
+    tdwidth:$tdwidth;
+    tdheight:$tdheight;
+    globalWeith:$globalWeith; }
 
 
 @mixin linkBtn {
@@ -39,17 +49,101 @@
     textOverflow:ellipsis;
 }
 
+
+.OverflowText {
+    width: "100%";
+    text-align:center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis ;
+    height:"100%";
+    word-wrap:break-word
+
+    // display:"inline-block",
+// verticalAlign: "middle",
+// lineHeight:"100%",
+// backgroundColor :"red",
+
+// display:"flex",
+// flex:1,
+// alignItems:"center",
+// justifyContent:"center",
+
+}
+
+
+// height:"100%",
+// weidth:"100%",
+// fontSize:"14px",
+// lineHeight:"20px",
+
+.total_header_column {
+
+    text-align: center;
+    background-color: #e9edcc;
+    border-style: solid;
+    border-color: #b5b5b5;
+    border-radius: 2px;
+    border-width: 1px;
+    color: black;
+    // backgroundColor: "black",
+    font-size:14px;
+    display:inline-block;
+    vertical-align:middle;
+    width:22px;
+    height:22px;
+    line-height:18px;
+
+    // backgroundColor: "black",
+    margin-left: 2px;
+    position:absolute;
+    bottom:2px,
+    // top:"2px",
+}
+
+.SOverCompBase  {
+    width: "100%";
+    height: "100%";
+    text-align:center;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: #c6a38b;
+    border-style: solid;
+    border-radius: 4px;
+    color:white;
+}
+
+.ChartContainer  {
+    display:inline-block;
+    vertical-align: middle;
+    width:100%;
+    height:$DEFAUL_BAR_HEIGHT,
+    // backgroundColor:"black",
+
+
+}
+
+.SchdulerButtonWrraper  {
+    display:inline-block;
+    vertical-align: middle;
+    height:$DEFAUL_BAR_HEIGHT,
+}
+
+
+
+.monthTag {
+    text-align: center;
+    white-space:nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+
 .groupTitleText {
  @include fixText;
  font-size: 15
 }
-
-
-// .rangeOvertimeText {
-//     @include fixText;
-//     text-align:center;
-//     color: fontColor,
-// }
 
 
 .actionButton {
@@ -72,7 +166,7 @@
     background-color: rgb(255, 255, 255);
     border-color: #bbd86c;
     color: #4a823d;
-//    border-color: rgb(113,186,217);
+    border-color: rgb(113,186,217);
 }
 
 
@@ -98,7 +192,7 @@
     margin-right: 5px;
 //    background-color: rgb(119,119,119);
     background-color: rgb(227,226,241);
-    //border-color: rgb(119,119,119);
+    // border-color: rgb(119,119,119);
 
 }
 
