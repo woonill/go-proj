@@ -45,7 +45,7 @@ const tdheight = styles.tdheight;
 const globalWeith=styles.globalWeith
 
 
-console.log("DefaultVals",tdwidth,tdheight,globalWeith,DEFAUL_BAR_HEIGHT,DEFAUL_BAR_LINE_HEIGHT)
+//console.log("DefaultVals",tdwidth,tdheight,globalWeith,DEFAUL_BAR_HEIGHT,DEFAUL_BAR_LINE_HEIGHT)
 
 function RangeTimelineText(props) {
   let fontColor = props.color === undefined ? "black" : props.color;
@@ -71,14 +71,15 @@ function RangeTimelineText(props) {
   }
 
   return (
-    <span
+    <div
       className={styles.OverflowText}
       style={{
         color: fontColor,
+        width:props.width
       }}
     >
       {rtext}
-    </span>
+    </div>
   );
 }
 
@@ -307,8 +308,8 @@ const newCharBarHeight = (withBorder=false) => {
   }
 
   return {
-    height:"27px",
-    lineHeight:"27px",
+    height:"30px",
+    lineHeight:"30px",
   }
 }
 
@@ -345,11 +346,16 @@ function ComplexChartBar({eventObj, mergeCount}) {
   let srRange = moment(midNode["to"]).diff(midNode["from"], "days");
   let trRange = moment(lastNode.to).diff(lastNode["from"],"days")
 
+  const subLenth = eventObj.subList.length
 
-  // const totalDays = fRange+srRange+trRange;
+  if(subLenth >1 && lastNode.to === midNode.to) { //두날짜가 같은날로 셋팅되면 둘다 절반 날수를 가진다 
+    srRange = srRange/2;
+    trRange = srRange;
+  }
+
   let barLengOption = calculBarLenOption()
 
-  let prio = barLengOption.rightSpaceWidth/3;
+  let prio = barLengOption.rightSpaceWidth / 3; //전체를 bar 3개로 표현하므로 
 
   let fWidth = ((globalWeith*fRange)-prio)+"px"
   let ssMerge = ((globalWeith*srRange)-prio)+"px"
@@ -384,6 +390,7 @@ function ComplexChartBar({eventObj, mergeCount}) {
       <div className={styles.SchdulerButtonWrraper}>
         <SchedulerBarButton
           buttonStyle={newSchButtonStyle(eventObj.source,fWidth)}
+          width={fWidth}
           mergeCount={fWidth}
           colData={eventObj}
         />
@@ -397,6 +404,7 @@ function ComplexChartBar({eventObj, mergeCount}) {
         <SchedulerBarButton 
           colData={lastNode} 
           buttonStyle={newSchButtonStyle(lastNode.source,trLen)}
+          width={trLen}
           mergeCount={trLen}
         />
       </div>
@@ -627,6 +635,7 @@ function SchedulerBarButton(props) {
   // let bgColor = newSchButtonBGColorOfRGB(props.colData.source);
   let fontColor = newSchButtonFontColor(props.colData.source);
   const MouseRightMenuComp = MouseRightMenuFunc(dataSource);
+//  const fullWidth = props.mergeCount* globalWeith;
 
   // if (props.colData.no === 7927) {
   //   console.log("ColData", props.colData);
@@ -655,8 +664,9 @@ function SchedulerBarButton(props) {
         <RangeTimelineText
           color={fontColor}
           eventObj={eventObj}
-          mergeCount={props.mergeCount}
+//          mergeCount={props.mergeCount}
           name={eventObj.name}
+          width={props.width}
           from={eventObj.from}
           to={eventObj.source.to}
         />
@@ -770,44 +780,27 @@ function newTotalFragment(record, date) {
 function calculBarLenOption() {
   //antd table 이 기보넞ㄱ으로 padding을 8 로가지고가는 상태에서 +8 한거라고 바야함 
   return  {
-    leftMargin:14,
-    rightSpaceWidth:36,
+    leftMargin:12,
+    rightSpaceWidth:33,
   }
 }
 
 function DefaultSchedulerLine(props) {
   let eventObj = props.eventObj;
-
  
   let srRange = moment(eventObj["to"]).diff(eventObj["from"], "days")+1;
-
   let barLengOption = calculBarLenOption()
-  let marginLeft = barLengOption.leftMargin+"px" //정상상태 왼쪽으로 이동 
+  let marginLeft = "0px"; 
   let widthLeng = (globalWeith*srRange)
 
-  //let haveNextOne = false;
-  // if(eventObj.isSameDayOfNext) { 
-    //다음 들어오는 eventObj 의 from 과 동일한 날이면  globaclWeith 의 절반과 
-    // widthLeng = widthLeng+2
-//    haveNextOne = true;
-//  }
-
-
-  widthLeng = widthLeng - barLengOption.rightSpaceWidth
-
-  // if(eventObj.isSameDayOfPre) {
-  //   marginLeft = "12px" //정상상태 왼쪽으로 이동 
-  //   widthLeng = widthLeng-14
-  //   if(haveNextOne) {
-  //     widthLeng = widthLeng-1
-  //   }
-  // }
-  
-  
-  const textWidth = (widthLeng-4)+"px";
+  if(srRange > 1) {
+    marginLeft = barLengOption.leftMargin+"px"
+    widthLeng = widthLeng - barLengOption.rightSpaceWidth
+  }
+    
   widthLeng = widthLeng+"px"
-
 //  const bStyle = newSchButtonStyle(eventObj.source,widthLeng,DEFAUL_BAR_HEIGHT,marginLeft);  
+
   const bStyle = newSchButtonStyle(eventObj.source,widthLeng,marginLeft);
 
   return (
@@ -815,6 +808,7 @@ function DefaultSchedulerLine(props) {
       <SchedulerBarButton
         buttonStyle={bStyle}
         colData={props.eventObj}
+        width={widthLeng}
         mergeCount={props.mergeCount}
       />
      </div>
@@ -1034,10 +1028,6 @@ function newColumnHeader(stObj,query, fallback) {
         );
       },
       render: function (text, record, index) {
-
-        if(index ===0) {
-          console.log("first line",text,record)
-        }
 
         if( (!searchState) && index === 0) {
           return reportDataRender(text)
@@ -1350,7 +1340,7 @@ function ChartTableView(props) {
   let chartData = toChartData(props.dataList);
   const query = props.query;
 
-// console.log("query",query)
+//  console.log("query",query)
 
   const [dataSource, chartUpdater] = useState([]);
 
@@ -1389,7 +1379,7 @@ function ChartTableView(props) {
   useEffect(()=> {
 
 
-    // console.log("update",dataSource.length)
+//    console.log("update",chartData.stObj)
 
 
     let co = buildTableDataList(roomList, chartData.list);

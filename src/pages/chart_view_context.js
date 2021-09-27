@@ -307,9 +307,15 @@ function rebuildEventObj(eventObj) {
     }
 
     //마감 막대기는 마지막 두번째 끝나는 시간붙어 마지막 데이터의 끝나는 시간으로 잡는다 
+
+    let lastFrom = _slastEventObj.to;
+    if(_slastEventObj.to === _lastEventObj.to) { //마지막 두번째하고 마감이 같은경우도 있음 그런경우를 처리
+      lastFrom = _lastEventObj.from;
+    }
+
     let lastEventObj = {
       no:_lastEventObj.no,
-      from: _slastEventObj.to,
+      from: lastFrom,
       to: _lastEventObj.to,
       name: _lastEventObj.name,
       source: _lastEventObj.source

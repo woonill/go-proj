@@ -118,19 +118,27 @@ const DateRangeInputField = (props) => {
   let [dateRangeVals, updateDateRange] = useState(props.dateRange);
 
   const onChangeCurrent =  (c) => {
-    props.setValue(dateRangeVals)
+    props.setValue(c)
     updateDateRange(c)
   }
 
   useEffect(()=>{
-    updateDateRange({
-      dateRangeVals:props.dateRange,
-    })
-  },[props.selectedValue])
+
+
+    props.setValue(dateRangeVals)
+
+    // if(props.selectValue === "0") {
+    //   console.log("useEffect",props)
+    //   updateDateRange({
+    //     dateRangeVals:props.dateRange,
+    //   })
+  
+    // }
+  })
 
   return  (
     <RangePicker
-      defaultValue={dateRangeVals}
+      value={dateRangeVals}
       format={props.dateFormat}
       onCalendarChange={onChangeCurrent}
     />
@@ -165,7 +173,6 @@ function HeaderView(props) {
   let currentDate=moment();//출산예정일 
 
   let dRangeVals = props.defaultSearchDateOfRange()
-  //
   let dateRangeVals = [dRangeVals.sDate,dRangeVals.eDate];
 
   function updateVal(c) {
@@ -219,6 +226,7 @@ function HeaderView(props) {
       param:params
     }
 
+    // console.log("Requet",reqEvent)
     props.emitHttpEvent({
       type: "LoadReservationList",
       request: reqEvent,
