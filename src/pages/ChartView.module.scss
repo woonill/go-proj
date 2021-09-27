@@ -69,12 +69,8 @@ $DefaultFontSie : 14px;
 }
 
 
-// height:"100%",
-// weidth:"100%",
-// fontSize:"14px",
-// lineHeight:"20px",
 
-.total_header_column {
+.TotalBoxWrapper {
 
     text-align: center;
     background-color: #e9edcc;
@@ -83,18 +79,21 @@ $DefaultFontSie : 14px;
     border-radius: 2px;
     border-width: 1px;
     color: black;
-    // backgroundColor: "black",
-    font-size:14px;
-    display:inline-block;
+    font-size:$DefaultFontSie;
+   display:inline-block;
     vertical-align:middle;
     width:22px;
     height:22px;
     line-height:18px;
 
+    margin-left: calc(40%);
+    transform: translateX(-40%);
+
+
     // backgroundColor: "black",
-    margin-left: 2px;
-    position:absolute;
-    bottom:2px,
+    // margin-left: 2px;
+    //position:absolute;
+    // bottom:2px,
     // top:"2px",
 }
 

@@ -769,9 +769,9 @@ function newTotalFragment(record, date) {
     }
 
     return (
-      <div  className={styles.total_header_column}>
-        {dataOfMonth}
-      </div>
+        <div  className={styles.TotalBoxWrapper}>
+          {dataOfMonth}
+        </div>
     );
   }
 }
