@@ -51,6 +51,8 @@ class TextInputFieldComp extends React.Component {
         ...this.state,
         inputText:""
       })
+    }else{ //Component 가 바뀌였던 상태가 아니면 지금에 값을 상위 컴퍼넌트에 알린다 
+      this.props.setValue(this.state.inputText)
     }
   }
 
@@ -95,12 +97,12 @@ const DateInputField = (props) => {
     // if(props.selectedValue !== currentDateState.index) {
     // }
     // console.log("Clear due date component")
-    updateState({
-      index:props.selectedValue,
-      currentDate:moment,
-    })
-
-  },[props.selectedValue])
+    // updateState({
+    //   index:props.selectedValue,
+    //   currentDate:moment,
+    // })
+      props.setValue(currentDate)
+  })
 
   return  (
     <DatePicker
