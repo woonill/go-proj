@@ -1,4 +1,4 @@
-module util
+module github.com/woonill/go-proj/util
 
 go 1.16
 
